@@ -76,7 +76,7 @@ CameraIspAdapter::CameraIspAdapter(int cameraId)
 	m_buffers_capture = NULL;
 	m_buffers_capture = new cv_fimc_buffer();
         memset(m_buffers_capture,0x0,sizeof(cv_fimc_buffer));
-	mCameraGL = new CameraGL();
+	//mCameraGL = new CameraGL();
     mGPUCommandThread = new GPUCommandThread(this);
     mGPUCommandThreadState = STA_GPUCMD_IDLE;
     mGPUCommandThread->run("GPUCommandThread",ANDROID_PRIORITY_DISPLAY);
@@ -87,7 +87,7 @@ CameraIspAdapter::CameraIspAdapter(int cameraId)
     mfd_buffers_capture = new cv_fimc_buffer();
     memset(mfd_buffers_capture,0x0,sizeof(cv_fimc_buffer));
     memset(&mfd,0x0,sizeof(mfdprocess));
-    mMutliFrameDenoise = new MutliFrameDenoise();
+//    mMutliFrameDenoise = new MutliFrameDenoise();
     mMFDCommandThread = new MFDCommandThread(this);
     mMFDCommandThreadState = STA_GPUCMD_IDLE;
     mMFDCommandThread->run("MFDCommandThread",ANDROID_PRIORITY_DISPLAY);
@@ -109,7 +109,7 @@ CameraIspAdapter::~CameraIspAdapter()
             mGPUCommandThread.clear();
             mGPUCommandThread = NULL;
         }
-	    delete mCameraGL;
+	    //delete mCameraGL;
         mCameraGL = NULL;
     }
 
@@ -124,7 +124,7 @@ CameraIspAdapter::~CameraIspAdapter()
             mMFDCommandThread.clear();
             mMFDCommandThread = NULL;
         }
-	delete mMutliFrameDenoise;
+	//delete mMutliFrameDenoise;
 	mMutliFrameDenoise = NULL;
     }
 
@@ -2093,7 +2093,7 @@ void CameraIspAdapter::gpuCommandThread()
                 {
                     //ALOGD("check init, w-h: %d-%d, tid: %d", width, height, gettid());
                     if (!mCameraGL->initialized) {
-                        mCameraGL->init(NULL, mGpuFBOWidth, mGpuFBOHeight);
+//                        mCameraGL->init(NULL, mGpuFBOWidth, mGpuFBOHeight);
                     }
                     mGPUCommandThreadState = STA_GPUCMD_RUNNING;
                     if(msg.arg1)
@@ -2103,7 +2103,7 @@ void CameraIspAdapter::gpuCommandThread()
                 case CMD_GPU_PROCESS_UPDATE:
                 {
                     if (mCameraGL->initialized) {
-                        mCameraGL->update(m_buffers_capture);
+                        //mCameraGL->update(m_buffers_capture);
                     }
                     if(msg.arg1)
                         ((Semaphore*)msg.arg1)->Signal();
@@ -2134,7 +2134,7 @@ void CameraIspAdapter::gpuCommandThread()
 							uvnr_set_distances = 5;
 						}
 
-                        mCameraGL->process(NULL,OUTPUT_NONE,uvnr_set_ratio,uvnr_set_distances);
+//                        mCameraGL->process(NULL,OUTPUT_NONE,uvnr_set_ratio,uvnr_set_distances);
                     }
                     if(msg.arg1)
                         ((Semaphore*)msg.arg1)->Signal();
@@ -2148,7 +2148,7 @@ void CameraIspAdapter::gpuCommandThread()
                 case CMD_GPU_PROCESS_DEINIT:
                 {
                     if (mCameraGL->initialized) {
-                        mCameraGL->destroy();
+                       // mCameraGL->destroy();
                     }
 
                     mGPUCommandThreadState = STA_GPUCMD_STOP;
@@ -2211,7 +2211,7 @@ void CameraIspAdapter::mfdCommandThread()
                 {
                     //ALOGD("check init, w-h: %d-%d, tid: %d", width, height, gettid());
                     if (!mMutliFrameDenoise->initialized) {
-                        mMutliFrameDenoise->initOpenGLES(NULL, mMfdFBOWidth, mMfdFBOHeight);
+//                        mMutliFrameDenoise->initOpenGLES(NULL, mMfdFBOWidth, mMfdFBOHeight);
                     }
                     mMFDCommandThreadState = STA_GPUCMD_RUNNING;
                     if(msg.arg1)
@@ -2223,7 +2223,7 @@ void CameraIspAdapter::mfdCommandThread()
                     if (mMutliFrameDenoise->initialized) {
                         //ALOGD("fill buffer capture, start: %.8x, dat0: %d, fd: %d, length: %d", mfd_buffers_capture->start, (void*)(mfd_buffers_capture->start),             mfd_buffers_capture->share_fd, mfd_buffers_capture->length);
 					// m_camDevice->getGain(mfdISO);
-                        mMutliFrameDenoise->updateImageData(mfd_buffers_capture);
+//                        mMutliFrameDenoise->updateImageData(mfd_buffers_capture);
                     }
                     if(msg.arg1)
                         ((Semaphore*)msg.arg1)->Signal();
@@ -2234,7 +2234,7 @@ void CameraIspAdapter::mfdCommandThread()
                 {
                     if (mMutliFrameDenoise->initialized) {
                         m_camDevice->getGain(mfdISO);
-                        mMutliFrameDenoise->processing(NULL,mfdISO);
+//                        mMutliFrameDenoise->processing(NULL,mfdISO);
                         LOGD("CameraIspAdapter::mfdCommandThread mfdISO = %f",mfdISO);
                     }
                     if(msg.arg1)
@@ -2260,7 +2260,7 @@ void CameraIspAdapter::mfdCommandThread()
 					} else {
 						mfd.process_frames = 2;
 					}
-					mMutliFrameDenoise->setFrames(mfd.process_frames);
+//					mMutliFrameDenoise->setFrames(mfd.process_frames);
                     if(msg.arg1)
                         ((Semaphore*)msg.arg1)->Signal();
                     break;
@@ -2268,7 +2268,7 @@ void CameraIspAdapter::mfdCommandThread()
                 case CMD_GPU_PROCESS_DEINIT:
                 {
                     if (mMutliFrameDenoise->initialized) {
-                        mMutliFrameDenoise->destroy();
+//                        mMutliFrameDenoise->destroy();
                     }
 
                     mMFDCommandThreadState = STA_GPUCMD_STOP;
@@ -2563,6 +2563,7 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
         
     	//picture ?
     	if(mRefEventNotifier->isNeedSendToPicture()){
+    	#if 0
             bool send_to_pic = true;
 			MediaBufLockBuffer( pMediaBuffer );
             //new frames
@@ -2615,7 +2616,7 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
 					tmpFrame->vir_addr = (ulong_t)y_addr_vir;
 	                if ((mMutliFrameDenoise->initialized) && (mfd.enable)) {
 						mfdsendBlockedMsg(CMD_GPU_PROCESS_RENDER);
-	                    mMutliFrameDenoise->getResult(tmpFrame->vir_addr);
+//	                    mMutliFrameDenoise->getResult(tmpFrame->vir_addr);
 	                }
 
 					if( tmpFrame->vir_addr == NULL) {
@@ -2636,7 +2637,7 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
 
 						sendBlockedMsg(CMD_GPU_PROCESS_UPDATE);
 						sendBlockedMsg(CMD_GPU_PROCESS_RENDER);
-						mCameraGL->getResult(tmpFrame->vir_addr);
+//						mCameraGL->getResult(tmpFrame->vir_addr);
 					}
 					if( tmpFrame->vir_addr == NULL) {
 						LOGE("uvnr tmpFrame->vir_addr is NULL!");
@@ -2669,7 +2670,43 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
 	                mRefEventNotifier->notifyNewPicFrame(tmpFrame);
 	            }
             }
-    	}
+        #endif
+				MediaBufLockBuffer( pMediaBuffer );
+				//new frames
+				FramInfo_s *tmpFrame=(FramInfo_s *)malloc(sizeof(FramInfo_s));
+				if(!tmpFrame){
+					MediaBufUnlockBuffer( pMediaBuffer );
+					return;
+				}		   
+				//add to vector
+				memset(tmpFrame, 0x0, sizeof(*tmpFrame));
+				tmpFrame->frame_index = (ulong_t)tmpFrame; 
+				tmpFrame->phy_addr = (ulong_t)phy_addr;
+				tmpFrame->frame_width = width;
+				tmpFrame->frame_height= height;
+				tmpFrame->vir_addr = (ulong_t)y_addr_vir;
+				tmpFrame->frame_fmt = fmt;
+				tmpFrame->used_flag = 2;
+				tmpFrame->res = &mImgAllFovReq;
+#if (USE_RGA_TODO_ZOOM == 1)  
+				tmpFrame->zoom_value = mZoomVal;
+#else
+				if((tmpFrame->frame_width > 2592) && (tmpFrame->frame_height > 1944) && (mZoomVal != 100) ) {
+					tmpFrame->zoom_value = mZoomVal;
+				} else {
+					tmpFrame->zoom_value = 100;
+				}
+#endif
+				{
+					Mutex::Autolock lock(mFrameArrayLock);
+					mFrameInfoArray.add((void*)tmpFrame,(void*)pMediaBuffer);
+					mPicEncFrameLeak++;
+				}
+				picture_info_s &picinfo = mRefEventNotifier->getPictureInfoRef();
+				getCameraParamInfo(picinfo.cameraparam);
+				mRefEventNotifier->notifyNewPicFrame(tmpFrame);
+
+        }
 
     	//preview data callback ?
     	if(mRefEventNotifier->isNeedSendToDataCB() && (mRefDisplayAdapter->getDisplayStatus() == 0)) {

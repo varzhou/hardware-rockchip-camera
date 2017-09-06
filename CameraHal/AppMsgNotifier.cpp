@@ -662,7 +662,7 @@ int AppMsgNotifier::startRecording(int w,int h)
 
 		for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
 	    	if(!mVideoBufs[i])
-	    		mVideoBufs[i] = mRequestMemory(-1, sizeof(long), 1, NULL);
+	    		mVideoBufs[i] = mRequestMemory(-1, sizeof(long), 1, mCallbackCookie);
 	    	if( (NULL == mVideoBufs[i]) || ( NULL == mVideoBufs[i]->data)) {
 	    		mVideoBufs[i] = NULL;
 	    		LOGE("%s(%d): video buffer %d create failed",__FUNCTION__,__LINE__,i);
@@ -683,7 +683,7 @@ int AppMsgNotifier::startRecording(int w,int h)
 		#if 0
 		for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
 			if(!mVideoBufs[i])
-				mVideoBufs[i] = mRequestMemory(-1, sizeof(long)*2, 1, NULL);
+				mVideoBufs[i] = mRequestMemory(-1, sizeof(long)*2, 1, mCallbackCookie);
 			if( (NULL == mVideoBufs[i]) || ( NULL == mVideoBufs[i]->data)) {
 				mVideoBufs[i] = NULL;
 				LOGE("%s(%d): video buffer %d create failed",__FUNCTION__,__LINE__,i);
@@ -697,8 +697,8 @@ int AppMsgNotifier::startRecording(int w,int h)
 		#else
 		for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
 			if(!mVideoBufs[i]) {
-				#if defined(ANDROID_7_X)
-				mVideoBufs[i] = mRequestMemory(-1, sizeof(VideoNativeHandleMetadata), 1, NULL);
+				#if defined(ANDROID_7_X)||defined(ANDROID_8_X)
+				mVideoBufs[i] = mRequestMemory(-1, sizeof(VideoNativeHandleMetadata), 1, mCallbackCookie);
 				#endif
 			}
 			if( (NULL == mVideoBufs[i]) || ( NULL == mVideoBufs[i]->data)) {
@@ -707,7 +707,7 @@ int AppMsgNotifier::startRecording(int w,int h)
 			}
 
 			addr = (long*)mVideoBufs[i]->data;
-			#if defined(ANDROID_7_X)
+			#if defined(ANDROID_7_X)||defined(ANDROID_8_X)
             	#if defined(TARGET_RK3368)
 					addr[0] = kMetadataBufferTypeNativeHandleSource;
 					addr[1] = (long)&mGrallocVideoBuf[i]->priv_hnd->base;
@@ -732,7 +732,7 @@ int AppMsgNotifier::startRecording(int w,int h)
 
 int AppMsgNotifier::storeMetadataInBuffer(bool meta)
 {
-	#if defined(ANDROID_7_X)
+	#if defined(ANDROID_7_X)||defined(ANDROID_8_X)
 	LOG_FUNCTION_NAME
 	Mutex::Autolock lock(mRecordingLock);
 	mIsStoreMD = meta;
@@ -1061,7 +1061,7 @@ int AppMsgNotifier::copyAndSendRawImage(void *raw_image, int size)
 
     if(mMsgTypeEnabled & CAMERA_MSG_RAW_IMAGE) {
 
-        mPicture = mRequestMemory(-1, size, 1, NULL);
+        mPicture = mRequestMemory(-1, size, 1, mCallbackCookie);
         mPicSize = size;		
         picture = mPicture;
         if (NULL != picture) {
@@ -1085,7 +1085,7 @@ int AppMsgNotifier::copyAndSendCompressedImage(void *compressed_image, int size)
     void *dest = NULL, *src = NULL;
 
     if(mMsgTypeEnabled & CAMERA_MSG_COMPRESSED_IMAGE) {
-		mPicture = mRequestMemory(-1, size, 1, NULL);
+		mPicture = mRequestMemory(-1, size, 1, mCallbackCookie);
 		mPicSize = size;
         picture = mPicture;
         if (NULL != picture) {

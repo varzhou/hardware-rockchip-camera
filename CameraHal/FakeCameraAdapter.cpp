@@ -59,7 +59,7 @@ int createSourceImage(unsigned char* output, int width, int height)
     SkIRect srcR = { 0, 0, (int)SkIntToScalar(srcW), (int)SkIntToScalar(srcH) };
     SkRect  dstR = { SkIntToScalar((width-srcW) / 2), SkIntToScalar((height - srcH) / 2),
                                            SkIntToScalar((width + srcW) / 2), SkIntToScalar(height + srcH) / 2 };
-	#if defined(ANDROID_7_X)
+	#if defined(ANDROID_7_X) || defined(ANDROID_8_X)
     canvas->drawBitmapRect(bitmap, srcR, dstR, NULL);
 	#else
 	canvas->drawBitmapRect(bitmap, /*&srcR*/ NULL, dstR, NULL);

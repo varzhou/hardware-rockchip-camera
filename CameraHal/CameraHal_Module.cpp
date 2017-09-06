@@ -73,7 +73,7 @@ camera_module_t HAL_MODULE_INFO_SYM = {
 #if defined(ANDROID_5_X)
     open_legacy:NULL,
 #endif
-#if defined(ANDROID_6_X)
+#if defined(ANDROID_6_X) || defined(ANDROID_7_X) || defined(ANDROID_8_X)
     set_torch_mode:NULL,
     init:NULL,
 #endif

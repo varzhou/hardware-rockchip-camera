@@ -104,6 +104,7 @@ LOCAL_C_INCLUDES += \
 	frameworks/native/include \
 	frameworks/native/include/media/hardware \
 	frameworks/native/include/media/openmax \
+	frameworks/native/libs/sensor/include \
 	external/libjpeg-turbo \
 	external/jpeg \
 	external/jhead \
@@ -131,6 +132,7 @@ LOCAL_C_INCLUDES += \
     external/skia/include/effects \
     external/skia/include/images \
     external/skia/src/ports \
+    external/skia/src/core \
     external/skia/include/utils \
     external/expat/lib
 
@@ -150,9 +152,10 @@ LOCAL_SHARED_LIBRARIES:= \
     libexpat \
     libskia \
     libhardware \
-    libcameragl \
-    libopencv_java3 \
-    libMFDenoise
+    liblog \
+    libsensor \
+    libopencv_java3
+
 #has no "external/stlport" from Android 6.0 on                         
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \< 6.0)))
 LOCAL_SHARED_LIBRARIES += \
@@ -344,6 +347,8 @@ endif
 
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 5.0)))
 LOCAL_CFLAGS += -DANDROID_5_X
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \< 6.0)))
+endif
 endif
 
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 6.0)))
@@ -353,7 +358,15 @@ endif
 endif
 
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 7.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \< 8.0)))
 LOCAL_CFLAGS += -DANDROID_7_X
+endif
+endif
+
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \< 9.0)))
+LOCAL_CFLAGS += -DANDROID_8_X
+endif
 endif
 
 ifeq ($(strip $(BOARD_USE_DRM)), true)

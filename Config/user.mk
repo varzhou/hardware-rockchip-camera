@@ -16,6 +16,7 @@ PRODUCT_PACKAGES += \
 	libisp_isi_drv_SP2518 \
 	libisp_isi_drv_GC0308 \
 	libisp_isi_drv_GC2035 \
+	libisp_isi_drv_GC2145 \
 	libisp_isi_drv_GC2155 \
 	libisp_isi_drv_NT99252 \
 	libisp_isi_drv_OV2680 \
@@ -65,6 +66,7 @@ PRODUCT_PACKAGES += \
 	libisp_isi_drv_SP2518 \
 	libisp_isi_drv_GC0308 \
 	libisp_isi_drv_GC2035 \
+	libisp_isi_drv_GC2145 \
 	libisp_isi_drv_GC2155 \
 	libisp_isi_drv_NT99252 \
 	libisp_isi_drv_OV2680 \
@@ -90,6 +92,7 @@ PRODUCT_PACKAGES += \
 	libisp_isi_drv_SP2518 \
 	libisp_isi_drv_GC0308 \
 	libisp_isi_drv_GC2035 \
+	libisp_isi_drv_GC2145 \
 	libisp_isi_drv_GC2155 \
 	libisp_isi_drv_NT99252 \
 	libisp_isi_drv_OV2680 \

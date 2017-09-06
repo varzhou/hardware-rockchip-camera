@@ -1135,20 +1135,20 @@ int CameraSOCAdapter::GetAFParameters(const CameraParameters params)
 				m_taf_roi[0] = strtol(zoneStr+1,0,0);
 
 				//get ty
-				char* tys = strstr(zoneStr,",");
+				const char* tys = strstr(zoneStr,",");
 				m_taf_roi[1] = strtol(tys+1,0,0);
 
 
 				//get rx
-				char* rxs = strstr(tys+1,",");
+				const char* rxs = strstr(tys+1,",");
 				m_taf_roi[2] = strtol(rxs+1,0,0);
 
 				//get by
-				char* dys = strstr(rxs+1,",");
+				const char* dys = strstr(rxs+1,",");
 				m_taf_roi[3] = strtol(dys+1,0,0);
 
 				//get weight
-				char* wt = strstr(dys+1,",");
+				const char* wt = strstr(dys+1,",");
 				weight = strtol(wt+1,0,0);
 				
 				if(strstr(wt+1,"(")){

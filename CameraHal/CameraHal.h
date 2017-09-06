@@ -739,10 +739,12 @@ v1.0x4f.0:
      1) fix rk3366 android7.1 compile error.
   v1.0x50.2
      1) use arm to scale again after rga2 scale fail.
+  v1.0x50.3
+     1) support android Oreo,fix compile error,can preview now.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x2)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x3)
 
 
 /*  */

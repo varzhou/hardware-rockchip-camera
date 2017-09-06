@@ -4,8 +4,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libisp_silicomimageisp_api
 
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 7.0)))
-LOCAL_SRC_FILES_arm := $(LOCAL_MODULE)_7x_32bit.so
-LOCAL_SRC_FILES_arm64 := $(LOCAL_MODULE)_7x_64bit.so
+LOCAL_SRC_FILES_arm := $(LOCAL_MODULE)_7x_8x_32bit.so
+LOCAL_SRC_FILES_arm64 := $(LOCAL_MODULE)_7x_8x_64bit.so
 else
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 6.0)))
 LOCAL_SRC_FILES_arm := $(LOCAL_MODULE)_6x_32bit.so
