@@ -2543,6 +2543,7 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
             tmpFrame->vir_addr = (ulong_t)y_addr_vir;
             tmpFrame->frame_fmt = fmt;
             tmpFrame->used_flag = 1;
+            tmpFrame->vir_addr_valid = true;
 #if (USE_RGA_TODO_ZOOM == 1)  
             tmpFrame->zoom_value = mZoomVal;
 #else

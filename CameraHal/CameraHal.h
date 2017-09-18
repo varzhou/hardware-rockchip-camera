@@ -777,8 +777,7 @@ v1.0x4f.0:
 
 #define CONFIG_CAMERA_PREVIEW_BUF_CNT 4
 #define CONFIG_CAMERA_DISPLAY_BUF_CNT		4
-#define CONFIG_CAMERA_VIDEO_BUF_CNT 4
-#define CONFIG_CAMERA_VIDEOENC_BUF_CNT		3
+#define CONFIG_CAMERA_VIDEOENC_BUF_CNT		4
 #define CONFIG_CAMERA_ISP_BUF_REQ_CNT		8
 
 #define CONFIG_CAMERA_UVC_MJPEG_SUPPORT 1
@@ -1705,7 +1704,7 @@ private:
     MessageQueue faceDetThreadCommandQ;
 	MessageQueue callbackThreadCommandQ;
 	
-    camera_memory_t* mVideoBufs[CONFIG_CAMERA_VIDEO_BUF_CNT];
+    camera_memory_t* mVideoBufs[CONFIG_CAMERA_VIDEOENC_BUF_CNT];
 
     char mPreviewDataFmt[30];
     int mPreviewDataW;
@@ -1720,7 +1719,7 @@ private:
 
 	const gralloc_module_t *mGrallocModule;
 	struct alloc_device_t *mGrallocAllocDev;
-	rk_videobuf_info_t *mGrallocVideoBuf[CONFIG_CAMERA_VIDEO_BUF_CNT];
+	rk_videobuf_info_t *mGrallocVideoBuf[CONFIG_CAMERA_VIDEOENC_BUF_CNT];
 };
 
 
