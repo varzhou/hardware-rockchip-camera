@@ -891,7 +891,7 @@ void camera_board_profiles::StartElementHandler(void *userData, const char *name
 		sscanf(atts[1], "v%x.%x.%x", &highBit, &middleBit, &lowBit);
 		pCamInfoProfiles->mBoardXmlVersion = ( (highBit&0xff)<<16 ) + ( (middleBit&0xff)<<8 ) + (lowBit&0xff) ;
         ALOGD("\n\n\n Cam_board.xml Version Check: \n");
-        ALOGD("    /etc/cam_board.xml : %s\n",atts[1]);
+        ALOGD("    /vendor/etc/cam_board.xml : %s\n",atts[1]);
         ALOGD("    CameraHal_board_xml_parser: v%d.%d.%d\n",
             (ConfigBoardXmlVersion&0xff0000)>>16,
             (ConfigBoardXmlVersion&0xff00)>>8,

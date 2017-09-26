@@ -59,21 +59,21 @@ using namespace android;
 #define RK_RET_FUNC_FAILED (-6)
 
 #if (defined(__arm64__) || defined(__aarch64__))
-#define RK_SENSOR_LIB_PATH "/system/lib64/hw/libisp_isi_drv_"
+#define RK_SENSOR_LIB_PATH "/vendor/lib64/hw/libisp_isi_drv_"
 #else
-#define RK_SENSOR_LIB_PATH "/system/lib/hw/libisp_isi_drv_"
+#define RK_SENSOR_LIB_PATH "/vendor/lib/hw/libisp_isi_drv_"
 #endif
-#define RK_BOARD_XML_PATH "/etc/cam_board.xml"
+#define RK_BOARD_XML_PATH "/vendor/etc/cam_board.xml"
 #define RK_DEFAULT_MEDIA_PROFILES_XML_PATH "/etc/media_profiles_default.xml"
-#if defined(ANDROID_5_X)
-#define RK_DST_MEDIA_PROFILES_XML_PATH "/data/camera/media_profiles.xml"
-#define RK_TMP_MEDIA_PROFILES_XML_PATH "/data/camera/media_profiles_tmp.xml"
+#if defined(ANDROID_5_X)||defined(ANDROID_6_X)||defined(ANDROID_7_X)||defined(ANDROID_8_X)
+#define RK_DST_MEDIA_PROFILES_XML_PATH "/etc/media_profiles.xml"
+#define RK_TMP_MEDIA_PROFILES_XML_PATH "/etc/media_profiles_tmp.xml"
 #else
 #define RK_DST_MEDIA_PROFILES_XML_PATH "/data/media_profiles.xml"
 #define RK_TMP_MEDIA_PROFILES_XML_PATH "/data/media_profiles_tmp.xml"
 #endif
 
-#define RK_SENSOR_XML_PATH "/etc/"
+#define RK_SENSOR_XML_PATH "/vendor/etc/"
 #define SENSOR_SPECIAL_TAG		(0xfefe5aa5)
 
 #define CAMERAHAL_BACKCAM_IQFILE_VER_PROPERTY_KEY		"sys_graphic.cam_back.iq.ver"

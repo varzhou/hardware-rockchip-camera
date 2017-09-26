@@ -173,6 +173,7 @@ int AppMsgNotifier::startFaceDection(int width,int height, int faceNum)
 {
     int ret = 0;
     Mutex::Autolock lock(mFaceDecLock);
+    return ret;
     if(!(mRunningState & STA_RECEIVE_FACEDEC_FRAME)){
         if((ret = initializeFaceDetec(width, height)) == 0){
         	mRunningState |= STA_RECEIVE_FACEDEC_FRAME;

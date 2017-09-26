@@ -2,7 +2,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libisp_silicomimageisp_api
-
+LOCAL_PROPRIETARY_MODULE := true
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 7.0)))
 LOCAL_SRC_FILES_arm := $(LOCAL_MODULE)_7x_8x_32bit.so
 LOCAL_SRC_FILES_arm64 := $(LOCAL_MODULE)_7x_8x_64bit.so

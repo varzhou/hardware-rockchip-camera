@@ -250,7 +250,7 @@ CameraHal::CameraHal(int cameraId)
 #endif 
 	mEventNotifier->setDatacbFrontMirrorFlipState(dataCbFrontMirror,dataCbFrontFlip);
 
-#if 1
+#if 0
       // register for sensor events
     mSensorListener = new SensorListener();
     if (mSensorListener.get()) {
@@ -286,7 +286,7 @@ void CameraHal::updateParameters(CameraParameters & tmpPara)
 CameraHal::~CameraHal()
 {
 	LOG_FUNCTION_NAME
-    if (mSensorListener.get()) {
+    if ((mSensorListener!=NULL) && mSensorListener.get()) {
         mSensorListener->disableSensor(SensorListener::SENSOR_ORIENTATION);
         mSensorListener.clear();
         mSensorListener = NULL;

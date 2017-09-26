@@ -719,8 +719,6 @@ int camera_get_number_of_cameras(void)
 	camera_board_profiles * profiles = NULL;
     size_t nCamDev = 0;
     char trace_level[PROPERTY_VALUE_MAX];
-	struct timeval t0, t1;
-    ::gettimeofday(&t0, NULL);
 	
     if (gCamerasNumber > 0)
         goto camera_get_number_of_cameras_end;
@@ -769,14 +767,14 @@ int camera_get_number_of_cameras(void)
 
     profiles = camera_board_profiles::getInstance();
     nCamDev = profiles->mDevieVector.size();
-	LOGE("board profiles cam num %d\n", nCamDev);
+	LOGD("board profiles cam num %d\n", nCamDev);
     if (nCamDev>0) {
         camera_board_profiles::LoadSensor(profiles);
         char sensor_ver[32];
 		
         for (i=0; (i<nCamDev); i++) 
         {  
-        	LOGE("load sensor name(%s) connect %d\n", profiles->mDevieVector[i]->mHardInfo.mSensorInfo.mSensorName, profiles->mDevieVector[i]->mIsConnect);
+			LOGD("load sensor name(%s) connect %d\n", profiles->mDevieVector[i]->mHardInfo.mSensorInfo.mSensorName, profiles->mDevieVector[i]->mIsConnect);
         	if(profiles->mDevieVector[i]->mIsConnect==1){
     	        rk_sensor_info *pSensorInfo = &(profiles->mDevieVector[i]->mHardInfo.mSensorInfo);
     	        
@@ -1173,7 +1171,7 @@ int camera_get_number_of_cameras(void)
    	}
 
    
-	camera_board_profiles::ProduceNewXml(profiles);
+	//camera_board_profiles::ProduceNewXml(profiles);
 	
     gCamerasNumber = cam_cnt;
 
@@ -1227,8 +1225,6 @@ int camera_get_number_of_cameras(void)
 camera_get_number_of_cameras_end:
     LOGD("%s(%d): Current board have %d cameras attached.",__FUNCTION__, __LINE__, gCamerasNumber);
 
-	::gettimeofday(&t1, NULL);
-	LOGD("meida_profiles_xml_control time (%ld)us\n", (t1.tv_sec*1000000 + t1.tv_usec) - (t0.tv_sec*1000000 + t0.tv_usec));
 #ifdef LAPTOP
     return gCamerasNumber > 0 ? gCamerasNumber - gCamerasUnavailabled : gCamerasNumber;
 #else

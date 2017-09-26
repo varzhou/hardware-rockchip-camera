@@ -94,10 +94,10 @@ CameraIspAdapter::CameraIspAdapter(int cameraId)
 
 	LOG_FUNCTION_NAME_EXIT
 	if(mCameraGL == NULL){
-        LOGE("ERROR in CameraIspAdapter: can not new mCameraGL!");
+        LOGW("mCameraGL is NULL!");
 	}
 	if(mMutliFrameDenoise == NULL){
-        LOGE("ERROR in CameraIspAdapter: can not new MutliFrameDenoise!");
+        LOGW("mMutliFrameDenoise is NULL!");
     }
 }
 CameraIspAdapter::~CameraIspAdapter()

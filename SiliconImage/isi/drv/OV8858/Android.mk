@@ -23,7 +23,7 @@ LOCAL_CFLAGS += -DLINUX  -DMIPI_USE_CAMERIC -DHAL_MOCKUP -DCAM_ENGINE_DRAW_DOM_O
 #LOCAL_STATIC_LIBRARIES := libisp_ebase libisp_oslayer libisp_common libisp_hal libisp_cameric_reg_drv libisp_cameric_drv libisp_isi
 LOCAL_SHARED_LIBRARIES := libutils libcutils libion libisp_silicomimageisp_api
 LOCAL_MODULE:= libisp_isi_drv_OV8858
-
+LOCAL_PROPRIETARY_MODULE := true
 #LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 ifneq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 5.0)))
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
