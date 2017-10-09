@@ -1710,9 +1710,9 @@ int AppMsgNotifier::processPreviewDataCb(FramInfo_s* frame){
 		
 		#if defined(RK_DRM_GRALLOC)
 		mHeap = new MemoryHeapBase(tempMemSize_crop * 1);
-        tmpPreviewMemory = mRequestMemory(mHeap->getHeapID(), tempMemSize_crop, 1, NULL);
+        tmpPreviewMemory = mRequestMemory(mHeap->getHeapID(), tempMemSize_crop, 1, mCallbackCookie);
 		#else
-        tmpPreviewMemory = mRequestMemory(-1, tempMemSize_crop, 1, NULL);
+        tmpPreviewMemory = mRequestMemory(-1, tempMemSize_crop, 1, mCallbackCookie);
 		#endif
         if (tmpPreviewMemory) {
 #if 0
@@ -1752,7 +1752,7 @@ int AppMsgNotifier::processPreviewDataCb(FramInfo_s* frame){
 			//arm_yuyv_to_nv12(frame->frame_width, frame->frame_height,(char*)(frame->vir_addr), (char*)buf_vir);
 			
 			if (strcmp(mPreviewDataFmt,android::CameraParameters::PIXEL_FORMAT_YUV420P) == 0) {
-				tmpNV12To420pMemory = mRequestMemory(-1, tempMemSize, 1, NULL);
+				tmpNV12To420pMemory = mRequestMemory(-1, tempMemSize, 1, mCallbackCookie);
 				if(tmpNV12To420pMemory){
 					cameraFormatConvert(V4L2_PIX_FMT_NV12,0,mPreviewDataFmt,
 						(char*)tmpPreviewMemory->data,(char*)tmpNV12To420pMemory->data,0,0,tempMemSize,
