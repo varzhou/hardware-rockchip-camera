@@ -746,10 +746,12 @@ v1.0x4f.0:
      1) support third party apps video function.
 v1.0x50.5
    1) compile relative files to vendor partition for treble.
+v1.0x50.6
+   1) fix some bugs, included front/rear cameras switch error,VTS,etc.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x5)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x6)
 
 
 /*  */

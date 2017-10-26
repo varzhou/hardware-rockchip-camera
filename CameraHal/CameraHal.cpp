@@ -30,27 +30,6 @@ extern rk_cam_info_t gCamInfos[CAMERAS_SUPPORT_MAX];
 extern bool g_ctsV_flag = false;
 
 namespace android {
-
-/************************
-接口实现有两种方式
-1。接口由command线程负责具体实现
-    有两种方式，一种异步，一种同步
-    1.1  同步
-        通过Semaphore
-    1.2   异步
-        无Semaphore
-2. 接口由在接口函数本身中实现，不发送给command线程。
-
-接口间的同步异步关系。
-1.1 和2 型 为 同步关系
-1.2 和2 型 为 异步关系
-1.1 和1.2型 为 同步关系 ，同步由线程队列实现。
-
-1.2型接口对于cameraservice来说是异步接口。
-1.2 和 1.2 为同步关系，对于cameraservice来说是异步。
-
-*********************/
-
 static void gsensor_orientation_cb(uint32_t orientation, uint32_t tilt, void* cookie){
     if(cookie){
         int cam_orien = 0, face = 0;
@@ -381,23 +360,6 @@ int CameraHal::startPreview()
     LOG_FUNCTION_NAME
     Message_cam msg;
 
-#ifdef ANDROID_6_X
-	if ( mSensorListener == NULL ) {   
-      // register for sensor events
-    mSensorListener = new SensorListener();
-    if (mSensorListener.get()) {
-        if (mSensorListener->initialize() == NO_ERROR) {
-            mSensorListener->setCallbacks(gsensor_orientation_cb, this);
-            mSensorListener->enableSensor(SensorListener::SENSOR_ORIENTATION);
-        } else {
-            LOGE("Error initializing SensorListener. not fatal, continuing");
-            mSensorListener.clear();
-            mSensorListener = NULL;
-        }
-    }
-	}
-#endif
- 
     Mutex::Autolock lock(mLock);
     if ((mCommandThread != NULL)) {
         msg.command = CMD_PREVIEW_START;
@@ -405,8 +367,7 @@ int CameraHal::startPreview()
 		setCamStatus(CMD_PREVIEW_START_PREPARE, 1);
         commandThreadCommandQ.put(&msg);
     }
-   // mPreviewCmdReceived = true;
-   setCamStatus(STA_PREVIEW_CMD_RECEIVED, 1);
+	setCamStatus(STA_PREVIEW_CMD_RECEIVED, 1);
     LOG_FUNCTION_NAME_EXIT
     return NO_ERROR ;
 }
@@ -430,7 +391,7 @@ void CameraHal::stopPreview()
 		if(mCameraStatus&CMD_PREVIEW_STOP_DONE)
 			LOGD("stop preview OK.");
     }
-    //mPreviewCmdReceived = false;
+
 	setCamStatus(STA_PREVIEW_CMD_RECEIVED, 0);
     LOG_FUNCTION_NAME_EXIT
 }
@@ -539,9 +500,7 @@ int CameraHal::startRecording()
     LOG_FUNCTION_NAME
     Mutex::Autolock lock(mLock);
     //get preview status
-    //if(mPreviewCmdReceived)
     if(mCameraStatus&STA_PREVIEW_CMD_RECEIVED)
-       // prevStatus = mCameraAdapter->getCurPreviewState(&recordW, &recordH);
         prevStatus = mCameraAdapter->getCurVideoSize(&recordW, &recordH);
     if(prevStatus == -1){
         err = -1;
@@ -556,7 +515,6 @@ int CameraHal::startRecording()
     
     //notify event
     mEventNotifier->startRecording(recordW,recordH);
-    //mRecordRunning = true;
 	setCamStatus(STA_RECORD_RUNNING, 1);
     LOG_FUNCTION_NAME_EXIT
     return err;
@@ -567,7 +525,6 @@ void CameraHal::stopRecording()
     LOG_FUNCTION_NAME
     Mutex::Autolock lock(mLock);
     mEventNotifier->stopRecording();
-    //mRecordRunning = false;
 	setCamStatus(STA_RECORD_RUNNING, 0);
     LOG_FUNCTION_NAME_EXIT
 }
@@ -577,7 +534,7 @@ int CameraHal::recordingEnabled()
     LOG_FUNCTION_NAME
     LOG_FUNCTION_NAME_EXIT
     Mutex::Autolock lock(mLock);
-    //return mRecordRunning;
+
 	return (mCameraStatus&STA_RECORD_RUNNING);
 }
 void CameraHal::releaseRecordingFrame(const void *opaque)
@@ -593,6 +550,14 @@ int CameraHal::takePicture()
     Message_cam msg;    
     Semaphore sem;
     Mutex::Autolock lock(mLock);
+
+	if(0==(mCameraStatus&STA_PREVIEW_CMD_RECEIVED))
+	{
+		LOGE("Not preview yet, status error!");
+		LOG_FUNCTION_NAME_EXIT
+		return INVALID_OPERATION;
+	}
+
     if ((mCommandThread != NULL)) {
         msg.command = CMD_CONTINUOS_PICTURE;
         sem.Create();
@@ -606,7 +571,6 @@ int CameraHal::takePicture()
 			LOGD("take picture command OK.");
     }
     //when back to preview status,cameraservice will call startpreview.
-    //mPreviewCmdReceived = false;
 	setCamStatus(STA_PREVIEW_CMD_RECEIVED, 0);
     LOG_FUNCTION_NAME_EXIT
     return NO_ERROR;
@@ -618,6 +582,12 @@ int CameraHal::cancelPicture()
     Message_cam msg;    
     Semaphore sem;
     Mutex::Autolock lock(mLock);
+    if(0==(mCameraStatus&CMD_CONTINUOS_PICTURE_DONE)) {
+		LOGE("Image capture is not running, status error!");
+		LOG_FUNCTION_NAME_EXIT
+		return INVALID_OPERATION;
+    }
+
     if ((mCommandThread != NULL)) {
         msg.command = CMD_PREVIEW_CAPTURE_CANCEL;
         sem.Create();
@@ -684,7 +654,6 @@ int CameraHal::setParametersUnlock(const CameraParameters &params_set)
     int err = 0;
     LOG_FUNCTION_NAME
     //get preview status
-    //if(mPreviewCmdReceived){
     if(mCameraStatus&STA_PREVIEW_CMD_RECEIVED){
         //preview has been started,some parameter can't change
 

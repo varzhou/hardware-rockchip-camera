@@ -318,8 +318,7 @@ void CameraSOCAdapter::initDefaultParameters(int camFd)
 
 	/*frame rate settings*/
 	cameraFpsInfoSet(params);
-	
-	/*zoom setting*/
+
     /*zoom setting*/
     char str[300],str_zoom_max[3],str_zoom_element[5];
     int max;
@@ -341,7 +340,7 @@ void CameraSOCAdapter::initDefaultParameters(int camFd)
 		strcat(str,str_zoom_element);
 	}
 	params.set(CameraParameters::KEY_ZOOM_RATIOS, str);
-
+	params.set(CameraParameters::KEY_SMOOTH_ZOOM_SUPPORTED, "false");
 	/*preview format setting*/
 	params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, "yuv420sp,yuv420p");
 	params.set(CameraParameters::KEY_VIDEO_FRAME_FORMAT,CameraParameters::PIXEL_FORMAT_YUV420SP);

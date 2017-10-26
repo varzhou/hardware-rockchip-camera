@@ -76,22 +76,24 @@ CameraIspAdapter::CameraIspAdapter(int cameraId)
 	m_buffers_capture = NULL;
 	m_buffers_capture = new cv_fimc_buffer();
         memset(m_buffers_capture,0x0,sizeof(cv_fimc_buffer));
-	//mCameraGL = new CameraGL();
+    #if 0
+    mCameraGL = new CameraGL();
     mGPUCommandThread = new GPUCommandThread(this);
     mGPUCommandThreadState = STA_GPUCMD_IDLE;
     mGPUCommandThread->run("GPUCommandThread",ANDROID_PRIORITY_DISPLAY);
-
+    #endif
 	mfdISO = 2;
 	mMutliFrameDenoise = NULL;
 	mfd_buffers_capture = NULL;
     mfd_buffers_capture = new cv_fimc_buffer();
     memset(mfd_buffers_capture,0x0,sizeof(cv_fimc_buffer));
     memset(&mfd,0x0,sizeof(mfdprocess));
-//    mMutliFrameDenoise = new MutliFrameDenoise();
+    #if 0
+    mMutliFrameDenoise = new MutliFrameDenoise();
     mMFDCommandThread = new MFDCommandThread(this);
     mMFDCommandThreadState = STA_GPUCMD_IDLE;
     mMFDCommandThread->run("MFDCommandThread",ANDROID_PRIORITY_DISPLAY);
-
+    #endif
 	LOG_FUNCTION_NAME_EXIT
 	if(mCameraGL == NULL){
         LOGW("mCameraGL is NULL!");
@@ -109,7 +111,7 @@ CameraIspAdapter::~CameraIspAdapter()
             mGPUCommandThread.clear();
             mGPUCommandThread = NULL;
         }
-	    //delete mCameraGL;
+	//delete mCameraGL;
         mCameraGL = NULL;
     }
 
@@ -1192,7 +1194,7 @@ void CameraIspAdapter::initDefaultParameters(int camFd)
         }else{
         	params.set(CameraParameters::KEY_ZOOM_SUPPORTED, "false");
         }
-
+		params.set(CameraParameters::KEY_SMOOTH_ZOOM_SUPPORTED, "false");
     }	
 
     //WB setting
