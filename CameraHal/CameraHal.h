@@ -748,10 +748,13 @@ v1.0x50.5
    1) compile relative files to vendor partition for treble.
 v1.0x50.6
    1) fix some bugs, included front/rear cameras switch error,VTS,etc.
+v1.0x50.7
+   1) change the way of get/put camera_memory_t according to the hidl requirement for
+      fixing the error in recording
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x6)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x7)
 
 
 /*  */

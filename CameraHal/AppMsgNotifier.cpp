@@ -68,14 +68,14 @@ AppMsgNotifier::AppMsgNotifier(CameraAdapter *camAdp)
     mRecMetaDataEn = true;
 	mIsStoreMD = false;
     memset(&mFaceDetectorFun,0,sizeof(struct face_detector_func_s));
-    int i ;
-    //request mVideoBufs
-	for (i=0; i<CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
-		mVideoBufs[i] = NULL;
-		mGrallocVideoBuf[i] = NULL;
-	}
+
+    for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
+        mVideoBufs[i] = NULL;
+        mGrallocVideoBuf[i] = NULL;
+    }
     mGrallocAllocDev = NULL;
 	mGrallocModule = NULL;
+
     //create thread 
     mCameraAppMsgThread = new CameraAppMsgThread(this);
     mCameraAppMsgThread->run("CamHalAppEventThread",ANDROID_PRIORITY_DISPLAY);
@@ -84,7 +84,7 @@ AppMsgNotifier::AppMsgNotifier(CameraAdapter *camAdp)
     mFaceDetThread = new CameraAppFaceDetThread(this);
     mFaceDetThread->run("CamHalAppFaceThread",ANDROID_PRIORITY_NORMAL);
     mCallbackThread = new CameraAppCallbackThread(this);
-    mCallbackThread->run("CamHalCallbckThread",ANDROID_PRIORITY_NORMAL);    
+    mCallbackThread->run("CamHalCallbckThread",ANDROID_PRIORITY_NORMAL);
     LOG_FUNCTION_NAME_EXIT
 }
 AppMsgNotifier::~AppMsgNotifier()
@@ -139,15 +139,11 @@ AppMsgNotifier::~AppMsgNotifier()
         mCallbackThread.clear();
     }
 
-    int i = 0;
-    //release mVideoBufs
     for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
-
-    	if(mVideoBufs[i]!= NULL){
-    		//free(mVideoBufs[i]);
-    		mVideoBufs[i]->release(mVideoBufs[i]);
-    		mVideoBufs[i] = NULL;
-    	}
+       if(mVideoBufs[i]!= NULL){
+               mVideoBufs[i]->release(mVideoBufs[i]);
+               mVideoBufs[i] = NULL;
+       }
     }
 
     //destroy buffer
@@ -164,6 +160,9 @@ AppMsgNotifier::~AppMsgNotifier()
 		release_vpu_memory_pool_allocator(pool);
 		pool = NULL;
 	}
+
+    grallocVideoBufFree();
+    grallocDevDeinit();
 
     deInitializeFaceDetec();
     LOG_FUNCTION_NAME_EXIT
@@ -661,18 +660,14 @@ int AppMsgNotifier::startRecording(int w,int h)
 	    mVideoBufferProvider->freeBuffer();
 	    mVideoBufferProvider->createBuffer(CONFIG_CAMERA_VIDEOENC_BUF_CNT, frame_size, VIDEOENCBUFFER,mVideoBufferProvider->is_cif_driver);
 
-		for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
-	    	if(!mVideoBufs[i])
-	    		mVideoBufs[i] = mRequestMemory(-1, sizeof(long), 1, mCallbackCookie);
-	    	if( (NULL == mVideoBufs[i]) || ( NULL == mVideoBufs[i]->data)) {
-	    		mVideoBufs[i] = NULL;
-	    		LOGE("%s(%d): video buffer %d create failed",__FUNCTION__,__LINE__,i);
-	    	}
-	    	if (mVideoBufs[i]) {
-	    		addr = (long*)mVideoBufs[i]->data;
-	    		*addr =  (long)mVideoBufferProvider->getBufPhyAddr(i);
-			}
-		}
+        //release mVideoBufs
+        for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
+            if(mVideoBufs[i]!= NULL){
+                mVideoBufs[i]->release(mVideoBufs[i]);
+                mVideoBufs[i] = NULL;
+            }
+            mVideoBufferProvider->setBufferStatus(i, 0);
+        }
 	}else{
 		if(!mGrallocAllocDev){ 
 			if(grallocDevInit() < 0)
@@ -681,44 +676,15 @@ int AppMsgNotifier::startRecording(int w,int h)
 			}
 			grallocVideoBufAlloc(CAMERA_DISPLAY_FORMAT_YUV420SP, w, h);
 		}
-		#if 0
-		for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
-			if(!mVideoBufs[i])
-				mVideoBufs[i] = mRequestMemory(-1, sizeof(long)*2, 1, mCallbackCookie);
-			if( (NULL == mVideoBufs[i]) || ( NULL == mVideoBufs[i]->data)) {
-				mVideoBufs[i] = NULL;
-				LOGE("%s(%d): video buffer %d create failed",__FUNCTION__,__LINE__,i);
-			}
 
-			addr = (long*)mVideoBufs[i]->data;
-			addr[0] = kMetadataBufferTypeGrallocSource;
-			addr[1] = (/*buffer_handle_t*/long)(mGrallocVideoBuf[i]->priv_hnd);
-		}
-
-		#else
-		for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
-			if(!mVideoBufs[i]) {
-				#if defined(ANDROID_7_X)||defined(ANDROID_8_X)
-				mVideoBufs[i] = mRequestMemory(-1, sizeof(VideoNativeHandleMetadata), 1, mCallbackCookie);
-				#endif
-			}
-			if( (NULL == mVideoBufs[i]) || ( NULL == mVideoBufs[i]->data)) {
-				mVideoBufs[i] = NULL;
-				LOGE("%s(%d): video buffer %d create failed",__FUNCTION__,__LINE__,i);
-			}
-
-			addr = (long*)mVideoBufs[i]->data;
-			#if defined(ANDROID_7_X)||defined(ANDROID_8_X)
-            	#if defined(TARGET_RK3368)
-					addr[0] = kMetadataBufferTypeNativeHandleSource;
-					addr[1] = (long)&mGrallocVideoBuf[i]->priv_hnd->base;
-                #else
-					addr[0] = kMetadataBufferTypeNativeHandleSource;
-					addr[1] = (long)mGrallocVideoBuf[i]->priv_hnd;
-            	#endif
-			#endif
-		}
-		#endif
+         //release mVideoBufs
+         for (int i=0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
+             if(mVideoBufs[i]!= NULL){
+                 mVideoBufs[i]->release(mVideoBufs[i]);
+                 mVideoBufs[i] = NULL;
+             }
+             mGrallocVideoBuf[i]->buf_state = 0;
+         }
 	}
    
     mRecordW = w;
@@ -764,8 +730,7 @@ int AppMsgNotifier::stopRecording()
         sem.Wait();
     }
 	mIsStoreMD = false;
-	grallocVideoBufFree();
-	grallocDevDeinit();
+
     LOG_FUNCTION_NAME_EXIT
     return 0;
 }
@@ -790,6 +755,11 @@ void AppMsgNotifier::releaseRecordingFrame(const void *opaque)
 	LOG_FUNCTION_NAME
 	if(mIsStoreMD == false){
 		for(i=0; i<mVideoBufferProvider->getBufCount(); i++) {
+            if( NULL == mVideoBufs[i]) {
+                ALOGV("%s(%d): video buffer %d is null!",__FUNCTION__,__LINE__,i);
+                continue;
+            }
+
 			if (mVideoBufs[i]->data == opaque) {
 				index = i;
 				break;
@@ -800,9 +770,25 @@ void AppMsgNotifier::releaseRecordingFrame(const void *opaque)
 			 LOG_FUNCTION_NAME_EXIT
 			return;
 		}
+
+        /* xuhf@rock-chips.com notes:
+         *      1 : close/delete the handle which is cloned by Hidl
+         *      2 : (mVideoCbLock)mutex between GetMemory/sPutMemory in hidl
+         */
+        VideoNativeHandleMetadata* md = (VideoNativeHandleMetadata*)mVideoBufs[index]->data;
+        native_handle_close(md->pHandle);
+        native_handle_delete(md->pHandle);
+        mVideoBufs[index]->release(mVideoBufs[index]);
+        mVideoBufs[index] = NULL;
+
 		mVideoBufferProvider->setBufferStatus(index, 0, 0);		
  	}else{
 		for(i=0; i<CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++) {
+            if( NULL == mVideoBufs[i]) {
+                ALOGV("%s(%d): video buffer %d is null!",__FUNCTION__,__LINE__,i);
+                continue;
+            }
+
 			if (mVideoBufs[i]->data == opaque) {
 				index = i;
 				break;
@@ -813,6 +799,17 @@ void AppMsgNotifier::releaseRecordingFrame(const void *opaque)
 			LOG_FUNCTION_NAME_EXIT
 			return;
 		}
+
+        /* xuhf@rock-chips.com notes:
+         *      1 : close/delete the handle which is cloned by Hidl
+         *      2 : (mVideoCbLock)mutex between GetMemory/sPutMemory in hidl
+         */
+        VideoNativeHandleMetadata* md = (VideoNativeHandleMetadata*)mVideoBufs[index]->data;
+        native_handle_close(md->pHandle);
+        native_handle_delete(md->pHandle);
+        mVideoBufs[index]->release(mVideoBufs[index]);
+        mVideoBufs[index] = NULL;
+
 		mGrallocVideoBuf[index]->buf_state = 0;
 	}
     LOG_FUNCTION_NAME_EXIT
@@ -1787,6 +1784,8 @@ int AppMsgNotifier::processVideoCb(FramInfo_s* frame){
     int ret = 0,buf_index = -1;
 	long buf_phy = 0,buf_vir = 0;
     int err;
+    long *addr = NULL;
+
 	if(mIsStoreMD == false){	
 	    //get one available buffer
 	    if((buf_index = mVideoBufferProvider->getOneAvailableBuffer(&buf_phy,&buf_vir)) == -1){
@@ -1796,6 +1795,33 @@ int AppMsgNotifier::processVideoCb(FramInfo_s* frame){
 	    }
 
 	    mVideoBufferProvider->setBufferStatus(buf_index, 1);
+
+        if(!mVideoBufs[buf_index]) {
+        #if defined(ANDROID_7_X)||defined(ANDROID_8_X)
+            mVideoBufs[buf_index] = mRequestMemory(-1, sizeof(VideoNativeHandleMetadata), 1, mCallbackCookie);
+        #endif
+        } else {
+            LOGE("%s: mVideoBufs[buf_index]: %p is not null!!!!!",__FUNCTION__, mVideoBufs[buf_index]);
+            ret = -1;
+            return ret;
+        }
+
+        if( (NULL == mVideoBufs[buf_index]) || ( NULL == mVideoBufs[buf_index]->data)) {
+            mVideoBufs[buf_index] = NULL;
+            LOGE("%s(%d): video buffer %d create failed",__FUNCTION__,__LINE__,buf_index);
+        }
+
+        addr = (long*)mVideoBufs[buf_index]->data;
+#if defined(ANDROID_7_X)||defined(ANDROID_8_X)
+    #if defined(TARGET_RK3368)
+        addr[0] = kMetadataBufferTypeNativeHandleSource;
+        addr[1] = (long)&mGrallocVideoBuf[buf_index]->priv_hnd->base;
+    #else
+        addr[0] = kMetadataBufferTypeNativeHandleSource;
+        addr[1] = (long)mGrallocVideoBuf[buf_index]->priv_hnd;
+    #endif
+#endif
+
 	    if((frame->frame_fmt == V4L2_PIX_FMT_NV12)){
 	        #if 0
 		buf_vir = mGrallocVideoBuf[buf_index]->vir_addr;
@@ -1844,7 +1870,34 @@ int AppMsgNotifier::processVideoCb(FramInfo_s* frame){
 			ret = -1;
 			return ret;
 		}
+
 		mGrallocVideoBuf[buf_index]->buf_state = 1;
+
+        if(!mVideoBufs[buf_index]) {
+        #if defined(ANDROID_7_X)||defined(ANDROID_8_X)
+            mVideoBufs[buf_index] = mRequestMemory(-1, sizeof(VideoNativeHandleMetadata), 1, mCallbackCookie);
+        #endif
+        } else {
+            LOGE("%s: mVideoBufs[buf_index]: %p is not null!!!!!",__FUNCTION__, mVideoBufs[buf_index]);
+            ret = -1;
+            return ret;
+        }
+
+        if( (NULL == mVideoBufs[buf_index]) || ( NULL == mVideoBufs[buf_index]->data)) {
+            mVideoBufs[buf_index] = NULL;
+            LOGE("%s(%d): video buffer %d create failed",__FUNCTION__,__LINE__,buf_index);
+        }
+
+        addr = (long*)mVideoBufs[buf_index]->data;
+#if defined(ANDROID_7_X)||defined(ANDROID_8_X)
+    #if defined(TARGET_RK3368)
+        addr[0] = kMetadataBufferTypeNativeHandleSource;
+        addr[1] = (long)&mGrallocVideoBuf[buf_index]->priv_hnd->base;
+    #else
+        addr[0] = kMetadataBufferTypeNativeHandleSource;
+        addr[1] = (long)mGrallocVideoBuf[buf_index]->priv_hnd;
+    #endif
+#endif
 
 		if((frame->frame_fmt == V4L2_PIX_FMT_NV12)){
         #if 0
@@ -2337,6 +2390,7 @@ void AppMsgNotifier::callbackThread()
 		  	{
 				LOG1("send video frame.");
 				frame = (camera_memory_t*)msg.arg2;
+
 				mDataCbTimestamp(systemTime(CLOCK_MONOTONIC), CAMERA_MSG_VIDEO_FRAME, frame, 0, mCallbackCookie);
 		  	}
 		  		break;
