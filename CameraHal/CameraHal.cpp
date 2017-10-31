@@ -534,8 +534,7 @@ int CameraHal::recordingEnabled()
     LOG_FUNCTION_NAME
     LOG_FUNCTION_NAME_EXIT
     Mutex::Autolock lock(mLock);
-
-	return (mCameraStatus&STA_RECORD_RUNNING);
+    return (mCameraStatus&STA_RECORD_RUNNING);
 }
 void CameraHal::releaseRecordingFrame(const void *opaque)
 {
@@ -551,12 +550,12 @@ int CameraHal::takePicture()
     Semaphore sem;
     Mutex::Autolock lock(mLock);
 
-	if(0==(mCameraStatus&STA_PREVIEW_CMD_RECEIVED))
-	{
-		LOGE("Not preview yet, status error!");
-		LOG_FUNCTION_NAME_EXIT
-		return INVALID_OPERATION;
-	}
+    if(!(mCameraStatus&STA_PREVIEW_CMD_RECEIVED))
+    {
+	LOGE("Not preview yet, status error!");
+	LOG_FUNCTION_NAME_EXIT
+	return INVALID_OPERATION;
+    }
 
     if ((mCommandThread != NULL)) {
         msg.command = CMD_CONTINUOS_PICTURE;
@@ -567,11 +566,14 @@ int CameraHal::takePicture()
         if(msg.arg1){
             sem.Wait();
         }
-		if(mCameraStatus&CMD_CONTINUOS_PICTURE_DONE)
-			LOGD("take picture command OK.");
+        if(mCameraStatus&CMD_CONTINUOS_PICTURE_DONE){
+	    LOGD("take picture command OK.");
+        }
     }
     //when back to preview status,cameraservice will call startpreview.
+    if (!(mCameraStatus&STA_RECORD_RUNNING)){
 	setCamStatus(STA_PREVIEW_CMD_RECEIVED, 0);
+    }
     LOG_FUNCTION_NAME_EXIT
     return NO_ERROR;
 }
@@ -582,12 +584,6 @@ int CameraHal::cancelPicture()
     Message_cam msg;    
     Semaphore sem;
     Mutex::Autolock lock(mLock);
-    if(0==(mCameraStatus&CMD_CONTINUOS_PICTURE_DONE)) {
-		LOGE("Image capture is not running, status error!");
-		LOG_FUNCTION_NAME_EXIT
-		return INVALID_OPERATION;
-    }
-
     if ((mCommandThread != NULL)) {
         msg.command = CMD_PREVIEW_CAPTURE_CANCEL;
         sem.Create();

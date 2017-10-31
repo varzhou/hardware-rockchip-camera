@@ -1011,7 +1011,7 @@ void CameraIspAdapter::initDefaultParameters(int camFd)
                 } else if (pixels > 7900000) {
                     if ((max_w != 3264)&&(max_h != 2448))
                         parameterString.append(",3264x2448");
-                    parameterString.append(",2592x1944,2048x1536,1600x1200");
+                    parameterString.append(",2592x1944,2048x1536,1632x1224,1600x1200");
                 } else if (pixels > 5000000) {
                     parameterString.append(",2048x1536,1600x1200,1024x768");
                 } else if (pixels > 3000000) {

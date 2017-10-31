@@ -751,10 +751,12 @@ v1.0x50.6
 v1.0x50.7
    1) change the way of get/put camera_memory_t according to the hidl requirement for
       fixing the error in recording
+v1.0x50.8
+   1) camera items all passed in vts r3 package.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x7)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x8)
 
 
 /*  */

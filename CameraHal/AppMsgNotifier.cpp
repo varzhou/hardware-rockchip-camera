@@ -833,10 +833,11 @@ int AppMsgNotifier::enableMsgType(int32_t msgtype)
     if(msgtype & (CAMERA_MSG_PREVIEW_FRAME)){
         Mutex::Autolock lock(mDataCbLock);
         mMsgTypeEnabled |= msgtype;
-		mRunningState |= STA_RECEIVE_PREVIEWCB_FRAME;
-		LOG1("enable msg CAMERA_MSG_PREVIEW_FRAME");
-    }else
+	mRunningState |= STA_RECEIVE_PREVIEWCB_FRAME;
+	LOG1("%s:%d:enable msg CAMERA_MSG_PREVIEW_FRAME",__FUNCTION__,__LINE__);
+    }else{
         mMsgTypeEnabled |= msgtype;
+    }
     LOG_FUNCTION_NAME_EXIT
 
     return 0;
@@ -860,17 +861,18 @@ int AppMsgNotifier::disableMsgType(int32_t msgtype)
     }else if(msgtype & (CAMERA_MSG_PREVIEW_FRAME)){
             
             {
-                LOG1("%s%d: get mDataCbLock",__FUNCTION__,__LINE__);
                 Mutex::Autolock lock(mDataCbLock);
                 mMsgTypeEnabled &= ~msgtype;
-        		mRunningState &= ~STA_RECEIVE_PREVIEWCB_FRAME;
-
-                LOG1("%s%d: release mDataCbLock",__FUNCTION__,__LINE__);
+		mRunningState &= ~STA_RECEIVE_PREVIEWCB_FRAME;
+                LOG1("%s%d: disable msg CAMERA_MSG_PREVIEW_FRAME",__FUNCTION__,__LINE__);
             }
     }else if(msgtype & (CAMERA_MSG_PREVIEW_METADATA)){
         Mutex::Autolock lock(mFaceDecLock);
         mMsgTypeEnabled &= ~msgtype;
         mRunningState &= ~STA_RECEIVE_FACEDEC_FRAME;
+    }else{//such as CAMERA_MSG_VIDEO_FRAME/CAMERA_MSG_FOCUS
+	mMsgTypeEnabled &= ~msgtype;
+        LOG1("%s%d: disabled msgtype:0x%x",__FUNCTION__,__LINE__,msgtype);
     }
     LOG_FUNCTION_NAME_EXIT
     return 0;
