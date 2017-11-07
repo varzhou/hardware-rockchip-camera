@@ -191,10 +191,6 @@ status_t CameraAdapter::startPreview(int preview_w,int preview_h,int w, int h, i
             break;            
     }
 
-    //for test capture
-    if(is_capture){
-        buf_count = 1;
-    }
     if(mPreviewBufProvider->createBuffer(buf_count,frame_size,PREVIEWBUFFER,mPreviewBufProvider->is_cif_driver) < 0)
     {
         LOGE("%s%d:create preview buffer failed",__FUNCTION__,__LINE__);

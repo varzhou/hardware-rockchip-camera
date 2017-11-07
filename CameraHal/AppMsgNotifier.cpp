@@ -1397,7 +1397,7 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
 		pictureSize = (pictureSize & 0xfffff000) + 0x1000;
 	}
 
-    jpegbuf_size = 0x1400000; //pictureSize;
+    jpegbuf_size = pictureSize;
     #if (JPEG_BUFFER_DYNAMIC == 1)
     //create raw & jpeg buffer
     ret = mRawBufferProvider->createBuffer(1, pictureSize, RAWBUFFER,mRawBufferProvider->is_cif_driver);

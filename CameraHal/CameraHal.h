@@ -753,10 +753,13 @@ v1.0x50.7
       fixing the error in recording
 v1.0x50.8
    1) camera items all passed in vts r3 package.
+v1.0x50.9
+   1) set jpegbuf_size equals to pictureSize.
+   1) remove one buffer limit when take picture in CameraAdapter.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x8)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x9)
 
 
 /*  */
