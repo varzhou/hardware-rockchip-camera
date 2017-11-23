@@ -21,6 +21,7 @@ enum cam_mem_flag_e {
 	CAM_MEM_FLAG_HW_READ	= 0x2,
 	CAM_MEM_FLAG_SW_WRITE	= 0x4,
 	CAM_MEM_FLAG_SW_READ	= 0x8,
+        CAM_MEM_FLAG_PHY_CONT   = 0x10,
 };
 
 typedef struct cam_mem_handle_s {

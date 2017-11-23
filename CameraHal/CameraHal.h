@@ -756,10 +756,12 @@ v1.0x50.8
 v1.0x50.9
    1) set jpegbuf_size equals to pictureSize.
    1) remove one buffer limit when take picture in CameraAdapter.
+v1.0x50.0xa
+   1) cameraAdapter uses drm allocate CMA buffers.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0x9)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xa)
 
 
 /*  */
@@ -946,7 +948,6 @@ protected:
     MemManagerBase* mCamBuffer;
 };
 
-//preview buffer ¹ÜÀí
 class PreviewBufferProvider:public BufferProvider
 {
 public:
@@ -975,7 +976,6 @@ public:
 class DisplayAdapter;
 class AppMsgNotifier;
 typedef struct cameraparam_info cameraparam_info_s;
-//diplay buffer ÓÉdisplay adapterÀà×ÔÐÐ¹ÜÀí¡£
 
 /* mjpeg decoder interface in libvpu.*/
 typedef void* (*getMjpegDecoderFun)(void);
@@ -999,7 +999,7 @@ typedef struct mjpeg_interface {
 } mjpeg_interface_t;
 
 /*************************
-CameraAdapter ¸ºÔðÓëÇý¶¯Í¨ÐÅ£¬ÇÒÎªÖ¡Êý¾ÝµÄÌá¹©Õß£¬Îªdisplay¼°msgcallbackÌá¹©Êý¾Ý¡£
+CameraAdapter 
 ***************************/
 class CameraAdapter:public FrameProvider
 {
@@ -1063,7 +1063,6 @@ protected:
 private:
     class CameraPreviewThread :public Thread
     {
-        //deque µ½Ö¡ºó¸ù¾ÝÐèÒª·Ö·¢¸øDisplayAdapterÀà¼°EventNotifierÀà¡£
         CameraAdapter* mPreivewCameraAdapter;
     public:
         CameraPreviewThread(CameraAdapter* adapter)
@@ -1261,7 +1260,7 @@ private:
 
 };
 /*************************
-DisplayAdapter ÎªÖ¡Êý¾ÝÏû·ÑÕß£¬´ÓCameraAdapter½ÓÊÕÖ¡Êý¾Ý²¢ÏÔÊ¾
+DisplayAdapter
 ***************************/
 class DisplayAdapter//:public CameraHal_Tracer
 {
@@ -1437,7 +1436,7 @@ struct face_detector_func_s{
 };
 
 /**************************************
-EventNotifier   ¸ºÔð´¦Àímsg µÄ»Øµ÷£¬ÅÄÕÕ»òÕßÂ¼Ó°Ê±Ò²×÷ÎªÖ¡Êý¾ÝµÄÏû·ÑÕß¡£
+EventNotifier
 **************************************/
 class AppMsgNotifier
 {
@@ -1486,8 +1485,6 @@ private:
         int stride;
     } rk_videobuf_info_t;
 
-	
-    //´¦Àípreview data cb¼°video enc
     class CameraAppMsgThread :public Thread
     {
     public:
@@ -1510,7 +1507,6 @@ private:
 		}
     };
 
-    //´¦Àí face detection
     class CameraAppFaceDetThread :public Thread
     {
     public:
@@ -1532,7 +1528,6 @@ private:
 		}
     };
 
-    //´¦Àípicture
 	class EncProcessThread : public Thread {
 	public:
 	    enum ENC_THREAD_CMD{
@@ -1739,8 +1734,8 @@ private:
 
 
 /***********************
-CameraHalÀà¸ºÔðÓëcameraserviceÁªÏµ£¬ÊµÏÖ
-cameraserviceÒªÇóÊµÏÖµÄ½Ó¿Ú¡£´ËÀàÖ»¸ºÔð¹«¹²×ÊÔ´µÄÉêÇë£¬ÒÔ¼°ÈÎÎñµÄ·Ö·¢¡£
+CameraHal
+cameraservice
 ***********************/
 class CameraHal
 {

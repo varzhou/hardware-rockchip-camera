@@ -549,8 +549,11 @@ int CameraAdapter::cameraStart()
             }
 
             if (buffer.memory == V4L2_MEMORY_OVERLAY) {  
-
+                #if defined(RK_DRM_GRALLOC)
+                buffer.m.offset = mPreviewBufProvider->getBufShareFd(i);
+                #else
                 buffer.m.offset = mPreviewBufProvider->getBufPhyAddr(i);
+                #endif
                 mCamDriverV4l2Buffer[i] = (char*)mPreviewBufProvider->getBufVirAddr(i);
             } else if (buffer.memory == V4L2_MEMORY_MMAP) {
                 mCamDriverV4l2Buffer[i] = (char*)mmap(0 /* start anywhere */ ,
@@ -682,10 +685,15 @@ int CameraAdapter::getFrame(FramInfo_s** tmpFrame){
     mPreviewFrameInfos[cfilledbuffer1.index].frame_width = mCamDrvWidth;
     mPreviewFrameInfos[cfilledbuffer1.index].frame_index = cfilledbuffer1.index;
     if(mCamDriverV4l2MemType == V4L2_MEMORY_OVERLAY){
+    #if defined(RK_DRM_GRALLOC)
+    	mPreviewFrameInfos[cfilledbuffer1.index].phy_addr = mPreviewBufProvider->getBufShareFd(cfilledbuffer1.index);
+    #else
 		if(cif_driver_iommu){
 			mPreviewFrameInfos[cfilledbuffer1.index].phy_addr = mPreviewBufProvider->getBufShareFd(cfilledbuffer1.index);
-		}else
+		}else {
         	mPreviewFrameInfos[cfilledbuffer1.index].phy_addr = mPreviewBufProvider->getBufPhyAddr(cfilledbuffer1.index);
+        }
+    #endif
 	}else
         mPreviewFrameInfos[cfilledbuffer1.index].phy_addr = 0;
     mPreviewFrameInfos[cfilledbuffer1.index].vir_addr = (unsigned long)mCamDriverV4l2Buffer[cfilledbuffer1.index];
@@ -722,7 +730,11 @@ int CameraAdapter::adapterReturnFrame(long index,int cmd){
         vb.memory = mCamDriverV4l2MemType;
         vb.index = index;                        
         vb.reserved = 0;
+        #if defined(RK_DRM_GRALLOC)
+        vb.m.offset = mPreviewBufProvider->getBufShareFd(index);
+        #else
         vb.m.offset = mPreviewBufProvider->getBufPhyAddr(index); 
+        #endif
         
         mPreviewBufProvider->setBufferStatus(index,1,PreviewBufferProvider::CMD_PREVIEWBUF_WRITING); 
         if (ioctl(mCamFd, VIDIOC_QBUF, &vb) < 0) {

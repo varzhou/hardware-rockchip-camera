@@ -319,6 +319,8 @@ static cam_mem_handle_t*  cam_mem_gralloc_ops_init(int iommu_enabled,unsigned in
 		handle->flag |= GRALLOC_USAGE_SW_WRITE_OFTEN;
 	if (mem_flag & CAM_MEM_FLAG_SW_READ)
 		handle->flag |= GRALLOC_USAGE_SW_READ_OFTEN;
+	if (mem_flag & CAM_MEM_FLAG_PHY_CONT)
+		handle->flag |= GRALLOC_USAGE_TO_USE_PHY_CONT;
 
     return handle;
 init_error:
@@ -359,7 +361,7 @@ static cam_mem_info_t* cam_mem_gralloc_ops_alloc(cam_mem_handle_t* handle,size_t
 	if (mgraphicbuf->initCheck()) {
 		TRACE_E("GraphicBuffer error : %s\n",strerror(errno));
 		goto error_alloc;
-	} 
+	}
 
 	ret = mgraphicbuf->lock(grallocFlags, (void**)&mem_addr);
 	if (ret) {
@@ -367,13 +369,13 @@ static cam_mem_info_t* cam_mem_gralloc_ops_alloc(cam_mem_handle_t* handle,size_t
 		goto lock_error;
 	}
 	mgraphicbuf->unlock();
-	
+
 #if defined(RK_DRM_GRALLOC)
 	mGrallocModule->perform(
 		mGrallocModule, 
 		GRALLOC_MODULE_PERFORM_GET_HADNLE_PRIME_FD, 
 		mgraphicbuf->handle, 
-		&mem->fd); 
+		&mem->fd);
 #else
 	mem->fd = mgraphicbuf->handle->share_fd;
 #endif
