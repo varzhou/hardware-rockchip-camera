@@ -924,7 +924,7 @@ GrallocDrmMemManager::GrallocDrmMemManager(bool iommuEnabled)
 	mOps = get_cam_ops(CAM_MEM_TYPE_GRALLOC);
 	
 	if (mOps){
-		#if defined(TARGET_RK312x) || defined(TARGET_RK3368)
+		#if defined(TARGET_RK312x)
 		mHandle = mOps->init(0,
 					CAM_MEM_FLAG_HW_WRITE | CAM_MEM_FLAG_HW_READ |
 					CAM_MEM_FLAG_SW_WRITE | CAM_MEM_FLAG_SW_READ | CAM_MEM_FLAG_PHY_CONT,

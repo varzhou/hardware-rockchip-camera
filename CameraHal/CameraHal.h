@@ -758,10 +758,12 @@ v1.0x50.9
    1) remove one buffer limit when take picture in CameraAdapter.
 v1.0x50.0xa
    1) cameraAdapter uses drm allocate CMA buffers.
+v1.0x50.0xb
+   1) 33688 gralloc isn't support GRALLOC_USAGE_TO_USE_PHY_CONT, so correct last commit.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xa)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xb)
 
 
 /*  */
