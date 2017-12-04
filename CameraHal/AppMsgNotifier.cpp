@@ -605,9 +605,8 @@ void AppMsgNotifier::grallocVideoBufFree()
 	int ret,i;
 
 	LOG_FUNCTION_NAME	
-	if (mGrallocAllocDev == NULL)
-		LOGE("%s: No gralloc alloc device, cannot free buffer", __func__);
-	else {
+	if (mGrallocAllocDev)
+	{
 		for (i = 0; i < CONFIG_CAMERA_VIDEOENC_BUF_CNT; i++){
 			if(mGrallocVideoBuf[i] && mGrallocVideoBuf[i]->buffer_hnd){
 				mGrallocModule->unlock(mGrallocModule, (buffer_handle_t)(mGrallocVideoBuf[i]->priv_hnd));
@@ -904,8 +903,9 @@ bool AppMsgNotifier::isNeedSendToDataCB()
     Mutex::Autolock lock(mDataCbLock);
     if(mRunningState & STA_RECEIVE_PREVIEWCB_FRAME){
         return ((mRecPrevCbDataEn) && (mMsgTypeEnabled & CAMERA_MSG_PREVIEW_FRAME) &&(mDataCb));
-    }else
+    }else{
         return false;
+    }
 }
 
 void AppMsgNotifier::notifyNewPicFrame(FramInfo_s* frame)
@@ -2043,19 +2043,22 @@ int AppMsgNotifier::processFaceDetect(FramInfo_s* frame, long frame_used_flag)
 
 void AppMsgNotifier::stopReceiveFrame()
 {
+	LOG_FUNCTION_NAME
     //pause event and enc thread
     flushPicture();
     pausePreviewCBFrameProcess();
     stopFaceDection();
     //disable messeage receive
+    LOG_FUNCTION_NAME_EXIT
 }
 
 void AppMsgNotifier::startReceiveFrame()
 {
     Mutex::Autolock lock(mDataCbLock); 
-
+	LOG_FUNCTION_NAME
     mRecPrevCbDataEn = true;
 	mRunningState |= STA_RECEIVE_PREVIEWCB_FRAME;
+	LOG_FUNCTION_NAME_EXIT
 }
 void AppMsgNotifier::dump()
 {

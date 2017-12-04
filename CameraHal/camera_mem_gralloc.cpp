@@ -311,17 +311,6 @@ static cam_mem_handle_t*  cam_mem_gralloc_ops_init(int iommu_enabled,unsigned in
     handle->phy_continuos = phy_continuos;
     handle->priv = (void*)gm;
 
-	if (mem_flag & CAM_MEM_FLAG_HW_WRITE)
-		handle->flag |= GRALLOC_USAGE_HW_CAMERA_WRITE;
-	if (mem_flag & CAM_MEM_FLAG_HW_READ)
-		handle->flag |= GRALLOC_USAGE_HW_CAMERA_READ;
-	if (mem_flag & CAM_MEM_FLAG_SW_WRITE)
-		handle->flag |= GRALLOC_USAGE_SW_WRITE_OFTEN;
-	if (mem_flag & CAM_MEM_FLAG_SW_READ)
-		handle->flag |= GRALLOC_USAGE_SW_READ_OFTEN;
-	if (mem_flag & CAM_MEM_FLAG_PHY_CONT)
-		handle->flag |= GRALLOC_USAGE_TO_USE_PHY_CONT;
-
     return handle;
 init_error:
     if (!handle)

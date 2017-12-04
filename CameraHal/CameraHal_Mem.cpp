@@ -924,17 +924,7 @@ GrallocDrmMemManager::GrallocDrmMemManager(bool iommuEnabled)
 	mOps = get_cam_ops(CAM_MEM_TYPE_GRALLOC);
 	
 	if (mOps){
-		#if defined(TARGET_RK312x)
-		mHandle = mOps->init(0,
-					CAM_MEM_FLAG_HW_WRITE | CAM_MEM_FLAG_HW_READ |
-					CAM_MEM_FLAG_SW_WRITE | CAM_MEM_FLAG_SW_READ | CAM_MEM_FLAG_PHY_CONT,
-					0);
-		#else
-		mHandle = mOps->init(iommuEnabled ? 1:0,
-					CAM_MEM_FLAG_HW_WRITE | CAM_MEM_FLAG_HW_READ |
-					CAM_MEM_FLAG_SW_WRITE | CAM_MEM_FLAG_SW_READ,
-					0);
-		#endif
+		mHandle = mOps->init(iommuEnabled ? 1:0,0,0);
 	}
 }
 
@@ -1023,6 +1013,13 @@ int GrallocDrmMemManager::createGrallocDrmBuffer(struct bufferinfo_s* grallocbuf
         default:
             return -1;
     }
+	if(grallocbuf->mIsForceIommuBuf) {
+		mHandle->flag = GRALLOC_USAGE_HW_CAMERA_WRITE | GRALLOC_USAGE_HW_CAMERA_READ |
+						GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN;
+	} else {
+		mHandle->flag = GRALLOC_USAGE_HW_CAMERA_WRITE | GRALLOC_USAGE_HW_CAMERA_READ |
+						GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_TO_USE_PHY_CONT;
+	}
 
     for(i = 0;i < numBufs;i++){
 		*tmpalloc = mOps->alloc(mHandle,grallocbuf->mPerBuffersize);
