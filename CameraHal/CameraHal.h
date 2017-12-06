@@ -762,10 +762,13 @@ v1.0x50.0xb
    1) 33688 gralloc isn't support GRALLOC_USAGE_TO_USE_PHY_CONT, so correct last commit.
 v1.0x50.0xc
    1) gralloc usage isn't init in GrallocDrmMemManager construct function.
+v1.0x50.0xd
+   1) RGA1.0 do not support crop from w*h to w/2*h/2,add judgement.
+   2) change RGA1.0 RGA_VIRTUAL_W from 4096 to 2048.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xc)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xd)
 
 
 /*  */
@@ -856,7 +859,7 @@ v1.0x50.0xc
 #else
 #define RGA_VER (1.0)
 #define RGA_ACTIVE_W (2048)
-#define RGA_VIRTUAL_W (4096)
+#define RGA_VIRTUAL_W (2048)
 #define RGA_ACTIVE_H (2048)
 #define RGA_VIRTUAL_H (2048)
 
