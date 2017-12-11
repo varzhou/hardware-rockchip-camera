@@ -97,7 +97,7 @@ CameraHal::CameraHal(int cameraId)
 
     if (!strcmp(value, "fakecamera")) {
         LOGD("it is a fake camera!");
-        mCameraAdapter = new CameraFakeAdapter(cameraId);
+       // mCameraAdapter = new CameraFakeAdapter(cameraId);
     } else {
 	    if((strcmp(gCamInfos[cameraId].driver,"uvcvideo") == 0)) {
 	        LOGD("it is a uvc camera!");

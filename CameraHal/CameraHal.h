@@ -46,7 +46,7 @@
 #include <ui/GraphicBufferAllocator.h>
 #include <ui/GraphicBufferMapper.h>
 #include <ui/GraphicBuffer.h>
-#include <system/window.h>
+//#include <system/window.h>
 #include <hardware/hardware.h>
 #include <hardware/camera.h>
 #include <camera/CameraParameters.h>
