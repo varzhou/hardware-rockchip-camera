@@ -765,10 +765,13 @@ v1.0x50.0xc
 v1.0x50.0xd
    1) RGA1.0 do not support crop from w*h to w/2*h/2,add judgement.
    2) change RGA1.0 RGA_VIRTUAL_W from 4096 to 2048.
+v1.0x50.0xe
+   1) RGA1.0 do not support crop from w to <=w/2 or from h to <=h/2,modify the judgement.
+   2) commit v1.0x50.0xc causes 3368 android8.0 camera open failed,fix up.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xd)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xe)
 
 
 /*  */

@@ -1403,11 +1403,13 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
     ret = mRawBufferProvider->createBuffer(1, pictureSize, RAWBUFFER,mRawBufferProvider->is_cif_driver);
     if(ret < 0){
         LOGE("mRawBufferProvider->createBuffer FAILED");
+	err = -1;
         goto 	captureEncProcessPicture_exit;
     }
     ret = mJpegBufferProvider->createBuffer(1, jpegbuf_size,JPEGBUFFER,mJpegBufferProvider->is_cif_driver);
     if(ret < 0){
         LOGE("mJpegBufferProvider->createBuffer FAILED");
+	err = -1;
         goto 	captureEncProcessPicture_exit;
     }
     #endif
@@ -1415,6 +1417,7 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
     bufindex=mRawBufferProvider->getOneAvailableBuffer(&rawbuf_phy, &rawbuf_vir);
     if(bufindex < 0){
         LOGE("mRawBufferProvider->getOneAvailableBuffer FAILED");
+	err = -1;
         goto 	captureEncProcessPicture_exit;
     }
 
@@ -1426,6 +1429,7 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
     bufindex=mJpegBufferProvider->getOneAvailableBuffer(&jpegbuf_phy, &jpegbuf_vir);
     if(bufindex < 0){
         LOGE("mJpegBufferProvider->getOneAvailableBuffer FAILED");
+	err = -1;
         goto 	captureEncProcessPicture_exit;
     }
 
