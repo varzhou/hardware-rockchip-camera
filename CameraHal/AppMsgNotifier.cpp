@@ -1352,28 +1352,27 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
 	memset(&JpegOutInfo,0x00,sizeof(JpegEncOutInfo));
 	memset(&exifInfo,0x00,sizeof(exifInfo));
 	quality = mPictureInfo.quality;	
-	/*only for passing cts yzm*/
-	property_get("sys.cts_camera.status",prop_value, "false");
-	if(!strcmp(prop_value,"true")){
-		thumbquality = mPictureInfo.thumbquality;
-		thumbwidth	= mPictureInfo.thumbwidth;
-		thumbheight = mPictureInfo.thumbheight;
-	}else{
-		thumbquality = 70;
-		thumbwidth	= 160;
-		thumbheight = 128;		
-	}
+	thumbquality = mPictureInfo.thumbquality;
+	thumbwidth	= mPictureInfo.thumbwidth;
+	thumbheight = mPictureInfo.thumbheight;
 	rotation = mPictureInfo.rotation;
-    
 	jpeg_w = mPictureInfo.w;
     jpeg_h = mPictureInfo.h;
 	/*get gps information*/
+	#if 0
+	altitude = mPictureInfo.altitude = 21;
+	latitude = mPictureInfo.latitude = 37.736071;
+	longtitude = mPictureInfo.longtitude = -122.441983;
+	timestamp = mPictureInfo.timestamp = 1199145600;
+	strcpy(mPictureInfo.getMethod,"GPS NETWORK HYBRID ARE ALL FINE.");
+	getMethod = mPictureInfo.getMethod;//getMethod : len <= 32
+	#else
 	altitude = mPictureInfo.altitude;
 	latitude = mPictureInfo.latitude;
 	longtitude = mPictureInfo.longtitude;
-	timestamp = mPictureInfo.timestamp;    
+	timestamp = mPictureInfo.timestamp;
 	getMethod = mPictureInfo.getMethod;//getMethod : len <= 32
-	
+	#endif
 	picfmt = mPictureInfo.fmt;
 
     if(frame->res)
@@ -1467,23 +1466,15 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
 			#if defined(TARGET_RK3188)
 				rk_camera_zoom_ipp(V4L2_PIX_FMT_NV12, (int)(frame->phy_addr), frame->frame_width, frame->frame_height,(int)rawbuf_phy,frame->zoom_value);
 			#else
-                if(g_ctsV_flag)
-                {
-                  mIs_Verifier = true;
-                }
-                else
-                {
-                  mIs_Verifier = false;
-                }
 				#if defined(RK_DRM_GRALLOC)
 				if (frame->vir_addr_valid) {
 					err = rga_nv12_scale_crop(frame->frame_width, frame->frame_height, 
 			                            (char*)(frame->vir_addr), (short int *)rawbuf_vir, 
-			                            jpeg_w,jpeg_h,frame->zoom_value,false,!mIs_Verifier,false,0,frame->vir_addr_valid);
+			                            jpeg_w,jpeg_h,frame->zoom_value,false,true,false,0,frame->vir_addr_valid);
 		        } else {
 					err = rga_nv12_scale_crop(frame->frame_width, frame->frame_height, 
 			                            (char*)(frame->phy_addr), (short int *)rawbuf_phy, 
-			                            jpeg_w,jpeg_h,frame->zoom_value,false,!mIs_Verifier,false,0,frame->vir_addr_valid);
+			                            jpeg_w,jpeg_h,frame->zoom_value,false,true,false,0,frame->vir_addr_valid);
 			    }
 				if (err < 0)
 					arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, V4L2_PIX_FMT_NV12, (char*)(frame->vir_addr),
@@ -1492,7 +1483,7 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
 				#else
 				rga_nv12_scale_crop(frame->frame_width, frame->frame_height, 
 		                            (char*)(frame->vir_addr), (short int *)rawbuf_vir, 
-		                            jpeg_w,jpeg_h,frame->zoom_value,false,!mIs_Verifier,false);
+		                            jpeg_w,jpeg_h,frame->zoom_value,false,true,false);
 				#endif
 			#endif
         #endif
@@ -1500,23 +1491,6 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
         input_vir_addr = output_vir_addr;
         mRawBufferProvider->flushBuffer(0);
     }
-	/*if ((frame->frame_fmt != picfmt) || (frame->frame_width!= jpeg_w) || (frame->frame_height != jpeg_h) 
-    	|| (frame->zoom_value != 100)) {
-
-        output_phy_addr = rawbuf_phy;
-        output_vir_addr = rawbuf_vir;
-        //do rotation,scale,zoom,fmt convert.   
-		if(cameraFormatConvert(frame->frame_fmt, picfmt, NULL,
-        (char*)input_vir_addr,(char*)output_vir_addr,0,0,jpeg_w*jpeg_h*2,
-        jpeg_w, jpeg_h,jpeg_w,jpeg_w, jpeg_h,jpeg_w,false)==0)
-      // arm_yuyv_to_nv12(frame->frame_width, frame->frame_height,(char*)input_vir_addr, (char*)output_vir_addr);
-        {
-            //change input addr
-			input_phy_addr = output_phy_addr;
-			input_vir_addr = output_vir_addr;
-			mRawBufferProvider->flushBuffer(0);
-		}
-	}*/
 	
 	if((mMsgTypeEnabled & (CAMERA_MSG_RAW_IMAGE))|| (mMsgTypeEnabled & CAMERA_MSG_RAW_IMAGE_NOTIFY)) {
 		copyAndSendRawImage((void*)input_vir_addr, pictureSize);
@@ -1724,7 +1698,7 @@ int AppMsgNotifier::processPreviewDataCb(FramInfo_s* frame){
 			arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, V4L2_PIX_FMT_NV21, (char*)(frame->vir_addr),
 					(char*)tmpPreviewMemory->data,frame->frame_width, frame->frame_height,mPreviewDataW, mPreviewDataH,mDataCbFrontMirror,frame->zoom_value);
 #else
-        if(g_ctsV_flag &&((mPreviewDataW==176&&mPreviewDataH==144)||(mPreviewDataW==352&&mPreviewDataH==288))) {
+        if(0/*((mPreviewDataW==176&&mPreviewDataH==144)||(mPreviewDataW==352&&mPreviewDataH==288))*/) {
             arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, pixFmt, (char*)(frame->vir_addr),
                                         (char*)tmpPreviewMemory->data,frame->frame_width, frame->frame_height,
                                         mPreviewDataW, mPreviewDataH,false,frame->zoom_value);
@@ -1835,7 +1809,7 @@ int AppMsgNotifier::processVideoCb(FramInfo_s* frame){
 	            (char*)buf_vir,frame->frame_width, frame->frame_height,
 	            mRecordW, mRecordH,false,frame->zoom_value);
 	        #else
-	        if(g_ctsV_flag &&((mRecordW==176&&mRecordH==144)||(mRecordW==352&&mRecordH==288))) {
+	        if(0/*(mRecordW==176&&mRecordH==144)||(mRecordW==352&&mRecordH==288)*/) {
 	            arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, V4L2_PIX_FMT_NV12, (char*)(frame->vir_addr),
 	                                        (char*)buf_vir,frame->frame_width, frame->frame_height,
 	                                        mRecordW, mRecordH,false,frame->zoom_value);
@@ -2323,8 +2297,9 @@ void AppMsgNotifier::callbackThread()
 			{
 				LOG2("datacb: send preview frame (CAMERA_MSG_PREVIEW_FRAME).");
 				frame = (camera_memory_t*)msg.arg2;
-				if (mMsgTypeEnabled & CAMERA_MSG_PREVIEW_FRAME)			
+				if (mMsgTypeEnabled & CAMERA_MSG_PREVIEW_FRAME)	{
 					mDataCb(CAMERA_MSG_PREVIEW_FRAME, frame, 0,NULL,mCallbackCookie);  
+				}
 				//release buffer
 				frame->release(frame);
 			}

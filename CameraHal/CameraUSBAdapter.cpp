@@ -562,21 +562,19 @@ void CameraUSBAdapter::initDefaultParameters(int camFd)
          params.set(CameraParameters::KEY_VIDEO_SIZE,"");
          params.set(CameraParameters::KEY_SUPPORTED_VIDEO_SIZES,"");
     }
-    LOGD("mIsCtsTest:%d Support video sizes:%s", mIsCtsTest, params.get(CameraParameters::KEY_SUPPORTED_VIDEO_SIZES));
+    LOGD("Support video sizes:%s",params.get(CameraParameters::KEY_SUPPORTED_VIDEO_SIZES));
 #endif
     params.set(KEY_CONTINUOUS_PIC_NUM,"1");  
 
-    if (mIsCtsTest) {
-        //color effect
-        //for passing cts
-        params.set(CameraParameters::KEY_SUPPORTED_EFFECTS, "none,mono,sepia");
-        params.set(CameraParameters::KEY_EFFECT, "none");
-        //for video test
-        params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "30000,30000");
-        params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(15000,15000),(30000,30000)");//(30000,30000) for passing cts.
-        params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "10,15,20,30"); 
-        params.setPreviewFrameRate(30);
-    }
+    //color effect
+    //for passing cts
+    params.set(CameraParameters::KEY_SUPPORTED_EFFECTS, "none,mono,sepia");
+    params.set(CameraParameters::KEY_EFFECT, "none");
+    //for video test
+    params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "30000,30000");
+    params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(15000,15000),(30000,30000)");//(30000,30000) for passing cts.
+    params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "10,15,20,30"); 
+    params.setPreviewFrameRate(30);
 
     LOGD ("Support Preview format: %s .. %s",params.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS),
         params.get(CameraParameters::KEY_PREVIEW_FORMAT));

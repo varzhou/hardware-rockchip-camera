@@ -116,7 +116,6 @@ bool CameraAdapter::isNeedToRestartPreview()
     int preferPreviewW=0,preferPreviewH=0;
 	int previewFrame2AppW=0,previewFrame2AppH=0;
 	bool ret = false;
-    char prop_value[PROPERTY_VALUE_MAX];
 
     mParameters.getPreviewSize(&previewFrame2AppW, &previewFrame2AppH);
     //case 1: when setVideoSize is suported
@@ -145,7 +144,7 @@ bool CameraAdapter::isNeedToRestartPreview()
     LOGD("mCamPreviewW (%dx%d)",mCamPreviewW,mCamPreviewH);
     LOGD("video width (%dx%d)",mVideoWidth,mVideoHeight);
 
-    if(mPreviewRunning && ((preferPreviewW != mCamPreviewW) || (preferPreviewH != mCamPreviewH)) && (mVideoWidth != -1) && (!mIsCtsTest))
+    if(mPreviewRunning && ((preferPreviewW != mCamPreviewW) || (preferPreviewH != mCamPreviewH)) && (mVideoWidth != -1))
 	{
       ret = true;
 	}
@@ -670,7 +669,7 @@ int CameraAdapter::getFrame(FramInfo_s** tmpFrame){
     }
     LOG2("%s(%d): deque a  frame %d success",__FUNCTION__,__LINE__,cfilledbuffer1.index);
 
-    if((mPreviewFrameIndex++ < FILTER_FRAME_NUMBER) && (!mIsCtsTest))
+    if((mPreviewFrameIndex++ < FILTER_FRAME_NUMBER))
     {
         LOG2("%s:filter frame %d",__FUNCTION__,mPreviewFrameIndex);
     	mCamDriverStreamLock.lock();
@@ -823,8 +822,6 @@ void CameraAdapter::previewThread(){
                       mRefEventNotifier->notifyNewVideoFrame(tmpFrame);
                 }
                 if(buffer_log & (PreviewBufferProvider::CMD_PREVIEWBUF_DATACB)){
-                      if(mIsCtsTest)
-                            usleep(10000);  //for passing cts test "testPreviewPictureSizesCombination"
                       tmpFrame->used_flag = PreviewBufferProvider::CMD_PREVIEWBUF_DATACB;
                       mRefEventNotifier->notifyNewPreviewCbFrame(tmpFrame);
                 }

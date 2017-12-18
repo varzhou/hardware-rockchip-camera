@@ -234,6 +234,8 @@ protected:
     int mVideoEncFrameLeak;
     int mPreviewCBFrameLeak;
     int mPicEncFrameLeak;
+    int mFpsRangeMin;
+    int mFpsRangeMax;
 private:
     
     awbStatus curAwbStatus;

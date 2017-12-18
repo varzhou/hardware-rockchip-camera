@@ -27,7 +27,6 @@
 #endif
 
 extern rk_cam_info_t gCamInfos[CAMERAS_SUPPORT_MAX];
-extern bool g_ctsV_flag = false;
 
 namespace android {
 static void gsensor_orientation_cb(uint32_t orientation, uint32_t tilt, void* cookie){
@@ -130,6 +129,7 @@ CameraHal::CameraHal(int cameraId)
     //initialize    
     {
         char *call_process = getCallingProcess();
+        #if 0
 	    if(strstr(call_process,"com.android.cts.verifier")) {
             mCameraAdapter->setImageAllFov(true);
             g_ctsV_flag = true;
@@ -139,17 +139,11 @@ CameraHal::CameraHal(int cameraId)
 			property_set("sys.cts_camera.status","true");
 		}else {
             mCameraAdapter->setImageAllFov(false);
-            g_ctsV_flag = false;
-            property_set("sys.cts_camera.status","false");
+            //below code is ugly,but I have no idea how to do better...
+            g_ctsV_flag = true;
+            property_set("sys.cts_camera.status","true");
 	    }
-    }
-
-    char prop_value[PROPERTY_VALUE_MAX];
-    property_get("sys.cts_camera.status",prop_value, "false");
-    if(!strcmp(prop_value,"true")){
-        mCameraAdapter->setCtsTestFlag(true);
-    }else{
-        mCameraAdapter->setCtsTestFlag(false);
+	    #endif
     }
 
     mDisplayAdapter = new DisplayAdapter();
@@ -876,10 +870,9 @@ get_command:
                 int prefered_w = app_previw_w, prefered_h = app_preview_h;
                 selectPreferedDrvSize(&prefered_w,&prefered_h,false);
                 
-                if(prevStatus){                    
+                if(prevStatus){     
                     //get preview size
-                    property_get("sys.cts_camera.status",prop_value, "false");
-                    if(strcmp(prop_value,"true") && ((prefered_w != drv_w) || (prefered_h != drv_h))){
+                    if(((prefered_w != drv_w) || (prefered_h != drv_h))){
                         if (mDisplayAdapter->getDisplayStatus() == DisplayAdapter::STA_DISPLAY_RUNNING) {
                             err=mDisplayAdapter->pauseDisplay();
         					if(err != -1)
@@ -902,6 +895,11 @@ get_command:
                             mEventNotifier->startFaceDection(drv_w,drv_h, -1);
 						if(err != 0)
 							goto PREVIEW_START_OUT;
+                    }else {
+                        if(mEventNotifier->msgEnabled(CAMERA_MSG_PREVIEW_FRAME))
+                            mEventNotifier->startReceiveFrame();
+                        if(mEventNotifier->msgEnabled(CAMERA_MSG_PREVIEW_METADATA))
+                            mEventNotifier->startFaceDection(drv_w,drv_h, -1);
                     }
                         
                 }else{
@@ -1046,11 +1044,9 @@ get_command:
                 prevStatus = mCameraAdapter->getCurPreviewState(&drv_w,&drv_h);
                 if(prevStatus){
 				    //get preview size
-				    //if(mRecordRunning){
-                    property_get("sys.cts_camera.status",prop_value, "false");
                     if(mCameraStatus&STA_RECORD_RUNNING){
                        LOGE("%s(%d):not support set picture size when recording.",__FUNCTION__,__LINE__);
-                    } else if(strcmp(prop_value,"true") && ((prefered_w != drv_w) || (prefered_h != drv_h))){
+                    } else if((prefered_w != drv_w) || (prefered_h != drv_h)){
                         //need to stop preview.
                         err=mDisplayAdapter->pauseDisplay();
 						if(err != -1)
