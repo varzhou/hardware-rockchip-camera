@@ -798,7 +798,7 @@ v1.0x50.0xe
 #define CONFIG_CAMERA_FRONT_FLIP_MDATACB_APK  "<com.tencent.mm>,<com.xiaomi.channel>,<com.tencent.mobileqq:video>"
 #else
 #define CONFIG_CAMERA_FRONT_MIRROR_MDATACB_APK  "<com.skype.raider>,<com.yahoo.mobile.client.andro>"
-#define CONFIG_CAMERA_FRONT_FLIP_MDATACB_APK  "<com.tencent.mm>,<com.xiaomi.channel>"
+#define CONFIG_CAMERA_FRONT_FLIP_MDATACB_APK  "<com.tencent.mm>,<com.xiaomi.channel>,<com.tencent.mobileqq:video>"
 #endif
 #define CONFIG_CAMERA_SETVIDEOSIZE	0
 

@@ -60,6 +60,16 @@ extern "C" char* getCallingProcess()
     int fp = -1;
     char cameraCallProcess[100];
     memset(cameraCallProcess,0x00,sizeof(cameraCallProcess));
+#if defined(ANDROID_8_X)
+    char value[PROPERTY_VALUE_MAX];
+    property_get("sys.camera.callprocess", value, "none");
+    memset(cameraCallProcess,0x00,sizeof(cameraCallProcess));
+    strcpy(cameraCallProcess, value);
+    if (!strcmp("none", value))
+        LOGE("Obtain calling process info failed");
+    else
+        LOGD("Calling process from sys.camera.callprocess is: %s", cameraCallProcess);
+#else
 	sprintf(cameraCallProcess,"/proc/%d/cmdline",getCallingPid());
 
 	fp = open(cameraCallProcess, O_RDONLY);
@@ -81,6 +91,7 @@ extern "C" char* getCallingProcess()
 		fp = -1;
 		LOGD("Calling process is: %s",cameraCallProcess);
 	}
+#endif
     return cameraCallProcess;
 
 }
