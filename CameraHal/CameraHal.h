@@ -767,10 +767,12 @@ v1.0x50.0xd
 v1.0x50.0xe
    1) RGA1.0 do not support crop from w to <=w/2 or from h to <=h/2,modify the judgement.
    2) commit v1.0x50.0xc causes 3368 android8.0 camera open failed,fix up.
+v1.0x50.0xf
+   1) for CTS test,only one or two items fail tested by bnd-d708 device.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xe)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xf)
 
 
 /*  */
