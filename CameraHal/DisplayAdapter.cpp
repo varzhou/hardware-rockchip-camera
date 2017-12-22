@@ -760,7 +760,7 @@ display_receive_cmd:
 						#if defined(TARGET_RK3188)
 							rk_camera_zoom_ipp(V4L2_PIX_FMT_NV12, (int)(frame->phy_addr), frame->frame_width, frame->frame_height,(int)(mDisplayBufInfo[queue_display_index].phy_addr),frame->zoom_value);
 						#else
-                            if(g_ctsV_flag &&((mDisplayWidth==176&&mDisplayHeight==144)||(mDisplayWidth==352&&mDisplayHeight==288))) {
+                            if(0/*((mDisplayWidth==176&&mDisplayHeight==144)||(mDisplayWidth==352&&mDisplayHeight==288))*/) {
                                 arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, V4L2_PIX_FMT_NV12,
                                         (char*)(frame->vir_addr), (char*)mDisplayBufInfo[queue_display_index].vir_addr,
                                         frame->frame_width, frame->frame_height,

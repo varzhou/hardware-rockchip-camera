@@ -150,7 +150,6 @@ extern "C" void generateJPEG(uint8_t* data,int w, int h,unsigned char* outbuf,in
 extern "C" int util_get_gralloc_buf_fd(buffer_handle_t handle,int* fd);
 
 extern rk_cam_info_t gCamInfos[CAMERAS_SUPPORT_MAX];
-extern bool g_ctsV_flag;
 
 namespace android {
 
@@ -1018,7 +1017,6 @@ public:
     virtual ~CameraAdapter();
 
     void setImageAllFov(bool sw){mImgAllFovReq=sw;}
-    void setCtsTestFlag(bool isCts){mIsCtsTest = isCts;}
     DisplayAdapter* getDisplayAdapterRef(){return mRefDisplayAdapter;}
     void setDisplayAdapterRef(DisplayAdapter& refDisplayAdap);
     void setEventNotifierRef(AppMsgNotifier& refEventNotify);
@@ -1123,7 +1121,6 @@ protected:
     int mVideoWidth;
     int mVideoHeight;
     bool mImgAllFovReq;
-    bool mIsCtsTest;
 
     unsigned int mCamDriverSupportFmt[CAMERA_DRIVER_SUPPORT_FORMAT_MAX];
     enum v4l2_memory mCamDriverV4l2MemType;
