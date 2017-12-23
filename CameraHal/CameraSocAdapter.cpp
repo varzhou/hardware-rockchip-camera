@@ -575,6 +575,7 @@ void CameraSOCAdapter::initDefaultParameters(int camFd)
 		params.set(CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, "2");
 		params.set(CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, "-2");
 		params.set(CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, "1.0f");
+		params.set("exposure_for_cts", "1");
 	}
 	/*rotation setting*/
 	params.set(CameraParameters::KEY_ROTATION, "0");
