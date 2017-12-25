@@ -196,7 +196,8 @@ CameraHal::CameraHal(int cameraId)
             dataCbFrontMirror = false;
         }
         if (strstr(CONFIG_CAMERA_FRONT_FLIP_MDATACB_APK,cameraCallProcess)) {
-            if (!strcmp("com.tencent.mm", cameraCallProcess)) {
+            if (!strcmp("com.tencent.mm", cameraCallProcess) || 
+                !strcmp("com.tencent.mobileqq", cameraCallProcess)) {
                 /*if device default orientation is portrait, must config front camera orientation = 270
                  *and back camera orientation = 90.
                  *if device default orientation is landscap, must config front camera orientation = 0
