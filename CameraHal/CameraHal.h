@@ -779,10 +779,12 @@ v1.0x51.0x2
    3)usb camera's width and height need align to 16,the extra eight rows need to be croped
      of some resolution such as 2592x1952,1920x1088,800x608.
    4)usb camera of mjpeg format send original data to app for taking picture on rk3328 platform.
+v1.0x51.0x3
+   1) camerasocadapter restore 15fps supported,because mediarecorder cts required.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x2)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x3)
 
 
 /*  */

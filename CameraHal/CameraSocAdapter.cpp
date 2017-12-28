@@ -177,10 +177,10 @@ int CameraSOCAdapter::cameraFpsInfoSet(CameraParameters &params)
     parameterString.append("),(15000,15000),(24000,24000)");
     #else
     params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "19000,19000");
-    parameterString.append("(19000,19000),(24000,24000)");
+    parameterString.append("(15000,15000),(19000,19000),(24000,24000)");
     #endif
     memset(framerates,0x00,sizeof(framerates));
-    strcpy(framerates,"19,24");
+    strcpy(framerates,"15,19,24");
     //parameterString.append(")");
 
     params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, parameterString.string());
