@@ -771,10 +771,12 @@ v1.0x50.0xf
    1) for CTS test,only one or two items fail tested by bnd-d708 device.
 v1.0x51.0x0
    1) implement cache flush functoin for graphic buffers.
+v1.0x51.0x1
+   1) for CTS test,only two items fail tested by xkp-3368 device.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x0)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x1)
 
 
 /*  */

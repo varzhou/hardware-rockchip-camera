@@ -1068,7 +1068,7 @@ static RESULT OV8858_IsiGetCapsIssInternal
                     pIsiSensorCaps->Resolution = ISI_RES_1632_1224P30;
                     break;
                 }
-
+#if 0
                 case 3:
                 {
                     pIsiSensorCaps->Resolution = ISI_RES_1632_1224P25;
@@ -1092,6 +1092,7 @@ static RESULT OV8858_IsiGetCapsIssInternal
                     pIsiSensorCaps->Resolution = ISI_RES_1632_1224P10;
                     break;
                 }
+#endif
                 default:
                 {
                     result = RET_OUTOFRANGE;
@@ -3614,6 +3615,7 @@ RESULT OV8858_IsiGetAfpsInfoIss(
                 case ISI_RES_1632_1224P10:
 					if(ISI_FPS_GET(ISI_RES_1632_1224P30) >= pOV8858Ctx->preview_minimum_framerate)
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P30 );
+                    #if 0
 					if(ISI_FPS_GET(ISI_RES_1632_1224P25) >= pOV8858Ctx->preview_minimum_framerate)
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P25 );
 					if(ISI_FPS_GET(ISI_RES_1632_1224P20) >= pOV8858Ctx->preview_minimum_framerate)
@@ -3622,6 +3624,7 @@ RESULT OV8858_IsiGetAfpsInfoIss(
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P15 );
 					if(ISI_FPS_GET(ISI_RES_1632_1224P10) >= pOV8858Ctx->preview_minimum_framerate)
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P10 );
+                    #endif
                     break;
 
                 case ISI_RES_3264_2448P15:

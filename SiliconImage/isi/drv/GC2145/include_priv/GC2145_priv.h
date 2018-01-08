@@ -9,9 +9,9 @@
  *
  *
  * v0.1.0x00 : 1. create file.
-
+ * v0.2.0x00 : modify variable fps 8-19 to 19 fps.
 */
-#define CONFIG_SENSOR_DRV_VERSION KERNEL_VERSION(0, 1, 0) 
+#define CONFIG_SENSOR_DRV_VERSION KERNEL_VERSION(0, 2, 0) 
 
 
 #ifdef __cplusplus

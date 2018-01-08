@@ -70,10 +70,12 @@ extern "C"
 *v1.0xa.0
 *   1). remove {0x0100,0x01} from 2A setting.
 *   2). correct OTP end address of 2A chip.
+*v1.0xb.0
+*   1). only 1632x1224 30fps for two lanes, temporaryly.
 */
 
 
-#define CONFIG_SENSOR_DRV_VERSION  KERNEL_VERSION(1, 0xa, 0)
+#define CONFIG_SENSOR_DRV_VERSION  KERNEL_VERSION(1, 0xb, 0)
 
 /*****************************************************************************
  * System control registers

@@ -761,17 +761,14 @@ const IsiRegDescription_t GC2145_g_aRegDescription[] =
 	{0x26 , 0xfa,"",eReadWrite,}, 
 	{0x27 , 0x04,"",eReadWrite,}, 
 	{0x28 , 0xe2,"",eReadWrite,}, //20fps 
-	{0x29 , 0x06,"",eReadWrite,}, 
-	{0x2a , 0xd6,"",eReadWrite,}, //14fps 
-	{0x2b , 0x07,"",eReadWrite,}, 
-	{0x2c , 0xd0,"",eReadWrite,}, //12fps
-	{0x2d , 0x0b,"",eReadWrite,}, 
-	{0x2e , 0xb8,"",eReadWrite,}, //8fps
+	{0x29 , 0x04,"",eReadWrite,}, 
+	{0x2a , 0xe2,"",eReadWrite,}, //14fps ?
+	{0x2b , 0x04,"",eReadWrite,}, 
+	{0x2c , 0xe2,"",eReadWrite,}, //12fps?
+	{0x2d , 0x04,"",eReadWrite,}, 
+	{0x2e , 0xe2,"",eReadWrite,}, //8fps?
 	{0xfe , 0x00,"",eReadWrite,},
-	
-	
-	//SENSORDB("GC2145_Sensor_SVGA","",eReadWrite,},
-	  
+
 	{0xfe, 0x00,"",eReadWrite,},
 	{0xfd, 0x01,"",eReadWrite,},
 	{0xfa, 0x00,"",eReadWrite,},

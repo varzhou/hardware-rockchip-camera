@@ -418,35 +418,26 @@ status_t CameraIspAdapter::startPreview(int preview_w,int preview_h,int w, int h
             resReq.request_exp_t = curExp*curGain;
         } else {
         	if(pCamInfo->mSoftInfo.mFrameRate > 0) {
-		        resReq.request_fps = pCamInfo->mSoftInfo.mFrameRate;
-		    } else if ((mFpsRangeMin == mFpsRangeMax)&& ((mFpsRangeMin == 15) || (mFpsRangeMin == 30))) {//for cts pass
-                resReq.request_fps = mFpsRangeMin;
-            } else {
-        	    resReq.request_fps = 10; 
-                resReq.request_exp_t = curExp;
+				resReq.request_fps = pCamInfo->mSoftInfo.mFrameRate;
+			} else {
+            	resReq.request_fps = 0 /*10*/;
             }
+            resReq.request_exp_t = 0 /*curExp*/;
         }
-        
+
         resReq.requset_aspect = (bool_t)false;        
         resReq.request_fullfov = (bool_t)mImgAllFovReq;    
         m_camDevice->getPreferedSensorRes(&resReq);
-        
+     
         width_sensor = ISI_RES_W_GET(resReq.resolution);
         height_sensor = ISI_RES_H_GET(resReq.resolution);
-        if ((mFpsRangeMin == mFpsRangeMax) &&
-        	((mFpsRangeMin == 15) || (mFpsRangeMin == 30)) &&
-        	(mFpsRangeMin<ISI_FPS_GET(resReq.resolution)))//for cts pass
-        {
-        	resReq.resolution = (resReq.resolution & (~0xfe000000)) | (mFpsRangeMin<<25);
-        }
+
         //stop streaming
         if(-1 == stop())
 			goto startPreview_end;
         /* ddl@rock-chips.com: v1.0x16.0 */
         if ( is_video ) {
             enableAfps(false);
-        } else if (mFpsRangeMin == mFpsRangeMax){
-        	enableAfps(false);
         } else {
             enableAfps(true);
         }
@@ -577,7 +568,8 @@ int CameraIspAdapter::setParameters(const CameraParameters &params_set,bool &isR
     int fps_min,fps_max;
     int framerate=0;
     
-    if (strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES), params_set.get(CameraParameters::KEY_PREVIEW_SIZE)) == NULL) {
+    if (mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES) &&
+    	strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES), params_set.get(CameraParameters::KEY_PREVIEW_SIZE)) == NULL) {
         LOGE("PreviewSize(%s) not supported",params_set.get(CameraParameters::KEY_PREVIEW_SIZE));        
         return BAD_VALUE;
     } else if (strcmp(mParameters.get(CameraParameters::KEY_PREVIEW_SIZE), params_set.get(CameraParameters::KEY_PREVIEW_SIZE))) {
@@ -590,7 +582,8 @@ int CameraIspAdapter::setParameters(const CameraParameters &params_set,bool &isR
 
     }
 
-    if (strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES), params_set.get(CameraParameters::KEY_PICTURE_SIZE)) == NULL) {
+    if (mParameters.get(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES) &&
+    	strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES), params_set.get(CameraParameters::KEY_PICTURE_SIZE)) == NULL) {
         LOGE("PictureSize(%s) not supported",params_set.get(CameraParameters::KEY_PICTURE_SIZE));
         return BAD_VALUE;
     } else if (strcmp(mParameters.get(CameraParameters::KEY_PICTURE_SIZE), params_set.get(CameraParameters::KEY_PICTURE_SIZE))) {
@@ -607,7 +600,8 @@ int CameraIspAdapter::setParameters(const CameraParameters &params_set,bool &isR
         return BAD_VALUE;
     }
 
-    if(strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE),params_set.get(CameraParameters::KEY_PREVIEW_FPS_RANGE)) == NULL) {
+    if(mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE) &&
+    	strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE),params_set.get(CameraParameters::KEY_PREVIEW_FPS_RANGE)) == NULL) {
         LOGE("fps range(%s) not supported,supported(%s)",params_set.get(CameraParameters::KEY_PREVIEW_FPS_RANGE),mParameters.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE));
         return BAD_VALUE;
     }else {
@@ -702,7 +696,8 @@ int CameraIspAdapter::setParameters(const CameraParameters &params_set,bool &isR
     {
         bool err_af = false;
 
-        if (strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_FOCUS_MODES),params_set.get(CameraParameters::KEY_FOCUS_MODE))) {            
+        if (mParameters.get(CameraParameters::KEY_SUPPORTED_FOCUS_MODES) &&
+        	strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_FOCUS_MODES),params_set.get(CameraParameters::KEY_FOCUS_MODE))) {            
             // Continues picture focus
             if (strcmp(params_set.get(CameraParameters::KEY_FOCUS_MODE),CameraParameters::FOCUS_MODE_CONTINUOUS_PICTURE)==0) {
                 if (mPreviewRunning == 1) {
@@ -811,7 +806,8 @@ int CameraIspAdapter::setParameters(const CameraParameters &params_set,bool &isR
 
         if (mParameters.get(CameraParameters::KEY_SUPPORTED_FLASH_MODES) && mParameters.get(CameraParameters::KEY_FLASH_MODE)) {
 
-            if (strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_FLASH_MODES),params_set.get(CameraParameters::KEY_FLASH_MODE))) {
+            if (mParameters.get(CameraParameters::KEY_SUPPORTED_FLASH_MODES) &&
+            	strstr(mParameters.get(CameraParameters::KEY_SUPPORTED_FLASH_MODES),params_set.get(CameraParameters::KEY_FLASH_MODE))) {
                 if (strcmp(mParameters.get(CameraParameters::KEY_FLASH_MODE),params_set.get(CameraParameters::KEY_FLASH_MODE))) {
                     rk_cam_total_info *pCamInfo = gCamInfos[mCamId].pcam_total_info;
                     flash_cfg.active_pol = (pCamInfo->mHardInfo.mFlashInfo.mFlashTrigger.active>0) ? CAM_ENGINE_FLASH_HIGH_ACTIVE:CAM_ENGINE_FLASH_LOW_ACTIVE;
@@ -1341,15 +1337,14 @@ void CameraIspAdapter::initDefaultParameters(int camFd)
 	/*no much meaning ,only for passing cts*/
 	params.set(CameraParameters::KEY_SUPPORTED_ANTIBANDING, "auto,50hz,60hz,off");
 	params.set(CameraParameters::KEY_ANTIBANDING, "off");
-
-    //for video test
-    params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5000,30000");
-    if (m_camDevice->isSOCSensor() == false)
-    	params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5000,30000),(15000,15000),(30000,30000)");
-    else
-    	params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5000,30000),(15000,15000)");
-    params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "10,15,20,30"); 
-
+	if (m_camDevice->isSOCSensor() == false) {
+	    params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5000,30000");
+		params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5000,30000),(30000,30000)");
+	}else {
+	    params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5000,19000");
+		params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5000,19000),(19000,19000),(24000,24000)");
+	}
+    params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "10,15,19,24,30");
     params.setPreviewFrameRate(30);
 
     params.set(KEY_CONTINUOUS_PIC_NUM,"1");
@@ -1372,7 +1367,7 @@ void CameraIspAdapter::initDefaultParameters(int camFd)
         pCamInfo->mSoftInfo.mPreviewWidth, pCamInfo->mSoftInfo.mPreviewHeight);
     LOGD ("Support Preview FPS range: %s",params.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE));
     LOGD ("Support Preview framerate: %s",params.get(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES));
-LOGD ("Support Picture sizes: %s    %s(default)",params.get(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES),params.get(CameraParameters::KEY_PICTURE_SIZE));
+	LOGD ("Support Picture sizes: %s    %s(default)",params.get(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES),params.get(CameraParameters::KEY_PICTURE_SIZE));
     LOGD ("Support Focus: %s  Focus zone: %s",params.get(CameraParameters::KEY_SUPPORTED_FOCUS_MODES),params.get(CameraParameters::KEY_MAX_NUM_FOCUS_AREAS));
     if (params.get(CameraParameters::KEY_SUPPORTED_FLASH_MODES) && params.get(CameraParameters::KEY_FLASH_MODE))
         LOGD ("Support Flash: %s  Flash: %s",params.get(CameraParameters::KEY_SUPPORTED_FLASH_MODES),params.get(CameraParameters::KEY_FLASH_MODE));
