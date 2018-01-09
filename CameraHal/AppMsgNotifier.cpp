@@ -1626,8 +1626,12 @@ int AppMsgNotifier::captureEncProcessPicture(FramInfo_s* frame){
 	LOG1("input_phy_addr %d,JpegOutInfo.outBufPhyAddr:%x,JpegOutInfo.outBufVirAddr:%p,jpegbuf_size:%d",input_phy_addr,JpegOutInfo.outBufPhyAddr,JpegOutInfo.outBufVirAddr,jpegbuf_size);
 
 #if defined(TARGET_RK322x)
-    generateJPEG((uint8_t*)input_vir_addr,jpeg_w,jpeg_h,JpegOutInfo.outBufVirAddr,&(JpegOutInfo.jpegFileLen));
-    copyAndSendCompressedImage((void*)JpegOutInfo.outBufVirAddr,JpegOutInfo.jpegFileLen);
+    if(V4L2_PIX_FMT_MJPEG == frame->original_frame_fmt){
+        copyAndSendCompressedImage((void*)frame->original_vir_addr,frame->frame_size);
+    }else{
+        generateJPEG((uint8_t*)input_vir_addr,jpeg_w,jpeg_h,JpegOutInfo.outBufVirAddr,&(JpegOutInfo.jpegFileLen));
+        copyAndSendCompressedImage((void*)JpegOutInfo.outBufVirAddr,JpegOutInfo.jpegFileLen);
+    }
 #else
 
 LOG2("\nJpegInInfo.y_rgb_addr=0x%x\n"

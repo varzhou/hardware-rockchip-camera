@@ -680,6 +680,7 @@ int CameraAdapter::getFrame(FramInfo_s** tmpFrame){
     }
     // fill frame info:w,h,phy,vir
     mPreviewFrameInfos[cfilledbuffer1.index].frame_fmt=  mCamDriverPreviewFmt;
+    mPreviewFrameInfos[cfilledbuffer1.index].original_frame_fmt=  mCamDriverPreviewFmt;
     mPreviewFrameInfos[cfilledbuffer1.index].frame_height = mCamDrvHeight;
     mPreviewFrameInfos[cfilledbuffer1.index].frame_width = mCamDrvWidth;
     mPreviewFrameInfos[cfilledbuffer1.index].frame_index = cfilledbuffer1.index;
@@ -696,6 +697,7 @@ int CameraAdapter::getFrame(FramInfo_s** tmpFrame){
 	}else
         mPreviewFrameInfos[cfilledbuffer1.index].phy_addr = 0;
     mPreviewFrameInfos[cfilledbuffer1.index].vir_addr = (unsigned long)mCamDriverV4l2Buffer[cfilledbuffer1.index];
+    mPreviewFrameInfos[cfilledbuffer1.index].original_vir_addr = mPreviewFrameInfos[cfilledbuffer1.index].vir_addr;
     //get zoom_value
     mPreviewFrameInfos[cfilledbuffer1.index].zoom_value = mZoomVal;
     mPreviewFrameInfos[cfilledbuffer1.index].used_flag = 0;

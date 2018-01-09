@@ -9,10 +9,12 @@ typedef struct FramInfo
 {
     ulong_t phy_addr;
     ulong_t vir_addr;
+    ulong_t original_vir_addr;
     int frame_width;
     int frame_height;
     ulong_t frame_index;
     int frame_fmt;
+    int original_frame_fmt;
     int zoom_value;
     ulong_t used_flag;
     int frame_size;

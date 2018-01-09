@@ -78,14 +78,14 @@
 
 #if defined(TARGET_RK30) && (defined(TARGET_BOARD_PLATFORM_RK30XX) \
     || (defined(TARGET_RK3399) && defined(ANDROID_6_X)) \
-    || defined(TARGET_RK312x) && (defined(ANDROID_6_X) || defined(ANDROID_7_X)) || defined(TARGET_RK3328) \
+    || ((defined(TARGET_RK312x) || defined(TARGET_RK3328)) && (defined(ANDROID_6_X) || defined(ANDROID_7_X)))  \
     || (defined(TARGET_RK3288) && defined(ANDROID_6_X)) || (defined(TARGET_BOARD_PLATFORM_RK2928)))
 #include "../libgralloc/gralloc_priv.h"
 #if (CONFIG_CAMERA_INVALIDATE_RGA==0)
 #include <hardware/rga.h>
 #endif
 #elif (defined(TARGET_RK3399) || defined(TARGET_RK3288) || defined(TARGET_RK3366)) && defined(ANDROID_7_X) \
-	|| defined(TARGET_RK312x) && defined(ANDROID_8_X)
+	|| ((defined(TARGET_RK312x) || defined(TARGET_RK3328)) && defined(ANDROID_8_X))
 #include "../libgralloc/gralloc_drm_handle.h"
 #include <hardware/rga.h>
 #elif defined(TARGET_RK30) && defined(TARGET_BOARD_PLATFORM_RK30XXB)
@@ -773,10 +773,16 @@ v1.0x51.0x0
    1) implement cache flush functoin for graphic buffers.
 v1.0x51.0x1
    1) for CTS test,only two items fail tested by xkp-3368 device.
+v1.0x51.0x2
+   1)fix rk3328 compiled error
+   2)rk312x support mirror and flip with rga.
+   3)usb camera's width and height need align to 16,the extra eight rows need to be croped
+     of some resolution such as 2592x1952,1920x1088,800x608.
+   4)usb camera of mjpeg format send original data to app for taking picture on rk3328 platform.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x1)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x2)
 
 
 /*  */
@@ -904,12 +910,14 @@ v1.0x51.0x1
 
 
 #if defined(TARGET_BOARD_PLATFORM_RK30XX) || defined(TARGET_RK29) || defined(TARGET_BOARD_PLATFORM_RK2928) \
-    || defined(TARGET_RK3328) || defined(TARGET_RK312x) && (defined(ANDROID_6_X) || defined(ANDROID_7_X))|| (defined(TARGET_RK3288) && defined(ANDROID_6_X)) \
+    || ((defined(TARGET_RK3328) || defined(TARGET_RK312x)) && (defined(ANDROID_6_X) || defined(ANDROID_7_X))) \
+    || (defined(TARGET_RK3288) && defined(ANDROID_6_X)) \
     || (defined(TARGET_RK3399) && defined(ANDROID_6_X))
     #define NATIVE_HANDLE_TYPE             private_handle_t
     #define PRIVATE_HANDLE_GET_W(hd)       (hd->width)
     #define PRIVATE_HANDLE_GET_H(hd)       (hd->height)
-#elif (defined(TARGET_RK3399) || defined(TARGET_RK3288) || defined(TARGET_RK3366)) && defined(ANDROID_7_X) || defined(TARGET_RK312x) && defined(ANDROID_8_X)
+#elif (defined(TARGET_RK3399) || defined(TARGET_RK3288) || defined(TARGET_RK3366)) && defined(ANDROID_7_X) \
+    || ((defined(TARGET_RK312x) || defined(TARGET_RK3328)) && defined(ANDROID_8_X))
     typedef struct gralloc_drm_handle_t    rk_gralloc_drm_handle_t;
     #define NATIVE_HANDLE_TYPE             rk_gralloc_drm_handle_t
     #define PRIVATE_HANDLE_GET_W(hd)       (hd->width)

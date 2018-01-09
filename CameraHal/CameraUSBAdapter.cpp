@@ -94,11 +94,11 @@ void CameraUSBAdapter::initDefaultParameters(int camFd)
 	mCamDriverFrmHeightMax = 0;
     while ((ret = ioctl(mCamFd, VIDIOC_ENUM_FRAMESIZES, &fsize)) == 0) {
         if (fsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {  
-			if((fsize.discrete.width%16 || fsize.discrete.height%16) && fsize.discrete.height != 1080)
+			/*if((fsize.discrete.width%16 || fsize.discrete.height%16) && fsize.discrete.height != 1080)
 			{
 				fsize.index++;
 				continue;
-			}
+			}*/
 #ifdef LAPTOP
             char *call_process = getCallingProcess();
             if (fsize.discrete.width == 320 && fsize.discrete.height == 240
@@ -144,7 +144,10 @@ void CameraUSBAdapter::initDefaultParameters(int camFd)
     params.set(KEY_PREVIEW_W_FORCE,"0");
     params.set(KEY_PREVIEW_H_FORCE,"0");
     params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, parameterString.string());
-    params.setPreviewSize(640,480);
+    if(parameterString.contains("640x480"))
+        params.setPreviewSize(640,480);
+    else
+        params.setPreviewSize(mCamDriverFrmWidthMax,mCamDriverFrmHeightMax);
     /*picture size setting*/      
     params.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, parameterString.string());        
     params.setPictureSize(mCamDriverFrmWidthMax,  mCamDriverFrmHeightMax);        
@@ -988,6 +991,7 @@ int CameraUSBAdapter::reprocessFrame(FramInfo_s* frame)
                                     (unsigned char*)&outbuf, &output_len, 
     		                          (unsigned char*)frame->vir_addr, &input_len,
     		                          phy_addr);
+        frame->vir_addr_valid = false;
         if (ret < 0){
             LOGE("%s(%d): mjpeg stream is error!",__FUNCTION__,__LINE__);
 	        }
@@ -1003,6 +1007,7 @@ int CameraUSBAdapter::reprocessFrame(FramInfo_s* frame)
 							 frame->frame_width, frame->frame_height, frame->frame_width,
 							 frame->frame_width, frame->frame_height, frame->frame_width,
 							 false);
+        frame->vir_addr_valid = true;
         if (ret < 0){
             LOGE("%s(%d): yuyv convert to nv12 error!",__FUNCTION__,__LINE__);
         }
@@ -1012,7 +1017,6 @@ int CameraUSBAdapter::reprocessFrame(FramInfo_s* frame)
         ret =  -1;
     }
 
-    frame->frame_fmt = V4L2_PIX_FMT_NV12;
     frame->phy_addr = phy_addr;
     frame->vir_addr = mPreviewBufProvider->getBufVirAddr(frame->frame_index);
     frame->zoom_value = mZoomVal;
@@ -1020,18 +1024,11 @@ int CameraUSBAdapter::reprocessFrame(FramInfo_s* frame)
 	int w,h;
 	w = frame->frame_width;
 	h = frame->frame_height;
-	if((w&0x0f) || (h&0x0f)){
+	if(((w&0x0f) || (h&0x0f)) && (frame->frame_fmt == V4L2_PIX_FMT_MJPEG)){
         frame->frame_width = ((w+15)&(~15));
         frame->frame_height = ((h+15)&(~15));
-		/*char *buf = (char*)malloc(w*h*3/2);
-		if(buf != NULL){
-			memcpy(buf,(void*)frame->vir_addr,w*h);
-			memcpy(buf+w*h,(void*)(frame->vir_addr+((w+15)&0xfff0)*((h+15)&0xfff0)), w*h/2);
-			memcpy((void*)frame->vir_addr,buf,w*h*3/2);
-			free(buf);
-		}*/
 	}
-
+    frame->frame_fmt = V4L2_PIX_FMT_NV12;
     //do zoom here?
     return ret;
     
