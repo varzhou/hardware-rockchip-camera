@@ -630,6 +630,34 @@ void AppMsgNotifier::grallocVideoBufUnlock()
 {
 }
 
+int AppMsgNotifier::grallocVideoBufFlushCache(int bufFd)
+{
+#if defined(RK_DRM_GRALLOC)
+	struct dma_buf_sync {
+		__u64 flags;
+	};
+    struct dma_buf_sync sync_args;
+	int ret = 0;
+
+	#define DMA_BUF_SYNC_READ      (1 << 0)
+	#define DMA_BUF_SYNC_WRITE     (2 << 0)
+	#define DMA_BUF_SYNC_RW        (DMA_BUF_SYNC_READ | DMA_BUF_SYNC_WRITE)
+	#define DMA_BUF_SYNC_START     (0 << 2)
+	#define DMA_BUF_SYNC_END       (1 << 2)
+	#define DMA_BUF_SYNC_VALID_FLAGS_MASK \
+			(DMA_BUF_SYNC_RW | DMA_BUF_SYNC_END)
+	#define DMA_BUF_BASE            'b'
+	#define DMA_BUF_IOCTL_SYNC      _IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
+
+	sync_args.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_RW;
+	ret = ioctl(bufFd, DMA_BUF_IOCTL_SYNC, &sync_args);
+	if (ret != 0)
+		LOGE("%s: ret %d ,DMA_BUF_IOCTL_SYNC failed!", __func__, ret);
+#endif
+
+	return ret;
+}
+
 int AppMsgNotifier::grallocVideoBufGetAvailable()
 {
 	int i=-1;
@@ -1901,6 +1929,7 @@ int AppMsgNotifier::processVideoCb(FramInfo_s* frame){
             arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, V4L2_PIX_FMT_NV12, (char*)(frame->vir_addr),
                     (char*)(mGrallocVideoBuf[buf_index]->vir_addr),frame->frame_width, frame->frame_height,
                     mRecordW,mRecordH,false,frame->zoom_value);
+            grallocVideoBufFlushCache(mGrallocVideoBuf[buf_index]->phy_addr);//phy_addr is fd here
         }
 		#else
         	#if (defined(TARGET_RK312x) || defined(TARGET_RK3328)) && defined(ANDROID_7_X)

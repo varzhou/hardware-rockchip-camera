@@ -769,10 +769,12 @@ v1.0x50.0xe
    2) commit v1.0x50.0xc causes 3368 android8.0 camera open failed,fix up.
 v1.0x50.0xf
    1) for CTS test,only one or two items fail tested by bnd-d708 device.
+v1.0x51.0x0
+   1) implement cache flush functoin for graphic buffers.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x50, 0xf)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x0)
 
 
 /*  */
@@ -1650,6 +1652,7 @@ public:
 	void grallocVideoBufLock();
 	void grallocVideoBufUnlock();
 	int grallocVideoBufGetAvailable();
+	int grallocVideoBufFlushCache(int bufFd);
 private:
 
    void encProcessThread();
