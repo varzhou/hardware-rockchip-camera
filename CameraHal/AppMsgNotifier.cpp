@@ -757,7 +757,8 @@ int AppMsgNotifier::stopRecording()
         sem.Wait();
     }
 	mIsStoreMD = false;
-
+    grallocVideoBufFree();
+    grallocDevDeinit();
     LOG_FUNCTION_NAME_EXIT
     return 0;
 }

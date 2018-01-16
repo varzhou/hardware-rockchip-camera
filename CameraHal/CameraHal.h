@@ -781,10 +781,13 @@ v1.0x51.0x2
    4)usb camera of mjpeg format send original data to app for taking picture on rk3328 platform.
 v1.0x51.0x3
    1) camerasocadapter restore 15fps supported,because mediarecorder cts required.
+v1.0x51.0x4
+   1) video buffer is not realloc, this would cause crash when test camera video
+      from 'LOW' to 'HIGH' in CTS Verifier, fix it.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x3)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x4)
 
 
 /*  */

@@ -489,7 +489,7 @@ extern "C" int rga_nv12_scale_crop(
 
 #if defined(TARGET_RK312x)
 		if ((src_width / 2 >= dst_width) || (src_height / 2 >= dst_height)) {
-			LOGE("%s:rk312x rga not support crop %dx%d->%dx%d",__func__,src_width,src_height,dst_width,dst_height);
+			LOGW("%s:rk312x rga not support crop %dx%d->%dx%d",__func__,src_width,src_height,dst_width,dst_height);
 			ret = -1;
 			goto failed;
 		}
