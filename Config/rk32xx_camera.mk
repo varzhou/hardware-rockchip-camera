@@ -98,9 +98,7 @@ PRODUCT_COPY_FILES += \
 	
 endif
 
-
-ifeq ($(strip $(TARGET_BOARD_PLATFORM)), rk3368)
-
+ifneq ($(filter rk3368 rk3326, $(strip $(TARGET_BOARD_PLATFORM))), )
 PRODUCT_PACKAGES += \
     libisp_silicomimageisp_api
 
