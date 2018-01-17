@@ -36,8 +36,7 @@ LOCAL_MODULE_SUFFIX := .so
 include $(BUILD_PREBUILT)
 endif
 
-
-ifeq ($(strip $(TARGET_BOARD_PLATFORM)), rk3368)
+ifneq ($(filter rk3368 rk3326, $(strip $(TARGET_BOARD_PLATFORM))), )
 #include $(CLEAR_VARS)
 ifneq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 5.0)))
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)
