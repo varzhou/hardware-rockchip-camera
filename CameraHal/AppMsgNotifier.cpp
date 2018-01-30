@@ -1748,7 +1748,7 @@ int AppMsgNotifier::processPreviewDataCb(FramInfo_s* frame){
 					(char*)(frame->vir_addr), (short int *)(tmpPreviewMemory->data), 
 					mPreviewDataW,mPreviewDataH,frame->zoom_value,mDataCbFrontMirror,true,!isYUV420p,0,true);
                 if (err){
-                    arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, V4L2_PIX_FMT_NV12, (char*)(frame->vir_addr),
+                    arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, pixFmt, (char*)(frame->vir_addr),
                         (char*)(tmpPreviewMemory->data),frame->frame_width, frame->frame_height,
                         mPreviewDataW,mPreviewDataH,mDataCbFrontMirror,frame->zoom_value);
                  }
