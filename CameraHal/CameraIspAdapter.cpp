@@ -68,8 +68,6 @@ CameraIspAdapter::CameraIspAdapter(int cameraId)
     mVideoEncFrameLeak = 0;
     mPreviewCBFrameLeak = 0;
     mPicEncFrameLeak = 0;
-    mFpsRangeMin = 0;
-    mFpsRangeMax = 0;
     mImgAllFovReq = false;
 	mCtxCbResChange.res = 0;
 	mCtxCbResChange.pIspAdapter =NULL;
@@ -189,7 +187,8 @@ int CameraIspAdapter::cameraCreate(int cameraId)
 	isp_halpara.mem_ops = NULL;
 #endif
 
-    isp_halpara.mipi_lanes = mipiLaneNum;
+	isp_halpara.mipi_lanes = mipiLaneNum;
+	isp_halpara.phy_index = pCamInfo->mHardInfo.mSensorInfo.mPhy.info.mipi.phy_index;
 	mCtxCbResChange.pIspAdapter = (void*)this;
 	isp_halpara.sensorpowerupseq = pCamInfo->mHardInfo.mSensorInfo.mSensorPowerupSequence;
 	isp_halpara.vcmpowerupseq = pCamInfo->mHardInfo.mVcmInfo.mVcmPowerupSequence;	
@@ -203,8 +202,9 @@ int CameraIspAdapter::cameraCreate(int cameraId)
 	isp_halpara.clkin_delay = pCamInfo->mHardInfo.mSensorInfo.mClkin_delay;
 	isp_halpara.vcmpwr_delay = pCamInfo->mHardInfo.mVcmInfo.mVcmpwr_delay;	
 	isp_halpara.vcmpwrdn_delay = pCamInfo->mHardInfo.mVcmInfo.mVcmpwrdn_delay;	
-    m_camDevice = new CamDevice( HalHolder::handle(dev_filename,&isp_halpara), CameraIspAdapter_AfpsResChangeCb, (void*)&mCtxCbResChange ,NULL, mipiLaneNum);
-	
+    m_halHolder = new HalHolder(dev_filename,&isp_halpara);
+    m_camDevice = new CamDevice( m_halHolder->handle(), CameraIspAdapter_AfpsResChangeCb, (void*)&mCtxCbResChange ,NULL, mipiLaneNum);
+
 	//load sensor
     loadSensor( cameraId);
     //open image
@@ -272,10 +272,8 @@ int CameraIspAdapter::cameraDestroy()
         disconnectCamera();
         delete m_camDevice;
         m_camDevice = NULL;
-        if(HalHolder::m_halHolder){
-            delete HalHolder::m_halHolder;
-            HalHolder::m_halHolder = NULL;
-        }
+        delete m_halHolder;
+        m_halHolder = NULL;
     }
     LOG_FUNCTION_NAME_EXIT
     return 0;
@@ -609,9 +607,6 @@ int CameraIspAdapter::setParameters(const CameraParameters &params_set,bool &isR
         if ((fps_min < 0) || (fps_max < 0) || (fps_max < fps_min)) {
             LOGE("FpsRange(%s) is invalidate",params_set.get(CameraParameters::KEY_PREVIEW_FPS_RANGE));
             return BAD_VALUE;
-        }else{
-            mFpsRangeMin = fps_min/1000;
-            mFpsRangeMax = fps_max/1000;
         }
     }
 	{
@@ -1561,13 +1556,15 @@ status_t CameraIspAdapter::autoFocus()
         	        w = strtol(zoneStr+1,0,0);                    
                     zoneStr = strstr(zoneStr+1,",");
         	        h = strtol(zoneStr+1,0,0);
+
                     w -= hOff;
                     h -= vOff;                    
+                    
                     if ( ((hOff<-1000) || (hOff>1000)) ||
                          ((vOff<-1000) || (vOff>1000)) ||
                          ((w<=0) || (w>2000)) ||
                          ((h<=0) || (h>2000)) ) {
-			LOGE("%s: %s , afWin(%d,%d,%d,%d)is invalidate!",
+                        LOGE("%s: %s , afWin(%d,%d,%d,%d)is invalidate!",
                             CameraParameters::KEY_FOCUS_AREAS,
                             mParameters.get(CameraParameters::KEY_FOCUS_AREAS),
                             hOff,vOff,w,h);
@@ -2351,6 +2348,7 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
 		}
     }
 #endif
+
     if(mIsSendToTunningTh){
         MediaBufLockBuffer( pMediaBuffer );
         //new frames

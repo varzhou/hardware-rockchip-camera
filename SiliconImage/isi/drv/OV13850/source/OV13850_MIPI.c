@@ -1,15 +1,3 @@
-//OV13850 the same with ov14825
-
-/******************************************************************************
- *
- * Copyright 2010, Dream Chip Technologies GmbH. All rights reserved.
- * No part of this work may be reproduced, modified, distributed, transmitted,
- * transcribed, or translated into any language or computer format, in any form
- * or by any means without written permission of:
- * Dream Chip Technologies GmbH, Steinriede 10, 30827 Garbsen / Berenbostel,
- * Germany
- *
- *****************************************************************************/
 /**
  * @file OV13850.c
  *
@@ -4125,7 +4113,7 @@ IsiCamDrvConfig_t IsiCamDrvConfig =
         0,                      /**< IsiSensor_t.pIsiGetSensorRevisionIss */
         0,                      /**< IsiSensor_t.pIsiRegisterReadIss */
         0,                      /**< IsiSensor_t.pIsiRegisterWriteIss */
-
+        0,                      /**< IsiSensor_t.pIsiIsEvenFieldIss */
         0,                      /**< IsiSensor_t.pIsiExposureControlIss */
         0,                      /**< IsiSensor_t.pIsiGetGainLimitsIss */
         0,                      /**< IsiSensor_t.pIsiGetIntegrationTimeLimitsIss */

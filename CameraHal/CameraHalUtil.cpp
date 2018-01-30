@@ -18,20 +18,11 @@
 #endif
 #endif
 
+#ifndef MIN
 #define MIN(x,y)   ((x<y) ? x: y)
+#endif
+#ifndef MAX
 #define MAX(x,y)    ((x>y) ? x: y)
-
-#ifdef ALOGD
-#define LOGD      ALOGD
-#endif
-#ifdef ALOGV
-#define LOGV      ALOGV
-#endif
-#ifdef ALOGE
-#define LOGE      ALOGE
-#endif
-#ifdef ALOGI
-#define LOGI      ALOGI
 #endif
 
 #define CAMERA_DISPLAY_FORMAT_NV12       "nv12"
@@ -487,7 +478,13 @@ extern "C" int rga_nv12_scale_crop(
 	//src.hnd = NULL;
 	//dst.hnd = NULL;
 
+	/*has something wrong with rga of rk312x mirror operation*/
 #if defined(TARGET_RK312x)
+		if(mirror){
+			 LOGE("%s:rk312x rga not support mirror",__func__);
+			 ret = -1;
+			 goto failed;
+		}
 		if ((src_width / 2 >= dst_width) || (src_height / 2 >= dst_height)) {
 			LOGW("%s:rk312x rga not support crop %dx%d->%dx%d",__func__,src_width,src_height,dst_width,dst_height);
 			ret = -1;
@@ -572,6 +569,13 @@ extern "C" int rga_nv12_scale_crop(int src_width, int src_height, char *src, sho
 	int ratio = 0;
 	int src_top_offset=0,src_left_offset=0,dst_top_offset=0,dst_left_offset=0,zoom_top_offset=0,zoom_left_offset=0;
 
+	/*has something wrong with rga of rk312x mirror operation*/
+	#if defined(TARGET_RK312x)
+		if(mirror){
+			return arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, (isDstNV21 ? V4L2_PIX_FMT_NV21:V4L2_PIX_FMT_NV12), 
+				src, (char *)dst,src_width, src_height,dst_width, dst_height,mirror,zoom_val);
+		}
+	#endif 
 	/*rk3188 do not support yuv to yuv scale by rga*/
 	#if defined(TARGET_RK3188)
 		return arm_camera_yuv420_scale_arm(V4L2_PIX_FMT_NV12, (isDstNV21 ? V4L2_PIX_FMT_NV21:V4L2_PIX_FMT_NV12), 

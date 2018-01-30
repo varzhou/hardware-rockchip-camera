@@ -145,6 +145,19 @@ typedef IsiSensorCaps_t IsiSensorConfig_t;
 
 /*****************************************************************************/
 /**
+ * @brief   This structure defines the sensor frame information.
+ */
+/*****************************************************************************/
+typedef struct IsiSensorFrameInfo_s
+{
+    uint16_t      pFrameNumFS;	/**< 16 bit frame number from Frame Start (FS) short packet */
+    uint16_t      pFrameNumFE;	/**< 16 bit frame number from Frame End (FE) short packet */
+} IsiSensorFrameInfo_t;
+
+
+
+/*****************************************************************************/
+/**
  *          IsiSensorInstanceConfig_t
  *
  * @brief   Config structure to create a new sensor instance
@@ -1138,6 +1151,29 @@ RESULT IsiMdiFocusGet
 RESULT IsiMdiFocusCalibrate
 (
     IsiSensorHandle_t   handle
+);
+
+
+
+/*****************************************************************************/
+/**
+ *			IsiIsEvenField
+ *
+ * @brief	Retrieves the currently applied focus point.
+ *
+ * @param	handle			sensor instance handle
+ *
+ * @return	Return the result of the function call.
+ * @retval	RET_SUCCESS
+ * @retval	RET_WRONG_HANDLE
+ * @retval	RET_NULL_POINTER
+ *
+ *****************************************************************************/
+RESULT IsiIsEvenField
+(
+	IsiSensorHandle_t	handle,
+	IsiSensorFrameInfo_t	*SensorInfo,
+	bool *isEvenField	
 );
 
 

@@ -6,7 +6,6 @@
 #include <jni.h>
 #include "string.h"
 #include "assert.h"
-//#include <system/window.h>
 #include <hardware/gralloc.h>
 
 enum OUTPUT_FMT {

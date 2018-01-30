@@ -4,6 +4,7 @@
 //usb camera adapter
 #include "CameraHal.h"
 #include "cam_api/camdevice.h"
+#include "cam_api/halholder.h"
 #include "oslayer/oslayer.h"
 #include <string>
 #include <utils/KeyedVector.h>
@@ -174,6 +175,7 @@ private:
 
 protected:
     CamDevice       *m_camDevice;
+    HalHolder     *m_halHolder;
     KeyedVector<void *, void *> mFrameInfoArray;
     Mutex  mFrameArrayLock;     
     void clearFrameArray();
@@ -234,8 +236,6 @@ protected:
     int mVideoEncFrameLeak;
     int mPreviewCBFrameLeak;
     int mPicEncFrameLeak;
-    int mFpsRangeMin;
-    int mFpsRangeMax;
 private:
     
     awbStatus curAwbStatus;

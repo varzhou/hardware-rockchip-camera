@@ -46,7 +46,6 @@
 #include <ui/GraphicBufferAllocator.h>
 #include <ui/GraphicBufferMapper.h>
 #include <ui/GraphicBuffer.h>
-//#include <system/window.h>
 #include <hardware/hardware.h>
 #include <hardware/camera.h>
 #include <camera/CameraParameters.h>
@@ -784,10 +783,13 @@ v1.0x51.0x3
 v1.0x51.0x4
    1) video buffer is not realloc, this would cause crash when test camera video
       from 'LOW' to 'HIGH' in CTS Verifier, fix it.
+v1.0x51.0x5
+   1) support isp0+isp1 dual-mipi cameras preview.
+   2) struct FramInfo add merge_status member.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x4)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x5)
 
 
 /*  */
