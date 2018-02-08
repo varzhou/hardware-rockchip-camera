@@ -678,6 +678,8 @@ int AppMsgNotifier::startRecording(int w,int h)
 	struct bufferinfo_s videoencbuf;
     
     Mutex::Autolock lock(mRecordingLock);
+    grallocVideoBufFree();
+    grallocDevDeinit();
     //create video buffer
     //video enc just support yuv420 format
     //w,h align up to 16
@@ -757,8 +759,6 @@ int AppMsgNotifier::stopRecording()
         sem.Wait();
     }
 	mIsStoreMD = false;
-    grallocVideoBufFree();
-    grallocDevDeinit();
     LOG_FUNCTION_NAME_EXIT
     return 0;
 }
