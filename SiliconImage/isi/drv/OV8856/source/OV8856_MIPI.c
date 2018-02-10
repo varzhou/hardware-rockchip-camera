@@ -1,20 +1,3 @@
-//OV8856_MIPI.c
-/*****************************************************************************/
-/*!
- *  \file        OV8856_MIPI.c \n
- *  \version     1.0 \n
- *  \author      ethan \n
- *  \Date: 2016-08-05 10:18:22 
- *  \brief       Image-sensor driver and other
- */
-/*  
- */
-/*****************************************************************************/
-
-/******************************************************************************
- *
- *
- *****************************************************************************/
 /**
  * @file OV8856.c
  *
@@ -4517,7 +4500,7 @@ IsiCamDrvConfig_t IsiCamDrvConfig =
         0,                      /**< IsiSensor_t.pIsiGetSensorRevisionIss */
         0,                      /**< IsiSensor_t.pIsiRegisterReadIss */
         0,                      /**< IsiSensor_t.pIsiRegisterWriteIss */
-
+        0,                      /**< IsiSensor_t.pIsiIsEvenFieldIss */
         0,                      /**< IsiSensor_t.pIsiExposureControlIss */
         0,                      /**< IsiSensor_t.pIsiGetGainLimitsIss */
         0,                      /**< IsiSensor_t.pIsiGetIntegrationTimeLimitsIss */

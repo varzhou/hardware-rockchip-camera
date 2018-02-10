@@ -202,6 +202,7 @@ extern "C"
 #define ISI_RES_VGAP20                         0x282801e0        /**<  1  640x480     */
 #define ISI_RES_VGAP30                         0x3c2801e0        /**<  1  640x480     */
 #define ISI_RES_VGAP60                         0x782801e0        /**<  1  640x480     */
+#define ISI_RES_VGAP100                        0xc82801e0        /**<  1  640x480     */
 #define ISI_RES_VGAP120                        0xf02801e0        /**<  1  640x480     */
 
 #define ISI_RES_SVGAP5                         0x0a320258        /**< 16 800x600@5   */
@@ -211,6 +212,12 @@ extern "C"
 #define ISI_RES_SVGAP30                        0x3c320258        /**< 16 800x600@30   */
 #define ISI_RES_SVGAP60                        0x78320258        /**< 16 800x600@60   */
 #define ISI_RES_SVGAP120                       0xf0320258        /**< 16 800x600@120   */
+
+#define ISI_RES_1920_540P60                    0x7878021c        /**< 16 1920x540@60  */
+#define ISI_RES_720_480P60		               0x782d01e0        /**< 16 720x480@60  */
+#define ISI_RES_720_576P50		               0x642d0240        /**< 16 720x576@50  */
+#define ISI_RES_720_240P60		               0x782d00f0        /**< 16 720x240@60  */
+#define ISI_RES_720_288P50		               0x642d0120        /**< 16 720x288@50  */
 
 #define ISI_RES_1280_960P10                    0x145003c0        /**< 16 1280x960@10   */
 #define ISI_RES_1280_960P15                    0x1e5003c0        /**< 16 1280x960@15   */
@@ -311,6 +318,14 @@ extern "C"
 #define ISI_RES_2104_1560P40                   0x50838618
 #define ISI_RES_2104_1560P50                   0x64838618
 #define ISI_RES_2104_1560P60                   0x78838618
+
+#define ISI_RES_3840_2160P7                    0x0ef00870      /**<  3840x2160    */
+#define ISI_RES_3840_2160P10                   0x14f00870      /**<  3840x2160    */
+#define ISI_RES_3840_2160P15                   0x1ef00870      /**<  3840x2160    */
+#define ISI_RES_3840_2160P20                   0x28f00870      /**<  3840x2160    */
+#define ISI_RES_3840_2160P25                   0x32f00870      /**<  3840x2160    */
+#define ISI_RES_3840_2160P30                   0x3cf00870      /**<  3840x2160    */
+
 
 #define ISI_RES_4224_3136P4                    0x09080c40
 #define ISI_RES_4224_3136P7                    0x0f080c40      /**<  5 4416x3312    */
