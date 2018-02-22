@@ -786,10 +786,12 @@ v1.0x51.0x4
 v1.0x51.0x5
    1) support isp0+isp1 dual-mipi cameras preview.
    2) struct FramInfo add merge_status member.
+v1.0x51.0x6
+   1) support mmu for rk3326 cif cameras.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x5)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x6)
 
 
 /*  */

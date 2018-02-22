@@ -52,9 +52,11 @@ int BufferProvider::createBuffer(int count,int perbufsize,buffer_type_enum bufty
 
     switch(buftype){
         case PREVIEWBUFFER:
+			#if !defined(TARGET_RK3326)
 			if(is_cif_driver){//should use cma buffer
 				buf.mIsForceIommuBuf = false;
 			}
+			#endif
             if(mCamBuffer->createPreviewBuffer(&buf) !=0) {
                 LOGE("%s(%d): preview buffer create failed",__FUNCTION__,__LINE__);		
                 ret = -1;	
