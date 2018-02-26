@@ -418,9 +418,9 @@ status_t CameraIspAdapter::startPreview(int preview_w,int preview_h,int w, int h
         	if(pCamInfo->mSoftInfo.mFrameRate > 0) {
 				resReq.request_fps = pCamInfo->mSoftInfo.mFrameRate;
 			} else {
-            	resReq.request_fps = 0 /*10*/;
+            	resReq.request_fps = 0;
             }
-            resReq.request_exp_t = 0 /*curExp*/;
+            resReq.request_exp_t = curExp;
         }
 
         resReq.requset_aspect = (bool_t)false;        

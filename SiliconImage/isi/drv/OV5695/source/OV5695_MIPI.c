@@ -969,7 +969,7 @@ static RESULT Sensor_SetupOutputWindowInternal
 	}
 
 	// store frame timing for later use in AEC module
-	rVtPixClkFreq = Sensor_get_PCLK(pSensorCtx, xclk);    
+	rVtPixClkFreq = 45000000;//Sensor_get_PCLK(pSensorCtx, xclk);    
     pSensorCtx->VtPixClkFreq     = rVtPixClkFreq;
     pSensorCtx->LineLengthPck    = usLineLengthPck;
     pSensorCtx->FrameLengthLines = usFrameLengthLines;	

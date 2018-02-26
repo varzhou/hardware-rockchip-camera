@@ -788,10 +788,12 @@ v1.0x51.0x5
    2) struct FramInfo add merge_status member.
 v1.0x51.0x6
    1) support mmu for rk3326 cif cameras.
+v1.0x51.0x7
+   1) support rk3326 mipi cameras.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x6)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x7)
 
 
 /*  */

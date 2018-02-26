@@ -149,13 +149,20 @@ LOCAL_SHARED_LIBRARIES:= \
     libion\
     libvpu\
     libdl\
-    libisp_silicomimageisp_api \
     libexpat \
     libskia \
     libhardware \
     liblog \
     libsensor \
     libopencv_java3
+
+ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3326)
+LOCAL_SHARED_LIBRARIES += \
+	lib_rkisp12_api
+else
+LOCAL_SHARED_LIBRARIES += \
+	lib_rkisp1_api
+endif
 
 ifeq ($(filter rk322x rk3328 , $(strip $(TARGET_BOARD_PLATFORM))), )
 LOCAL_SHARED_LIBRARIES += \
@@ -168,11 +175,6 @@ LOCAL_SHARED_LIBRARIES += \
     libstlport
 endif
 
-#LOCAL_STATIC_LIBRARIES :=  libisp_calibdb libtinyxml2 libisp_cam_calibdb libisp_ebase \
-#							libisp_oslayer libisp_common libisp_hal libisp_isi\
-#							libisp_cam_engine  libisp_version libisp_cameric_reg_drv  \
-
-#LOCAL_PREBUILT_LIBS := libisp_silicomimageisp_api.so
 endif
 ifeq ($(strip $(TARGET_BOARD_HARDWARE)),rk2928board)
 LOCAL_C_INCLUDES += \
@@ -294,7 +296,7 @@ endif
 
 
 ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3326)
-LOCAL_CFLAGS += -DTARGET_RK3368 -DTARGET_RK3326
+LOCAL_CFLAGS += -DTARGET_RK3368 -DTARGET_RK3326 -DRK_ISP_V12
 ifeq ($(strip $(TARGET_2ND_ARCH)), )
 LOCAL_CFLAGS += -DHAVE_ARM_NEON
 endif
