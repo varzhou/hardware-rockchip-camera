@@ -790,10 +790,12 @@ v1.0x51.0x6
    1) support mmu for rk3326 cif cameras.
 v1.0x51.0x7
    1) support rk3326 mipi cameras.
+v1.0x51.0x8
+   1) update lib_rkisp1_api library,v2.3.0.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x7)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x8)
 
 
 /*  */
