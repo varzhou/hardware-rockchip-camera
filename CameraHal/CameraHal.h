@@ -84,7 +84,7 @@
 #include <hardware/rga.h>
 #endif
 #elif (defined(TARGET_RK3399) || defined(TARGET_RK3288) || defined(TARGET_RK3366)) && defined(ANDROID_7_X) \
-	|| ((defined(TARGET_RK312x) || defined(TARGET_RK3328)) && defined(ANDROID_8_X))
+	|| ((defined(TARGET_RK312x) || defined(TARGET_RK3328) || defined(TARGET_RK3399)) && defined(ANDROID_8_X))
 #include "../libgralloc/gralloc_drm_handle.h"
 #include <hardware/rga.h>
 #elif defined(TARGET_RK30) && defined(TARGET_BOARD_PLATFORM_RK30XXB)
@@ -930,7 +930,7 @@ v1.0x51.0x8
     #define PRIVATE_HANDLE_GET_W(hd)       (hd->width)
     #define PRIVATE_HANDLE_GET_H(hd)       (hd->height)
 #elif (defined(TARGET_RK3399) || defined(TARGET_RK3288) || defined(TARGET_RK3366)) && defined(ANDROID_7_X) \
-    || ((defined(TARGET_RK312x) || defined(TARGET_RK3328)) && defined(ANDROID_8_X))
+    || ((defined(TARGET_RK312x) || defined(TARGET_RK3328) || defined(TARGET_RK3399)) && defined(ANDROID_8_X))
     typedef struct gralloc_drm_handle_t    rk_gralloc_drm_handle_t;
     #define NATIVE_HANDLE_TYPE             rk_gralloc_drm_handle_t
     #define PRIVATE_HANDLE_GET_W(hd)       (hd->width)
