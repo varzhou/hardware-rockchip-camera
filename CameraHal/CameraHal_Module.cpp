@@ -719,7 +719,7 @@ int camera_get_number_of_cameras(void)
 	camera_board_profiles * profiles = NULL;
     size_t nCamDev = 0;
     char trace_level[PROPERTY_VALUE_MAX];
-	
+
     if (gCamerasNumber > 0)
         goto camera_get_number_of_cameras_end;
 
@@ -1170,9 +1170,10 @@ int camera_get_number_of_cameras(void)
         }
    	}
 
-   
-	//camera_board_profiles::ProduceNewXml(profiles);
-	
+#ifdef TARGET_BOX
+	camera_board_profiles::ProduceNewXml(profiles);
+#endif
+
     gCamerasNumber = cam_cnt;
 
 #if CONFIG_AUTO_DETECT_FRAMERATE

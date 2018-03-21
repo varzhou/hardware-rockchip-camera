@@ -364,6 +364,10 @@ ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk30xxb)
 LOCAL_CFLAGS += -DTARGET_BOARD_PLATFORM_RK30XXB
 endif
 
+ifeq ($(strip $(TARGET_BOARD_PLATFORM_PRODUCT)),box)
+LOCAL_CFLAGS += -DTARGET_BOX
+endif
+
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 5.0)))
 LOCAL_CFLAGS += -DANDROID_5_X
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \< 6.0)))

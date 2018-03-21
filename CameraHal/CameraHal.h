@@ -792,10 +792,12 @@ v1.0x51.0x7
    1) support rk3326 mipi cameras.
 v1.0x51.0x8
    1) update lib_rkisp1_api library,v2.3.0.
+v1.0x51.0x9
+   1) usb camera use /data/camera/media_profiles.xml for video recording on platform box.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x8)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x9)
 
 
 /*  */
