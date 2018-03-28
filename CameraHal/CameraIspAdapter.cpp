@@ -2332,7 +2332,7 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
     if ( pMediaBuffer->pNext != NULL ) {
         MediaBufLockBuffer( (MediaBuffer_t*)pMediaBuffer->pNext );
     }
-#if 1
+	
 	if( (preview_frame_inval > 0) ){
 	  	preview_frame_inval--;
 		LOG1("frame_inval:%d\n",preview_frame_inval);
@@ -2347,7 +2347,7 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
 			goto end;
 		}
     }
-#endif
+
 
     if(mIsSendToTunningTh){
         MediaBufLockBuffer( pMediaBuffer );

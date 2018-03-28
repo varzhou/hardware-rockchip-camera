@@ -48,24 +48,18 @@ int BufferProvider::createBuffer(int count,int perbufsize,buffer_type_enum bufty
     buf.mBufType = (buffer_type_enum)buftype;
 
     mBufType = (buffer_type_enum)buftype;
-    buf.mIsForceIommuBuf = true;
+
 
     switch(buftype){
         case PREVIEWBUFFER:
-			#if !defined(TARGET_RK3326)
-			if(is_cif_driver){//should use cma buffer
-				buf.mIsForceIommuBuf = false;
-			}
-			#endif
+
             if(mCamBuffer->createPreviewBuffer(&buf) !=0) {
                 LOGE("%s(%d): preview buffer create failed",__FUNCTION__,__LINE__);		
                 ret = -1;	
             }
             break;
         case RAWBUFFER:
-			#if defined(TARGET_RK3188)//should use cma buffer
-				buf.mIsForceIommuBuf = false;
-			#endif
+
             if(mCamBuffer->createRawBuffer(&buf) !=0) {
                 LOGE("%s(%d): raw buffer create failed",__FUNCTION__,__LINE__);		
                 ret = -1;	

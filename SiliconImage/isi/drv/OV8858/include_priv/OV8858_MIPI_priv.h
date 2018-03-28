@@ -1,6 +1,5 @@
-//OV8858_MIPI_priv.h
-#ifndef __OV8810_PRIV_H__
-#define __OV8810_PRIV_H__
+#ifndef __OV8858_PRIV_H__
+#define __OV8858_PRIV_H__
 
 #include <ebase/types.h>
 #include <common/return_codes.h>
@@ -72,15 +71,19 @@ extern "C"
 *   2). correct OTP end address of 2A chip.
 *v1.0xb.0
 *   1). only 1632x1224 30fps for two lanes, temporaryly.
+*v1.0xc.0
+*   merge from CameraHal00_Release CameraHal8.x: v1.0x52.0 ISP: v2.0x4.0
+*   1). change bOTP_switch to bDumpRaw_OTP_switch.
+*   2). change judgment condition of applying OTP data,when dump raw data,it's true.
 */
 
 
-#define CONFIG_SENSOR_DRV_VERSION  KERNEL_VERSION(1, 0xb, 0)
+#define CONFIG_SENSOR_DRV_VERSION  KERNEL_VERSION(1, 0xc, 0)
 
 /*****************************************************************************
  * System control registers
  *****************************************************************************/
-//hkw  
+
 #define OV8858_MODE_SELECT                  (0x0100) // rw - Bit[7:1]not used  Bit[0]Streaming set 0: software_standby  1: streaming       
 #define OV8858_MODE_SELECT_OFF              (0x00U)
 #define OV8858_MODE_SELECT_ON				(0x01U)

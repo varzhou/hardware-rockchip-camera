@@ -542,7 +542,7 @@ int IonDmaMemManager::createIonBuffer(struct bufferinfo_s* ionbuf)
     for(i = 0;i < numBufs;i++){
     	memset(tmpalloc,0,sizeof(struct camera_ionbuf_s));
 
-        if((!mIommuEnabled) || (!ionbuf->mIsForceIommuBuf)){
+        if(!mIommuEnabled){
 			#if defined(TARGET_RK3188)
             ret = ion_alloc(client_fd, ionbuf->mPerBuffersize, PAGE_SIZE, ION_HEAP(ION_CARVEOUT_HEAP_ID), 0, &handle);
 			#else
@@ -573,7 +573,7 @@ int IonDmaMemManager::createIonBuffer(struct bufferinfo_s* ionbuf)
             break;
         }
         
-        if((!mIommuEnabled) || (!ionbuf->mIsForceIommuBuf)){
+        if(!mIommuEnabled){
             ret=ion_get_phys(client_fd,handle,&(tmpalloc->phy_addr));
 			if(ret<0)
 				LOGE("ion_get_phys failed\n");
@@ -984,7 +984,7 @@ int GrallocDrmMemManager::createGrallocDrmBuffer(struct bufferinfo_s* grallocbuf
         		LOGE("gralloc_alloc malloc buffer failed");
         		return -1;
             }
-            if(!grallocbuf->mIsForceIommuBuf) {
+            if(!mHandle->iommu_enabled) {
                 mHandle->flag |= GRALLOC_USAGE_TO_USE_PHY_CONT;
             }
 			break;

@@ -28,8 +28,10 @@ else
 LOCAL_SHARED_LIBRARIES += \
 	lib_rkisp1_api
 endif
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+	LOCAL_PROPRIETARY_MODULE := true
+endif
 LOCAL_MODULE:= libisp_isi_drv_TC358749XBG
-LOCAL_PROPRIETARY_MODULE := true
 ifneq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 5.0)))
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 else
