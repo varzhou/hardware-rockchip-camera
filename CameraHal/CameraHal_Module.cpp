@@ -704,6 +704,14 @@ int find_DV_resolution_index(int w, int h)
 
 	return index;
 }
+int usb_camera_hotplug(void)
+{
+    char usbcameraPlug[PROPERTY_VALUE_MAX];
+    property_get("persist.sys.usbcamera.status", usbcameraPlug, "");
+    bool plugstate = (strcmp(usbcameraPlug, "add") == 0)||
+                     (strcmp(usbcameraPlug, "remove") == 0);
+    return plugstate;
+}
 
 int camera_get_number_of_cameras(void)
 {
@@ -720,7 +728,8 @@ int camera_get_number_of_cameras(void)
     size_t nCamDev = 0;
     char trace_level[PROPERTY_VALUE_MAX];
 
-    if (gCamerasNumber > 0)
+    bool plugstate = usb_camera_hotplug();
+    if (gCamerasNumber > 0 && !plugstate)
         goto camera_get_number_of_cameras_end;
 
     {
