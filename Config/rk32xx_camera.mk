@@ -248,7 +248,7 @@ PRODUCT_PACKAGES += \
     lib_rkisp1_api
 endif
 
-ifneq ($(filter rk322x rk312x rk3126c rk3128 px3se, $(strip $(TARGET_BOARD_PLATFORM))), )
+ifneq ($(filter rk3128h rk322x rk312x rk3126c rk3128 px3se, $(strip $(TARGET_BOARD_PLATFORM))), )
 PRODUCT_PACKAGES += \
     lib_rkisp1_api
 endif
