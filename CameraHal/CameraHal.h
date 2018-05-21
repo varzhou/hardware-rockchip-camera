@@ -795,10 +795,13 @@ v1.0x51.0x8
    1) update lib_rkisp1_api library,v2.3.0.
 v1.0x51.0x9
    1) usb camera use /data/camera/media_profiles.xml for video recording on platform box.
+v1.0x51.0xa
+   1) fix crash in scale during CTS test.
+      Test: run cts -m CtsCameraTestCases -t android.hardware.cts.CameraTest#testPreviewPictureSizesCombination
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0x9)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0xa)
 
 
 /*  */

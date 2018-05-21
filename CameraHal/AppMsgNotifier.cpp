@@ -2105,7 +2105,8 @@ void AppMsgNotifier::encProcessThread()
 				case EncProcessThread::CMD_ENCPROCESS_SNAPSHOT:
 				{
 					FramInfo_s *frame = (FramInfo_s*)msg.arg2;
-					
+					LOGD("%s(%d): Set mRecPrevCbDataEn to false!\n",__FUNCTION__,__LINE__);
+					mRecPrevCbDataEn = false; //zyl add for passing cts test "testPreviewPictureSizesCombination"
 					LOGD("%s(%d): receive CMD_SNAPSHOT_SNAPSHOT with buffer %p,mEncPictureNum=%d",__FUNCTION__,__LINE__, (void*)frame->frame_index,mEncPictureNum);
 
                     //set picture encode info
