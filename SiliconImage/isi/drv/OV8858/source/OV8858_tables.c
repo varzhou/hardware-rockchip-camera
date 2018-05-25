@@ -797,6 +797,13 @@ const IsiRegDescription_t OV8858_g_1632x1224P10_twolane_fpschg[] =
 
 };
 
+const IsiRegDescription_t OV8858_g_1632x1224P7_twolane_fpschg[] =
+{
+	{0x380e, 0x13,"0x0100",eReadWrite}, // VTS H
+	{0x380f, 0x70,"0x0100",eReadWrite}, // VTS L
+	{0x0000 ,0x00,"eTableEnd",eTableEnd}
+};
+
 const IsiRegDescription_t OV8858_g_3264x2448_twolane[] =
 {
 	{0x030e, 0x02,"0x0100",eReadWrite}, // pll2_rdiv					

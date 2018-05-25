@@ -93,6 +93,8 @@ extern const IsiRegDescription_t OV8858_g_1632x1224P25_twolane_fpschg[];
 extern const IsiRegDescription_t OV8858_g_1632x1224P20_twolane_fpschg[];
 extern const IsiRegDescription_t OV8858_g_1632x1224P15_twolane_fpschg[];
 extern const IsiRegDescription_t OV8858_g_1632x1224P10_twolane_fpschg[];
+extern const IsiRegDescription_t OV8858_g_1632x1224P7_twolane_fpschg[];
+
 extern const IsiRegDescription_t OV8858_g_1632x1224_fourlane[];
 extern const IsiRegDescription_t OV8858_g_1632x1224P30_fourlane_fpschg[];
 extern const IsiRegDescription_t OV8858_g_1632x1224P25_fourlane_fpschg[];
@@ -1080,7 +1082,7 @@ static RESULT OV8858_IsiGetCapsIssInternal
                     pIsiSensorCaps->Resolution = ISI_RES_1632_1224P30;
                     break;
                 }
-#if 0
+#if 1
                 case 3:
                 {
                     pIsiSensorCaps->Resolution = ISI_RES_1632_1224P25;
@@ -1102,6 +1104,12 @@ static RESULT OV8858_IsiGetCapsIssInternal
                 case 6:
                 {
                     pIsiSensorCaps->Resolution = ISI_RES_1632_1224P10;
+                    break;
+                }
+
+		case 7:
+                {
+                    pIsiSensorCaps->Resolution = ISI_RES_1632_1224P7;
                     break;
                 }
 #endif
@@ -1150,10 +1158,10 @@ static RESULT OV8858_IsiGetCapsIssInternal
         pIsiSensorCaps->AGC             = ( ISI_AGC_OFF );//close;
         pIsiSensorCaps->AWB             = ( ISI_AWB_OFF );
         pIsiSensorCaps->AEC             = ( ISI_AEC_OFF );
-        pIsiSensorCaps->DPCC            = ( ISI_DPCC_AUTO | ISI_DPCC_OFF );//坏点
+        pIsiSensorCaps->DPCC            = ( ISI_DPCC_AUTO | ISI_DPCC_OFF );//禄碌碌茫
 
         pIsiSensorCaps->DwnSz           = ISI_DWNSZ_SUBSMPL; //;
-        pIsiSensorCaps->CieProfile      = ( ISI_CIEPROF_A  //光源；
+        pIsiSensorCaps->CieProfile      = ( ISI_CIEPROF_A  //鹿芒脭麓拢禄
                                           | ISI_CIEPROF_D50
                                           | ISI_CIEPROF_D65
                                           | ISI_CIEPROF_D75
@@ -1161,7 +1169,7 @@ static RESULT OV8858_IsiGetCapsIssInternal
                                           | ISI_CIEPROF_F11 );
         pIsiSensorCaps->SmiaMode        = ISI_SMIA_OFF;
         pIsiSensorCaps->MipiMode        = ISI_MIPI_MODE_RAW_10; 
-        pIsiSensorCaps->AfpsResolutions = ( ISI_AFPS_NOTSUPP ); //跳帧;没用
+        pIsiSensorCaps->AfpsResolutions = ( ISI_AFPS_NOTSUPP ); //脤酶脰隆;脙禄脫脙
 		pIsiSensorCaps->SensorOutputMode = ISI_SENSOR_OUTPUT_MODE_RAW;//
     }
 end:
@@ -1216,7 +1224,7 @@ const IsiSensorCaps_t OV8858_g_IsiSensorDefaultConfig =
     ISI_BLS_OFF,                // Bls
     ISI_GAMMA_OFF,              // Gamma
     ISI_CCONV_OFF,              // CConv
-    ISI_RES_3264_2448P15, 
+    ISI_RES_3264_2448P15, 		// resolution
     ISI_DWNSZ_SUBSMPL,          // DwnSz
     ISI_BLC_AUTO,               // BLC
     ISI_AGC_OFF,                // AGC
@@ -1245,7 +1253,7 @@ const IsiSensorCaps_t OV8858_g_IsiSensorDefaultConfig =
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 验证上面模式等；
+ * 脩茅脰陇脡脧脙忙脛拢脢陆碌脠拢禄
  *****************************************************************************/
 RESULT OV8858_SetupOutputFormat
 (
@@ -1563,7 +1571,7 @@ static RESULT OV8858_SetupOutputWindowInternal
     float    rVtPixClkFreq      = 0.0f;
     int xclk = 2400;
     
-	TRACE( OV8858_INFO, "%s (enter)\n", __FUNCTION__);
+	TRACE( OV8858_INFO, "%s (enter) g_sensor_version is %02x\n", __FUNCTION__ , g_sensor_version);
 	
 	if(pOV8858Ctx->IsiSensorMipiInfo.ucMipiLanes == SUPPORT_MIPI_ONE_LANE){
 	
@@ -1621,7 +1629,8 @@ static RESULT OV8858_SetupOutputWindowInternal
             case ISI_RES_1632_1224P25:
             case ISI_RES_1632_1224P20:
             case ISI_RES_1632_1224P15:
-            case ISI_RES_1632_1224P10:            
+            case ISI_RES_1632_1224P10:
+            case ISI_RES_1632_1224P7:
             {
                 if (set2Sensor == BOOL_TRUE) {                    
                     if (res_no_chg == BOOL_FALSE) {
@@ -1640,6 +1649,8 @@ static RESULT OV8858_SetupOutputWindowInternal
                     } else if (pConfig->Resolution == ISI_RES_1632_1224P15) {
                         result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P15_twolane_fpschg);
                     } else if (pConfig->Resolution == ISI_RES_1632_1224P10) {
+                        result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P10_twolane_fpschg);
+                    } else if (pConfig->Resolution == ISI_RES_1632_1224P7) {
                         result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P10_twolane_fpschg);
                     }
         		}
@@ -2016,7 +2027,7 @@ static RESULT OV8858_SetupOutputWindow
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 不用改
+ * 虏禄脫脙赂脛
  *****************************************************************************/
 static RESULT OV8858_AecSetModeParameters
 (
@@ -2111,7 +2122,7 @@ static RESULT OV8858_IsiSetupSensorIss
     MEMCPY( &pOV8858Ctx->Config, pConfig, sizeof( IsiSensorConfig_t ) );
 
     /* 1.) SW reset of image sensor (via I2C register interface)  be careful, bits 6..0 are reserved, reset bit is not sticky */
-    result = OV8858_IsiRegWriteIss ( pOV8858Ctx, OV8858_SOFTWARE_RST, OV8858_SOFTWARE_RST_VALUE );//宏定义 hkw；
+    result = OV8858_IsiRegWriteIss ( pOV8858Ctx, OV8858_SOFTWARE_RST, OV8858_SOFTWARE_RST_VALUE );//潞锚露篓脪氓 hkw拢禄
     RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 
     osSleep( 10 );
@@ -2258,7 +2269,7 @@ static RESULT OV8858_IsiSetupSensorIss
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_WRONG_STATE
  * @retval  RET_OUTOFRANGE
- * 不用改
+ * 虏禄脫脙赂脛
  *****************************************************************************/
 static RESULT OV8858_IsiChangeSensorResolutionIss
 (
@@ -2458,7 +2469,7 @@ static RESULT OV8858_IsiSensorSetStreamingIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 不用改
+ * 虏禄脫脙赂脛
  *****************************************************************************/
 static RESULT OV8858_IsiSensorSetPowerIss
 (
@@ -2532,7 +2543,7 @@ static RESULT OV8858_IsiSensorSetPowerIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 读pid;2或3个寄存器；
+ * 露脕pid;2禄貌3赂枚录脛麓忙脝梅拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiCheckSensorConnectionIss
 (
@@ -2637,7 +2648,7 @@ static RESULT OV8858_IsiGetSensorRevisionIss
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改
+ * 虏禄脫脙赂脛
  *****************************************************************************/
 static RESULT OV8858_IsiRegReadIss
 (
@@ -2693,7 +2704,7 @@ static RESULT OV8858_IsiRegReadIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
- * 不用改
+ * 虏禄脫脙赂脛
  *****************************************************************************/
 static RESULT OV8858_IsiRegWriteIss
 (
@@ -2742,7 +2753,7 @@ static RESULT OV8858_IsiRegWriteIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 不用改；获得增益限制
+ * 虏禄脫脙赂脛拢禄禄帽碌脙脭枚脪忙脧脼脰脝
  *****************************************************************************/
 static RESULT OV8858_IsiGetGainLimitsIss
 (
@@ -2795,7 +2806,7 @@ static RESULT OV8858_IsiGetGainLimitsIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 不用改；获得曝光限制；
+ * 虏禄脫脙赂脛拢禄禄帽碌脙脝脴鹿芒脧脼脰脝拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiGetIntegrationTimeLimitsIss
 (
@@ -2845,7 +2856,7 @@ static RESULT OV8858_IsiGetIntegrationTimeLimitsIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 不用改；获得GAIN值
+ * 虏禄脫脙赂脛拢禄禄帽碌脙GAIN脰碌
  *****************************************************************************/
 RESULT OV8858_IsiGetGainIss
 (
@@ -2904,7 +2915,7 @@ RESULT OV8858_IsiGetGainIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 不用改；获得GAIN最小值
+ * 虏禄脫脙赂脛拢禄禄帽碌脙GAIN脳卯脨隆脰碌
  *****************************************************************************/
 RESULT OV8858_IsiGetGainIncrementIss
 (
@@ -2956,7 +2967,7 @@ RESULT OV8858_IsiGetGainIncrementIss
  * @retval  RET_NULL_POINTER
  * @retval  RET_INVALID_PARM
  * @retval  RET_FAILURE
- * 不用改；设置gain值
+ * 虏禄脫脙赂脛拢禄脡猫脰脙gain脰碌
  *****************************************************************************/
 RESULT OV8858_IsiSetGainIss
 (
@@ -2991,7 +3002,7 @@ RESULT OV8858_IsiSetGainIss
     if( NewGain < pOV8858Ctx->AecMinGain ) NewGain = pOV8858Ctx->AecMinGain;
     if( NewGain > pOV8858Ctx->AecMaxGain ) NewGain = pOV8858Ctx->AecMaxGain;
 
-    usGain = (uint16_t)(NewGain * OV8858_MAXN_GAIN+0.5); //大概加0.5 hkw
+    usGain = (uint16_t)(NewGain * OV8858_MAXN_GAIN+0.5); //麓贸赂脜录脫0.5 hkw
 
     // write new gain into sensor registers, do not write if nothing has changed
     if( (usGain != pOV8858Ctx->OldGain) )
@@ -3038,7 +3049,7 @@ RESULT OV8858_IsiSetGainIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 获得曝光时间 不用改
+ * 禄帽碌脙脝脴鹿芒脢卤录盲 虏禄脫脙赂脛
  *****************************************************************************/
 RESULT OV8858_IsiGetIntegrationTimeIss
 (
@@ -3084,7 +3095,7 @@ RESULT OV8858_IsiGetIntegrationTimeIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- * 获得曝光时间的step 不用改
+ * 禄帽碌脙脝脴鹿芒脢卤录盲碌脛step 虏禄脫脙赂脛
  *****************************************************************************/
 RESULT OV8858_IsiGetIntegrationTimeIncrementIss
 (
@@ -3140,7 +3151,7 @@ RESULT OV8858_IsiGetIntegrationTimeIncrementIss
  * @retval  RET_INVALID_PARM
  * @retval  RET_FAILURE
  * @retval  RET_DIVISION_BY_ZERO
- *设置曝光时间；根据应用手册修改寄存器宏
+ *脡猫脰脙脝脴鹿芒脢卤录盲拢禄赂霉戮脻脫娄脫脙脢脰虏谩脨脼赂脛录脛麓忙脝梅潞锚
  *****************************************************************************/
 RESULT OV8858_IsiSetIntegrationTimeIss
 (
@@ -3296,7 +3307,7 @@ RESULT OV8858_IsiSetIntegrationTimeIss
  * @retval  RET_INVALID_PARM
  * @retval  RET_FAILURE
  * @retval  RET_DIVISION_BY_ZERO
- * 不用改，设置整个曝光；
+ * 虏禄脫脙赂脛拢卢脡猫脰脙脮没赂枚脝脴鹿芒拢禄
  *****************************************************************************/
 RESULT OV8858_IsiExposureControlIss
 (
@@ -3353,7 +3364,7 @@ RESULT OV8858_IsiExposureControlIss
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
  * @retval  RET_NULL_POINTER
- *不用改，获取gain和exposure 时间
+ *虏禄脫脙赂脛拢卢禄帽脠隆gain潞脥exposure 脢卤录盲
  *****************************************************************************/
 RESULT OV8858_IsiGetCurrentExposureIss
 (
@@ -3404,7 +3415,7 @@ RESULT OV8858_IsiGetCurrentExposureIss
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；
+ * 虏禄脫脙赂脛拢禄
  *****************************************************************************/
 RESULT OV8858_IsiGetResolutionIss
 (
@@ -3451,7 +3462,7 @@ RESULT OV8858_IsiGetResolutionIss
  *
  * @return  Return the result of the function call.
  * @retval  RET_SUCCESS
- * 不用改；没用；
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiGetAfpsInfoHelperIss(
     OV8858_Context_t   *pOV8858Ctx,
@@ -3516,7 +3527,7 @@ static RESULT OV8858_IsiGetAfpsInfoHelperIss(
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
  * @retval  RET_NOTSUPP
- * 不用改；没用；
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄
  *****************************************************************************/
 RESULT OV8858_IsiGetAfpsInfoIss(
     IsiSensorHandle_t   handle,
@@ -3617,9 +3628,10 @@ RESULT OV8858_IsiGetAfpsInfoIss(
                 case ISI_RES_1632_1224P20:
                 case ISI_RES_1632_1224P15:
                 case ISI_RES_1632_1224P10:
+				case ISI_RES_1632_1224P7:
 					if(ISI_FPS_GET(ISI_RES_1632_1224P30) >= pOV8858Ctx->preview_minimum_framerate)
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P30 );
-                    #if 0
+                    #if 1
 					if(ISI_FPS_GET(ISI_RES_1632_1224P25) >= pOV8858Ctx->preview_minimum_framerate)
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P25 );
 					if(ISI_FPS_GET(ISI_RES_1632_1224P20) >= pOV8858Ctx->preview_minimum_framerate)
@@ -3628,6 +3640,8 @@ RESULT OV8858_IsiGetAfpsInfoIss(
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P15 );
 					if(ISI_FPS_GET(ISI_RES_1632_1224P10) >= pOV8858Ctx->preview_minimum_framerate)
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P10 );
+					if(ISI_FPS_GET(ISI_RES_1632_1224P7) >= pOV8858Ctx->preview_minimum_framerate)
+                    	AFPSCHECKANDADD( ISI_RES_1632_1224P7);
                     #endif
                     break;
 
@@ -3730,7 +3744,7 @@ RESULT OV8858_IsiGetAfpsInfoIss(
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiGetCalibKFactor
 (
@@ -3776,7 +3790,7 @@ static RESULT OV8858_IsiGetCalibKFactor
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiGetCalibPcaMatrix
 (
@@ -3823,7 +3837,7 @@ static RESULT OV8858_IsiGetCalibPcaMatrix
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；return success;
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄return success;
  *****************************************************************************/
 static RESULT OV8858_IsiGetCalibSvdMeanValue
 (
@@ -3870,7 +3884,7 @@ static RESULT OV8858_IsiGetCalibSvdMeanValue
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；return success;
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄return success;
  *****************************************************************************/
 static RESULT OV8858_IsiGetCalibCenterLine
 (
@@ -3917,7 +3931,7 @@ static RESULT OV8858_IsiGetCalibCenterLine
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；return success;
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄return success;
  *****************************************************************************/
 static RESULT OV8858_IsiGetCalibClipParam
 (
@@ -3964,7 +3978,7 @@ static RESULT OV8858_IsiGetCalibClipParam
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；return success;
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄return success;
  *****************************************************************************/
 static RESULT OV8858_IsiGetCalibGlobalFadeParam
 (
@@ -4011,7 +4025,7 @@ static RESULT OV8858_IsiGetCalibGlobalFadeParam
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；return success;
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄return success;
  *****************************************************************************/
 static RESULT OV8858_IsiGetCalibFadeParam
 (
@@ -4057,7 +4071,7 @@ static RESULT OV8858_IsiGetCalibFadeParam
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；return success;
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄return success;
  *****************************************************************************/
 static RESULT OV8858_IsiGetIlluProfile
 (
@@ -4124,7 +4138,7 @@ static RESULT OV8858_IsiGetIlluProfile
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；return success;
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄return success;
  *****************************************************************************/
 static RESULT OV8858_IsiGetLscMatrixTable
 (
@@ -4293,7 +4307,7 @@ static RESULT OV8858_IsiGetLscMatrixTable
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；
+ * 虏禄脫脙赂脛拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiMdiInitMotoDriveMds
 (
@@ -4332,7 +4346,7 @@ static RESULT OV8858_IsiMdiInitMotoDriveMds
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；
+ * 虏禄脫脙赂脛拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiMdiSetupMotoDrive
 (
@@ -4387,7 +4401,7 @@ static RESULT OV8858_IsiMdiSetupMotoDrive
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 参考14825；外置马达；
+ * 虏脦驴录14825拢禄脥芒脰脙脗铆麓茂拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiMdiFocusSet
 (
@@ -4460,7 +4474,7 @@ static RESULT OV8858_IsiMdiFocusSet
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 参考14825；外置马达；
+ * 虏脦驴录14825拢禄脥芒脰脙脗铆麓茂拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiMdiFocusGet
 (
@@ -4540,7 +4554,7 @@ static RESULT OV8858_IsiMdiFocusGet
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改；没用；
+ * 虏禄脫脙赂脛拢禄脙禄脫脙拢禄
  *****************************************************************************/
 static RESULT OV8858_IsiMdiFocusCalibrate
 (
@@ -4577,7 +4591,7 @@ static RESULT OV8858_IsiMdiFocusCalibrate
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- *不用改，没用，return；
+ *虏禄脫脙赂脛拢卢脙禄脫脙拢卢return拢禄
  ******************************************************************************/
 static RESULT OV8858_IsiActivateTestPattern
 (
@@ -4644,7 +4658,7 @@ static RESULT OV8858_IsiActivateTestPattern
  * @retval  RET_SUCCESS
  * @retval  RET_WRONG_HANDLE
  * @retval  RET_NULL_POINTER
- * 不用改
+ * 虏禄脫脙赂脛
  ******************************************************************************/
 static RESULT OV8858_IsiGetSensorMipiInfoIss
 (
