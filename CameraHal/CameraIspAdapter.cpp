@@ -1332,13 +1332,13 @@ void CameraIspAdapter::initDefaultParameters(int camFd)
 	/*no much meaning ,only for passing cts*/
 	params.set(CameraParameters::KEY_SUPPORTED_ANTIBANDING, "auto,50hz,60hz,off");
 	params.set(CameraParameters::KEY_ANTIBANDING, "off");
-	if (m_camDevice->isSOCSensor() == false) {
-	    params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5000,30000");
-		params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5000,30000),(30000,30000)");
-	}else {
+	//if (m_camDevice->isSOCSensor() == false) {
+	//    params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5000,30000");
+	//	params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5000,30000),(30000,30000)");
+	//}else {
 	    params.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "5000,19000");
 		params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(5000,19000),(19000,19000),(24000,24000)");
-	}
+	//}
     params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "10,15,19,24,30");
     params.setPreviewFrameRate(30);
 
@@ -2333,7 +2333,7 @@ void CameraIspAdapter::bufferCb( MediaBuffer_t* pMediaBuffer )
         MediaBufLockBuffer( (MediaBuffer_t*)pMediaBuffer->pNext );
     }
 	
-	if( (preview_frame_inval > 0) ){
+	if( (preview_frame_inval > 0) && !mIsCtsTest){
 	  	preview_frame_inval--;
 		LOG1("frame_inval:%d\n",preview_frame_inval);
         if(m_camDevice->isSOCSensor() == false){

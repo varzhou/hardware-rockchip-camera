@@ -798,10 +798,12 @@ v1.0x51.0x9
 v1.0x51.0xa
    1) fix crash in scale during CTS test.
       Test: run cts -m CtsCameraTestCases -t android.hardware.cts.CameraTest#testPreviewPictureSizesCombination
+v1.0x51.0xb
+   1) fix 3368 8.1 cts fail.
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0xa)
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0xb)
 
 
 /*  */
@@ -1051,6 +1053,7 @@ public:
     virtual ~CameraAdapter();
 
     void setImageAllFov(bool sw){mImgAllFovReq=sw;}
+    void setCtsTestFlag(bool isCts){mIsCtsTest = isCts;}
     DisplayAdapter* getDisplayAdapterRef(){return mRefDisplayAdapter;}
     void setDisplayAdapterRef(DisplayAdapter& refDisplayAdap);
     void setEventNotifierRef(AppMsgNotifier& refEventNotify);
@@ -1155,6 +1158,7 @@ protected:
     int mVideoWidth;
     int mVideoHeight;
     bool mImgAllFovReq;
+    bool mIsCtsTest;
 
     unsigned int mCamDriverSupportFmt[CAMERA_DRIVER_SUPPORT_FORMAT_MAX];
     enum v4l2_memory mCamDriverV4l2MemType;

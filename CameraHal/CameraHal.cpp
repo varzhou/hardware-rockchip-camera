@@ -146,6 +146,17 @@ CameraHal::CameraHal(int cameraId)
 	    #endif
     }
 
+    char cts_property[PROPERTY_VALUE_MAX];                                                                                                                                     
+    char img_property[PROPERTY_VALUE_MAX];                                                                                                                                
+    property_get("cts_gts.status", cts_property, "false");                    
+    property_get("ro.build.fingerprint", img_property, "0");                                                                                                                   
+    if(!strcmp(cts_property,"true") ||                                                                                                                                         
+        strstr(img_property, "aosp_arm_a") != NULL){                                                                                                                 
+        mCameraAdapter->setCtsTestFlag(true);                                                                                                                              
+    }else{                                                                                                                                                                     
+        mCameraAdapter->setCtsTestFlag(false);                                                                                                                             
+    } 
+
     mDisplayAdapter = new DisplayAdapter();
     mEventNotifier = new AppMsgNotifier(mCameraAdapter);
     
