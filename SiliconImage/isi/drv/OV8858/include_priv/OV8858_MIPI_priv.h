@@ -75,10 +75,12 @@ extern "C"
 *   merge from CameraHal00_Release CameraHal8.x: v1.0x52.0 ISP: v2.0x4.0
 *   1). change bOTP_switch to bDumpRaw_OTP_switch.
 *   2). change judgment condition of applying OTP data,when dump raw data,it's true.
+*v1.0xd.0
+*   1) fix some bugs.
 */
 
 
-#define CONFIG_SENSOR_DRV_VERSION  KERNEL_VERSION(1, 0xc, 0)
+#define CONFIG_SENSOR_DRV_VERSION  KERNEL_VERSION(1, 0xd, 0)
 
 /*****************************************************************************
  * System control registers

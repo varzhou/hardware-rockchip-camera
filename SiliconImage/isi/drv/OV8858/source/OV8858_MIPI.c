@@ -101,6 +101,7 @@ extern const IsiRegDescription_t OV8858_g_1632x1224P25_fourlane_fpschg[];
 extern const IsiRegDescription_t OV8858_g_1632x1224P20_fourlane_fpschg[];
 extern const IsiRegDescription_t OV8858_g_1632x1224P15_fourlane_fpschg[];
 extern const IsiRegDescription_t OV8858_g_1632x1224P10_fourlane_fpschg[];
+extern const IsiRegDescription_t OV8858_g_1632x1224P7_fourlane_fpschg[];
 extern const IsiRegDescription_t OV8858_g_3264x2448_onelane[];
 extern const IsiRegDescription_t OV8858_g_3264x2448_twolane[];
 extern const IsiRegDescription_t OV8858_g_3264x2448P15_twolane_fpschg[];
@@ -1651,7 +1652,7 @@ static RESULT OV8858_SetupOutputWindowInternal
                     } else if (pConfig->Resolution == ISI_RES_1632_1224P10) {
                         result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P10_twolane_fpschg);
                     } else if (pConfig->Resolution == ISI_RES_1632_1224P7) {
-                        result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P10_twolane_fpschg);
+                        result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P7_twolane_fpschg);
                     }
         		}
 
@@ -1670,6 +1671,8 @@ static RESULT OV8858_SetupOutputWindowInternal
                     usTimeVts = 0x9b8;
                 } else if (pConfig->Resolution == ISI_RES_1632_1224P10) {
                     usTimeVts = 0x0e94;
+                } else if (pConfig->Resolution == ISI_RES_1632_1224P7) {
+                    usTimeVts = 0x1370;
                 }
                 
     		    /* sleep a while, that sensor can take over new default values */
@@ -1724,7 +1727,8 @@ static RESULT OV8858_SetupOutputWindowInternal
             case ISI_RES_1632_1224P25:
             case ISI_RES_1632_1224P20:
             case ISI_RES_1632_1224P15:
-            case ISI_RES_1632_1224P10:            
+            case ISI_RES_1632_1224P10:
+            case ISI_RES_1632_1224P7:
             {
                 if (set2Sensor == BOOL_TRUE) {                    
                     if (res_no_chg == BOOL_FALSE) {
@@ -1744,6 +1748,8 @@ static RESULT OV8858_SetupOutputWindowInternal
                         result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P15_fourlane_fpschg);
                     } else if (pConfig->Resolution == ISI_RES_1632_1224P10) {
                         result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P10_fourlane_fpschg);
+                    } else if (pConfig->Resolution == ISI_RES_1632_1224P7) {
+                        result = IsiRegDefaultsApply( pOV8858Ctx, OV8858_g_1632x1224P7_fourlane_fpschg);
                     }
         		}
     			usTimeHts = 0x0788; 
@@ -1757,6 +1763,8 @@ static RESULT OV8858_SetupOutputWindowInternal
                     usTimeVts = 0x9b8;
                 } else if (pConfig->Resolution == ISI_RES_1632_1224P10) {
                     usTimeVts = 0x0e94;
+                } else if (pConfig->Resolution == ISI_RES_1632_1224P7) {
+                    usTimeVts = 0x1370;
                 }
                 
     		    /* sleep a while, that sensor can take over new default values */
@@ -3674,6 +3682,7 @@ RESULT OV8858_IsiGetAfpsInfoIss(
                 case ISI_RES_1632_1224P20:
                 case ISI_RES_1632_1224P15:
                 case ISI_RES_1632_1224P10:
+                case ISI_RES_1632_1224P7:
 					if(ISI_FPS_GET(ISI_RES_1632_1224P30) >= pOV8858Ctx->preview_minimum_framerate)
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P30 );
 					if(ISI_FPS_GET(ISI_RES_1632_1224P25) >= pOV8858Ctx->preview_minimum_framerate)
@@ -3684,6 +3693,8 @@ RESULT OV8858_IsiGetAfpsInfoIss(
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P15 );
 					if(ISI_FPS_GET(ISI_RES_1632_1224P10) >= pOV8858Ctx->preview_minimum_framerate)
                     	AFPSCHECKANDADD( ISI_RES_1632_1224P10 );
+                                        if(ISI_FPS_GET(ISI_RES_1632_1224P7) >= pOV8858Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_1632_1224P7 );
                     break;
                     
                 case ISI_RES_3264_2448P30:
