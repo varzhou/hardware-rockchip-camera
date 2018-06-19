@@ -181,6 +181,7 @@ int CameraSOCAdapter::cameraFpsInfoSet(CameraParameters &params)
     #endif
     memset(framerates,0x00,sizeof(framerates));
     strcpy(framerates,"15,19,24");
+    params.setPreviewFrameRate(24);
     //parameterString.append(")");
 
     params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, parameterString.string());
