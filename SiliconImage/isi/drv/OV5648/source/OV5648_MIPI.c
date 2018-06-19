@@ -165,7 +165,7 @@ static RESULT Sensor_IsiMdiFocusCalibrate( IsiSensorHandle_t handle );
 static RESULT Sensor_IsiGetSensorMipiInfoIss( IsiSensorHandle_t handle, IsiSensorMipiInfo *ptIsiSensorMipiInfo);
 static RESULT Sensor_IsiGetSensorIsiVersion(  IsiSensorHandle_t   handle, unsigned int* pVersion);
 static RESULT Sensor_IsiGetSensorTuningXmlVersion(  IsiSensorHandle_t   handle, char** pTuningXmlVersion);
-
+static RESULT Sensor_IsiSetSensorFrameRateLimit(IsiSensorHandle_t handle, uint32_t minimum_framerate);
 
 static float dctfloor( const float f )
 {
@@ -3242,14 +3242,20 @@ RESULT Sensor_IsiGetAfpsInfoIss(
 					case ISI_RES_1296_972P20:
 					case ISI_RES_1296_972P15:
 					case ISI_RES_1296_972P10:
-						AFPSCHECKANDADD( ISI_RES_1296_972P30);
-						AFPSCHECKANDADD( ISI_RES_1296_972P25);
-						AFPSCHECKANDADD( ISI_RES_1296_972P20);
-						AFPSCHECKANDADD( ISI_RES_1296_972P15);
-						AFPSCHECKANDADD( ISI_RES_1296_972P10);
+						if(ISI_FPS_GET(ISI_RES_1296_972P30) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P30);
+						if(ISI_FPS_GET(ISI_RES_1296_972P25) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P25);
+						if(ISI_FPS_GET(ISI_RES_1296_972P20) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P20);
+						if(ISI_FPS_GET(ISI_RES_1296_972P15) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P15);
+						if(ISI_FPS_GET(ISI_RES_1296_972P10) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P10);
 						break;
 					case ISI_RES_2592_1944P10:
-						AFPSCHECKANDADD( ISI_RES_2592_1944P10);
+					        if(ISI_FPS_GET(ISI_RES_2592_1944P10) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_2592_1944P10);
 						break;
 				}
 				break;
@@ -3273,12 +3279,17 @@ RESULT Sensor_IsiGetAfpsInfoIss(
 					case ISI_RES_1296_972P10:
 						//TRACE( Sensor_ERROR, "%s: (99999exit)\n", __FUNCTION__);
 						#ifndef MIPI_210MBPS
-						AFPSCHECKANDADD( ISI_RES_1296_972P30);
-						AFPSCHECKANDADD( ISI_RES_1296_972P25);
+						if(ISI_FPS_GET(ISI_RES_1296_972P30) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P30);
+						if(ISI_FPS_GET(ISI_RES_1296_972P25) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P25);
 						#endif
-						AFPSCHECKANDADD( ISI_RES_1296_972P20);
-						AFPSCHECKANDADD( ISI_RES_1296_972P15);
-						AFPSCHECKANDADD( ISI_RES_1296_972P10);
+						if(ISI_FPS_GET(ISI_RES_1296_972P20) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P20);
+						if(ISI_FPS_GET(ISI_RES_1296_972P15) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P15);
+						if(ISI_FPS_GET(ISI_RES_1296_972P10) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_1296_972P10);
 						break;
 					#ifndef MIPI_210MBPS
 					case ISI_RES_2592_1944P15:
@@ -3286,9 +3297,11 @@ RESULT Sensor_IsiGetAfpsInfoIss(
 					case ISI_RES_2592_1944P7:
 						//TRACE( Sensor_ERROR, "%s: (88888exit)\n", __FUNCTION__);
 						#ifndef MIPI_210MBPS
-						AFPSCHECKANDADD( ISI_RES_2592_1944P15);
+						if(ISI_FPS_GET(ISI_RES_2592_1944P15) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_2592_1944P15);
 						#endif
-						AFPSCHECKANDADD( ISI_RES_2592_1944P7);
+						if(ISI_FPS_GET(ISI_RES_2592_1944P7) >= pSensorCtx->preview_minimum_framerate)
+						    AFPSCHECKANDADD( ISI_RES_2592_1944P7);
 						break;
 						// check next series here...
 			        #if 0
@@ -3296,9 +3309,12 @@ RESULT Sensor_IsiGetAfpsInfoIss(
 			        case ISI_RES_TV1080P15:
 			        case ISI_RES_TV1080P10:
 			        case ISI_RES_TV1080P5:
-			            AFPSCHECKANDADD( ISI_RES_TV1080P15 );
-			            AFPSCHECKANDADD( ISI_RES_TV1080P10 );
-			            AFPSCHECKANDADD( ISI_RES_TV1080P5  );
+					if(ISI_FPS_GET(ISI_RES_TV1080P15) >= pSensorCtx->preview_minimum_framerate)
+			                    AFPSCHECKANDADD( ISI_RES_TV1080P15 );
+				        if(ISI_FPS_GET(ISI_RES_TV1080P10) >= pSensorCtx->preview_minimum_framerate)
+			                    AFPSCHECKANDADD( ISI_RES_TV1080P10 );
+				        if(ISI_FPS_GET(ISI_RES_TV1080P5) >= pSensorCtx->preview_minimum_framerate)
+			                    AFPSCHECKANDADD( ISI_RES_TV1080P5  );
 			            break;
 			        #endif
 				}
@@ -4448,6 +4464,7 @@ RESULT Sensor_IsiGetSensorIss
 
         /* Testpattern */
         pIsiSensor->pIsiActivateTestPattern             = Sensor_IsiActivateTestPattern;
+	pIsiSensor->pIsiSetSensorFrameRateLimit			= Sensor_IsiSetSensorFrameRateLimit;
     }
     else
     {
@@ -4532,6 +4549,24 @@ static RESULT Sensor_IsiGetSensorI2cInfo(sensor_i2c_info_t** pdata)
 	
     *pdata = pSensorI2cInfo;
     return RET_SUCCESS;
+}
+
+static RESULT Sensor_IsiSetSensorFrameRateLimit(IsiSensorHandle_t handle, uint32_t minimum_framerate)
+{
+    Sensor_Context_t *pSensorCtx = (Sensor_Context_t *)handle;
+
+    RESULT result = RET_SUCCESS;
+
+    TRACE( Sensor_INFO, "%s: (enter)\n", __FUNCTION__);
+
+    if ( pSensorCtx == NULL )
+    {
+    	TRACE( Sensor_ERROR, "%s: pSensorCtx IS NULL\n", __FUNCTION__);
+        return ( RET_WRONG_HANDLE );
+    }
+	
+	pSensorCtx->preview_minimum_framerate = minimum_framerate;
+	return RET_SUCCESS;
 }
 
 /******************************************************************************
