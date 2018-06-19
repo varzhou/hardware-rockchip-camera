@@ -21,7 +21,6 @@
 #include "GraphConfigManager.h"
 #include "MediaController.h"
 #include "v4l2device.h"
-#include <rk_aiq_types.h>
 #include "NodeTypes.h"
 
 namespace android {
@@ -67,12 +66,9 @@ public:
     struct ConfigurationResults {
         int pixelFormat;  /**< V4L2 pixel format produced by the input system
                                pipe */
-        rk_aiq_frame_params sensorFrameParams; /**< Sensor cropping and scaling
-                                                    configuration */
 
         ConfigurationResults() :
             pixelFormat(0) {
-            CLEAR(sensorFrameParams);
         }
 
     };

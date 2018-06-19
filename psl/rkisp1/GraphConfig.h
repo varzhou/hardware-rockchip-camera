@@ -25,7 +25,7 @@
 #include <utils/Errors.h>
 #include <hardware/camera3.h>
 #include <gcss.h>
-#include <rk_aiq.h>
+/* #include <rk_aiq.h> */
 #include <linux/media.h>
 #include "MediaCtlPipeConfig.h"
 #include "LogHelper.h"
@@ -210,8 +210,6 @@ public:
     status_t streamGetConnectedOutputPorts(int32_t streamId,
                                            NodesPtrVector &outputPorts,
                                            NodesPtrVector &peerPorts);
-    status_t streamGetFrameParams(rk_aiq_frame_params &sensorFrameParams,
-                                  int32_t streamId);
     /*
      * Port Interrogation methods
      */
@@ -227,7 +225,6 @@ public:
     status_t portGetPeerIdByName(std::string name,
                                  uid_t &terminalId);
     bool isPipeEdgePort(Node *port); // TODO: should be renamed as portIsEdgePort
-    status_t getSourceFrameParams(rk_aiq_frame_params &frameParams);
     status_t getDimensions(const Node *node, int &w, int &h) const;
     status_t getDimensions(const Node *node, int &w, int &h, int &l,int &t) const;
     /*
@@ -423,11 +420,6 @@ private:
     void deleteKernelInfo();
     void createKernelListStructures();
     status_t generateKernelListsForStreams();
-    status_t getTPGFrameParams(rk_aiq_frame_params &tpgFrameParams);
-
-public:
-    // Imgu used from ParameterWorker
-    status_t getSensorFrameParams(rk_aiq_frame_params &sensorFrameParams);
 
 private:
     // Disable copy constructor and assignment operator

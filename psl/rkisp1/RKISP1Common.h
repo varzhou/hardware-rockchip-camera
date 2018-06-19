@@ -17,7 +17,7 @@
 #ifndef _CAMERA3_HAL_RKISP1_COMMON_H_
 #define _CAMERA3_HAL_RKISP1_COMMON_H_
 
-#include <ia_types.h>
+#include "3ATypes.h"
 
 namespace android {
 namespace camera2 {

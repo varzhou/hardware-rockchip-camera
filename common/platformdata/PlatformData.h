@@ -149,36 +149,6 @@ enum ExtensionGroups {
     CAPABILITY_DEVICE = 1 << 3,
 };
 
-/*
-  * aiqd: automatic image quality data
-  * aiqd data is used by 3a libs.
-  *
-  * The main purpose of it is as below:
-  * 1. manual AE
-  * 2. LSC self-calibration
-  * 3. Latest detected flicker detection mode and flicker frequency
-  *
-  * When the camera is starting, if there is aiqd data, rk_aiq_init() will
-  * use it. The 3a also could work if there is no aiqd data.
-  *
-  * The aiqd data will be read from file system to PlatformData
-  * when the camera HAL is loaded by arc_camera3_service.
-  * When the camera is starting, the aiqd data will be passed to 3a libs.
-  * When the camera is stopping, the aiqd data will be saved to PlatformData.
-  * When the Chrome OS is shutting down, the aiqd data will be save into
-  * the file system.
-  */
-struct AiqdDataInfo {
-    int mDataSize; // the real size of the Data
-    int mDataCapacity; // the total size of the Data buffer
-    std::string mFileName;
-    std::unique_ptr<char[]> mData;
-
-    AiqdDataInfo(): mDataSize(0),
-        mDataCapacity(0),
-        mFileName("") {}
-};
-
 /**
  * \class CameraHWInfo
  *
@@ -223,7 +193,6 @@ public:
     bool mHasMediaController; // TODO: REMOVE. WA to overcome BXT MC-related issue with camera ID <-> ISP port
     media_device_info mDeviceInfo;
     std::vector<struct SensorDriverDescriptor> mSensorInfo;
-    struct AiqdDataInfo mAiqdDataInfo[MAX_CAMERAS];
 private:
     // the below functions are used to init the mSensorInfo
     status_t initDriverList();
@@ -329,7 +298,6 @@ public:
     static const char* boardName(void);
     static const char* productName(void);
     static const char* manufacturerName(void);
-    static std::string getAiqdFileName(const std::string& sensorName);
     static bool supportDualVideo(void);
     static int getCameraDeviceAPIVersion(void);
     static bool supportExtendedMakernote(void);
@@ -346,15 +314,6 @@ public:
     static int getPartialMetadataCount(int cameraId);
     static CameraWindow getActivePixelArray(int cameraId);
 
-    static bool readAiqdData(int cameraId, ia_binary_data* data);
-    static void saveAiqdData(int cameraId, const ia_binary_data& data);
-
-private:
-    static void initAiqdInfo(int cameraIdx);
-    static unsigned int getAiqdFileSize(std::string fileName);
-    static bool readAiqdDataFromFile(int cameraIdx, const std::string fileName, int fileSize);
-    static bool saveAiqdDataToFile();
-    static status_t readSpId(std::string& spIdName, unsigned int& spIdValue);
 };
 } NAMESPACE_DECLARATION_END
 

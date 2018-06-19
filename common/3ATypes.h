@@ -18,9 +18,6 @@
 #ifndef _HAL_3A_TYPES_H_
 #define _HAL_3A_TYPES_H_
 
-#include <ia_mkn_types.h>
-#include <ia_types.h>
-
 #define EV_LOWER_BOUND         (-100)
 #define EV_UPPER_BOUND          100
 
@@ -154,6 +151,21 @@ struct AAAWindowInfo {
     unsigned width;
     unsigned height;
 };
+
+/**
+ *  \brief Bundles binary data pointer with size.
+ */
+typedef struct
+{
+    void        *data;
+    unsigned int size;
+} ia_binary_data; /* ia_binay_data owns data */
+
+/** Coordinate, used in red-eye correction. */
+typedef struct {
+    int x;
+    int y;
+} ia_coordinate;
 
 } NAMESPACE_DECLARATION_END
 

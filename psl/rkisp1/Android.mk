@@ -40,7 +40,6 @@ PSLSRC = \
     psl/rkisp1/NodeTypes.cpp \
     psl/rkisp1/RgaCropScale.cpp \
     psl/rkisp1/RkCtrlLoop.cpp 
-    # psl/rkisp1/rkisp_control_loop_test.cpp
 
 STRICTED_CPPFLAGS := \
                     -Wno-unused-parameter \

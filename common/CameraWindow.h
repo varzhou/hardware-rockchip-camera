@@ -20,7 +20,7 @@
 
 #include <utils/Errors.h>
 #include <stdint.h>
-#include "ia_types.h"
+#include "3ATypes.h"
 #include "FrameInfo.h"
 
 NAMESPACE_DECLARATION {

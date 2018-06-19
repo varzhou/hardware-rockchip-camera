@@ -178,8 +178,6 @@ void PlatformData::init()
             continue;
         if (cci->sensorType() != SENSOR_TYPE_RAW)
             continue;
-
-        initAiqdInfo(i);
     }
 
     mInitialized = true;
@@ -193,10 +191,6 @@ void PlatformData::deinit() {
     LOGI("@%s", __FUNCTION__);
 
     if (mCameraHWInfo) {
-        saveAiqdDataToFile();
-        for (int i = 0; i < numberOfCameras(); i++) {
-            mCameraHWInfo->mAiqdDataInfo[i].mData.reset();
-        }
         delete mCameraHWInfo;
         mCameraHWInfo = nullptr;
     }
@@ -436,29 +430,6 @@ const char* PlatformData::manufacturerName(void)
     return mCameraHWInfo->manufacturerName();
 }
 
-/**
- *
- * retrieves the AIQD data file path saved on the host file system
- *
- * AIQD is triggered to store into filesystem by 3a to rembmer 3a parameters before
- * the camera exist, 3a will read the AIQD file for better 3a quality when camera starts
- *
- * \param[IN] sensorName the name of the sensor
- *
- * \return the AIQD data file path on the host file system
- */
-std::string PlatformData::getAiqdFileName(const std::string& sensorName)
-{
-    std::string aiqdFileName = "";
-
-    aiqdFileName.append(CAMERA_CACHE_DIR);
-    aiqdFileName.append(sensorName);
-    aiqdFileName.append(".aiqd");
-
-    LOGI("@%s: aiqd file location: %s", __FUNCTION__, aiqdFileName.c_str());
-    return aiqdFileName;
-}
-
 bool PlatformData::supportDualVideo(void)
 {
     return mCameraHWInfo->supportDualVideo();
@@ -506,201 +477,6 @@ unsigned int PlatformData::getNumOfCPUCores()
     }
     LOGI("@%s, line:%d, cpu core number:%d", __FUNCTION__, __LINE__, cpuCores);
     return cpuCores;
-}
-
-status_t PlatformData::readSpId(string& spIdName, unsigned int& spIdValue)
-{
-    FILE *file;
-    status_t ret = OK;
-    string sysfsSpIdPath = "/sys/spid/";
-    string fullPath;
-
-    fullPath = sysfsSpIdPath;
-    fullPath.append(spIdName);
-
-    file = fopen(fullPath.c_str(), "rb");
-    if (!file) {
-        LOGE("ERROR in opening file %s", fullPath.c_str());
-        return NAME_NOT_FOUND;
-    }
-    ret = fscanf(file, "%x", &spIdValue);
-    if (ret < 0) {
-        LOGE("ERROR in reading %s", fullPath.c_str());
-        spIdValue = 0;
-        fclose(file);
-        return UNKNOWN_ERROR;
-    }
-    fclose(file);
-    return ret;
-}
-
-void PlatformData::initAiqdInfo(int cameraIdx)
-{
-    CameraProfiles * i = getInstance();
-    if (!i)
-        return;
-
-    auto it = i->mCameraIdToSensorName.find(cameraIdx);
-    if (it == i->mCameraIdToSensorName.end())
-        return;
-
-    std::string fileName = getAiqdFileName(it->second);
-    unsigned int fileSize = getAiqdFileSize(fileName);
-    if (fileSize > 0) {
-        if (!readAiqdDataFromFile(cameraIdx, fileName, fileSize)) {
-            LOGW("Failed to open Aiqd file from system!");
-        }
-    }
-}
-
-unsigned int PlatformData::getAiqdFileSize(std::string fileName)
-{
-    struct stat fileStat;
-    CLEAR(fileStat);
-
-    if (stat(fileName.c_str(), &fileStat) != 0) {
-        LOGW("can't read aiqd file or file doesn't exist, AiqdFileName = %s, error:%s",
-            fileName.c_str(), strerror(errno));
-        return 0;
-    }
-
-    LOGI("@%s: read aiqd file: %s, size = %jd", __FUNCTION__, fileName.c_str(), (intmax_t)fileStat.st_size);
-    return fileStat.st_size;
-}
-
-bool PlatformData::readAiqdDataFromFile(int cameraIdx, const std::string fileName, int fileSize)
-{
-    LOGI("@%s: update aiqd data read from file %s.", __FUNCTION__, fileName.c_str());
-
-    if (cameraIdx < 0 || cameraIdx >= MAX_CAMERAS) {
-        LOGE("@%s: Invalid camera id: %d.", __FUNCTION__, cameraIdx);
-        return false;
-    }
-
-    FILE *f = fopen(fileName.c_str(), "rb");
-    if (!f) {
-        LOGW("@%s, Failed to open Aiqd file:%s from file system!, error:%s",
-            __FUNCTION__, fileName.c_str(), strerror(errno));
-        return false;
-    }
-
-    std::unique_ptr<char[]> data(new char[fileSize]);
-    size_t readCount = fread(data.get(), sizeof(unsigned char), fileSize, f);
-    if (readCount != fileSize) {
-        LOGE("read aiqd %d bytes from file: %s fail", fileSize, fileName.c_str());
-
-        fclose(f);
-
-        return false;
-    }
-
-    fclose(f);
-
-    struct AiqdDataInfo& aiqdData = mCameraHWInfo->mAiqdDataInfo[cameraIdx];
-    aiqdData.mData = std::move(data);
-    aiqdData.mDataCapacity = fileSize;
-    aiqdData.mDataSize = fileSize;
-    aiqdData.mFileName = fileName;
-
-    LOGI("@%s, aiqd fileName: %s, size: %d", __FUNCTION__, fileName.c_str(), aiqdData.mDataSize);
-
-    return true;
-}
-
-bool PlatformData::readAiqdData(int cameraId, ia_binary_data *data)
-{
-    if (cameraId < 0 || cameraId >= MAX_CAMERAS) {
-        LOGE("@%s: Invalid camera id: %d.", __FUNCTION__, cameraId);
-        return false;
-    }
-
-    if (mCameraHWInfo->mAiqdDataInfo[cameraId].mDataSize > 0) {
-        data->size = mCameraHWInfo->mAiqdDataInfo[cameraId].mDataSize;
-        data->data = mCameraHWInfo->mAiqdDataInfo[cameraId].mData.get();
-        LOGI("@%s: fill in Aiqd data: %p, size : %d", __FUNCTION__, data->data, data->size);
-        return true;
-    }
-
-    return false;
-}
-
-void PlatformData::saveAiqdData(int cameraId, const ia_binary_data& data)
-{
-    if (cameraId < 0 || cameraId >= MAX_CAMERAS) {
-        LOGE("@%s: Invalid cameraId: %d", __FUNCTION__, cameraId);
-        return;
-    }
-
-    CameraProfiles * i = getInstance();
-    if (!i)
-        return;
-
-    LOGI("@%s: save aiqd data into PlatformData, camera: %d.", __FUNCTION__, cameraId);
-
-    struct AiqdDataInfo& aiqdData = mCameraHWInfo->mAiqdDataInfo[cameraId];
-
-    if (aiqdData.mDataCapacity < data.size) {
-        aiqdData.mData.reset(new char[data.size]);
-        aiqdData.mDataCapacity = data.size;
-        LOGI("@%s: camera = %d, new aiqd capacity size = %d",
-            __FUNCTION__, cameraId, aiqdData.mDataCapacity);
-    }
-    aiqdData.mDataSize = data.size;
-
-    MEMCPY_S(aiqdData.mData.get(), aiqdData.mDataCapacity, data.data, data.size);
-
-    auto it = i->mCameraIdToSensorName.find(cameraId);
-    if (it != i->mCameraIdToSensorName.end()) {
-        aiqdData.mFileName = getAiqdFileName(it->second);
-    }
-
-    LOGI("@%s: camera = %d, aiqd capacity = %d, aiqd size = %d, data = %p, location = %s.",
-            __FUNCTION__, cameraId,
-            aiqdData.mDataCapacity, aiqdData.mDataSize,
-            aiqdData.mData.get(), aiqdData.mFileName.c_str());
-}
-
-bool PlatformData::saveAiqdDataToFile()
-{
-    LOGI("@%s: save aiqd data to file.", __FUNCTION__);
-
-    for (auto& it : mCameraHWInfo->mAiqdDataInfo) {
-        if (it.mDataSize <= 0)
-            continue;
-
-        LOGI("@%s, size = %d, file location = %s, data = %p.", __FUNCTION__,
-                it.mDataSize, it.mFileName.c_str(), it.mData.get());
-
-        /* remove the existed file before do saving */
-        struct stat filestat;
-        if (stat(it.mFileName.c_str(), &filestat) == 0) {
-            LOGW("file already exist, remove the old one, AiqdFileName = %s, error:%s",
-               it.mFileName.c_str(), strerror(errno));
-            if (std::remove(it.mFileName.c_str()) != 0) {
-                LOGE("error when removing file: %s", it.mFileName.c_str());
-                return false;
-            }
-        }
-
-        FILE *f = fopen(it.mFileName.c_str(), "wb");
-        if (f == nullptr) {
-            LOGE("Can't save aiqd to file: %s! error:%s", it.mFileName.c_str(), strerror(errno));
-            return false;
-        }
-
-        size_t writeCount = fwrite(it.mData.get(), 1, it.mDataSize, f);
-        if (writeCount != it.mDataSize) {
-            LOGE("Save aiqd %d bytes to file: %s fail, error:%s",
-                it.mDataSize, it.mFileName.c_str(), strerror(errno));
-            fclose(f);
-            return false;
-        }
-
-        fflush(f);
-        fclose(f);
-    }
-
-    return true;
 }
 
 /**
