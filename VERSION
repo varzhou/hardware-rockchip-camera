@@ -1,0 +1,11 @@
+V0.0.1
+	- release the initial RK Camera Hal3 version
+	- inital version supports following features:
+		- preview, recording, snapshot(HW jpeg encoder)
+		- digital zoom(by RGA)
+		- Support up to 4 streams, including one input/bidrection stream.
+		  And these 4 streams can have different size. 
+		- AE and AWB
+	- TODOS:
+		- AF
+		- manual 3A controls
