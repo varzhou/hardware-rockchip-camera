@@ -698,11 +698,8 @@ ControlUnit::handleNewRequestDone(Message &msg)
     /*
      * Remove the request from Q once we have received all pixel data buffers
      * we expect from ISA. Query the graph config for that.
-     *
-     * Request which are processed from input buffers do not wait for pixel data
      */
-    if (reqState->request->getNumberInputBufs() == 0)
-        mWaitingForCapture.erase(reqId);
+    mWaitingForCapture.erase(reqId);
 
     return status;
 }

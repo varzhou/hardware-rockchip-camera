@@ -228,16 +228,15 @@ status_t InputFrameWorker::postRun()
         goto exit;
     }
 
-    postOutBuf = std::make_shared<PostProcBuffer> ();
     camBufs = findOutputBuffers(request);
 
     for(auto buf : camBufs) {
+        postOutBuf = std::make_shared<PostProcBuffer> ();
         postOutBuf->cambuf = buf;
         postOutBuf->request = request;
         outBufs.push_back(postOutBuf);
         postOutBuf.reset();
     }
-    postOutBuf = nullptr;
 
     inCamBuf = findInputBuffer(request, mStream);
     inBuf->cambuf = inCamBuf;

@@ -234,6 +234,8 @@ Camera3Request::init(camera3_capture_request* req,
         buffer++;
     }
     if (req->input_buffer) {
+        if (!mInputBuffer.get())
+            mInputBuffer = std::make_shared<CameraBuffer>();
         status = mInputBuffer->init(req->input_buffer, cameraId);
         if (status != NO_ERROR) {
             LOGE("init input buffer fail");

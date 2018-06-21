@@ -91,6 +91,7 @@ public:
     bool isRegistered() const { return mRegistered; };
     bool isLocked() const { return mLocked; };
     buffer_handle_t * getBufferHandle() { return &mHandle; };
+    buffer_handle_t * getBufferHandlePtr() { return mHandlePtr; };
     status_t waitOnAcquireFence();
 
     void dump();

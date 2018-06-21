@@ -465,7 +465,9 @@ void ResultProcessor::returnPendingBuffers(RequestState_t* reqState)
         buf.status = request->getError() ? CAMERA3_BUFFER_STATUS_ERROR :
                         pendingBuf->status();
         buf.stream = pendingBuf->getOwner()->getStream();
-        buf.buffer = pendingBuf->getBufferHandle();
+        /* framework check the handle point other than handle */
+        /* buf.buffer = pendingBuf->getBufferHandle(); */
+        buf.buffer = pendingBuf->getBufferHandlePtr();
         pendingBuf->getFence(&buf);
         result.result = nullptr;
         if (request->isInputBuffer(pendingBuf)) {

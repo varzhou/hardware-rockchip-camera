@@ -87,6 +87,7 @@ public:
     virtual status_t postRun() = 0;
     virtual std::shared_ptr<V4L2VideoNode> getNode() const = 0;
     virtual status_t deviceError(void) { mDevError = true; return NO_ERROR; }
+    virtual status_t asyncPollDone(std::shared_ptr<DeviceMessage> msg, bool polled) =0;
 
 protected:
     std::shared_ptr<DeviceMessage> mMsg; /*!Set in prepareRun and should be valid until

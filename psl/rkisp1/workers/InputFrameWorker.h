@@ -43,6 +43,10 @@ public:
     status_t notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                             const std::shared_ptr<ProcUnitSettings>& settings,
                             int err);
+    virtual status_t asyncPollDone(std::shared_ptr<DeviceMessage> msg, bool polled) {
+        mMsg = msg;
+        return OK;
+    }
 
 private:
     std::shared_ptr<CameraBuffer> findInputBuffer(Camera3Request* request,

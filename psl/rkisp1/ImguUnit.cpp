@@ -444,6 +444,7 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
                 mActiveStreams.inputStream, outStreams, pipelineDepth);
 
         videoConfig->deviceWorkers.insert(videoConfig->deviceWorkers.begin(), inWorker);
+        mListenerDeviceWorkers.push_back(inWorker.get());
     }
 
     status_t ret = OK;
@@ -616,9 +617,11 @@ status_t ImguUnit::processNextRequest()
         }
     }
 
+    mCurPipeConfig->nodes.clear();
+    mRequestToWorkMap[request->getId()].clear();
+
     std::vector<std::shared_ptr<IDeviceWorker>>::iterator it = mCurPipeConfig->deviceWorkers.begin();
     for (;it != mCurPipeConfig->deviceWorkers.end(); ++it) {
-        status |= (*it)->prepareRun(msg);
         // construct an dummy poll event for inputFrameworker
         // notice that this would cause poll event disorder,
         // so we should do some workaround in startProcessing.
@@ -631,14 +634,16 @@ status_t ImguUnit::processNextRequest()
             dummyMsg.pollEvent.requestId = request->getId();
             dummyMsg.pollEvent.numDevices = 0;
             dummyMsg.pollEvent.polledDevices = 0;
+            dummyMsg.pollEvent.activeDevices = nullptr;
             dummyMsg.id = MESSAGE_ID_POLL;
             dummyMsg.cbMetadataMsg = cbMetadataMsg;
+            status |= (*it)->prepareRun(msg);
             mMessageQueue.send(&dummyMsg);
-        }
+            return status;
+        } else
+            status |= (*it)->prepareRun(msg);
     }
 
-    mCurPipeConfig->nodes.clear();
-    mRequestToWorkMap[request->getId()].clear();
     std::vector<std::shared_ptr<FrameWorker>>::iterator pollDevice = mCurPipeConfig->pollableWorkers.begin();
     for (;pollDevice != mCurPipeConfig->pollableWorkers.end(); ++pollDevice) {
         bool needsPolling = (*pollDevice)->needPolling();
@@ -747,7 +752,7 @@ ImguUnit::startProcessing(DeviceMessage pollmsg)
             startId++;
         }
 
-        while (i >= 0 && processReqNum > 1) {
+        while (i > 0 && processReqNum > 1) {
             mDelayProcessRequest.erase(mDelayProcessRequest.begin());
             i--;
         }
@@ -802,7 +807,6 @@ ImguUnit::startProcessing(DeviceMessage pollmsg)
         /* return null metadata if device error occured */
         request->mCallback->metadataDone(request, deviceError ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
         mMessagesUnderwork.erase(mMessagesUnderwork.begin());
-        reqId++;
     }
 
     return status;
@@ -937,7 +941,8 @@ status_t ImguUnit::handleMessagePoll(DeviceMessage msg)
 
     status_t status = startProcessing(msg);
 
-    delete [] msg.pollEvent.activeDevices;
+    if (msg.pollEvent.activeDevices)
+        delete [] msg.pollEvent.activeDevices;
     msg.pollEvent.activeDevices = nullptr;
 
     return status;
