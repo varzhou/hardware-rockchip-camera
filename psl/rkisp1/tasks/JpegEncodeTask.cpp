@@ -84,19 +84,6 @@ status_t JpegEncodeTask::handleMessageSettings(ProcUnitSettings &procSettings)
 {
     Camera3Request *req = procSettings.request;
     std::shared_ptr<CaptureUnitSettings> capSettings = procSettings.captureSettings;
-    const CameraMetadata* settings = req->getSettings();
-    uint8_t aeMode =  ANDROID_CONTROL_AE_MODE_ON;
-    uint8_t controlMode =  ANDROID_CONTROL_MODE_AUTO;
-    camera_metadata_ro_entry entry;
-    entry = settings->find(ANDROID_CONTROL_MODE);
-    if (entry.count == 1) {
-        controlMode = entry.data.u8[0];
-    }
-
-    entry = settings->find(ANDROID_CONTROL_AE_MODE);
-    if (entry.count == 1) {
-        aeMode = entry.data.u8[0];
-    }
 
     // EXIF data to be mapped to request ID
     ExifDataCache exifCache;
@@ -105,6 +92,25 @@ status_t JpegEncodeTask::handleMessageSettings(ProcUnitSettings &procSettings)
     if (!req) {
         LOGE("JPEG settings, nullptr request!");
         return BAD_VALUE;
+    }
+
+    const CameraMetadata* settings = req->getSettings();
+    uint8_t aeMode =  ANDROID_CONTROL_AE_MODE_ON;
+    uint8_t controlMode =  ANDROID_CONTROL_MODE_AUTO;
+
+    if (settings != NULL) {
+        camera_metadata_ro_entry entry;
+        entry = settings->find(ANDROID_CONTROL_MODE);
+        if (entry.count == 1) {
+            controlMode = entry.data.u8[0];
+        }
+
+        entry = settings->find(ANDROID_CONTROL_AE_MODE);
+        if (entry.count == 1) {
+            aeMode = entry.data.u8[0];
+        }
+    } else {
+        LOGE("JPEG settings, no settings in request - BUG");
     }
 
     if (capSettings.get() == nullptr) {
