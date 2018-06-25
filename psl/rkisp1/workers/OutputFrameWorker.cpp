@@ -372,9 +372,11 @@ status_t OutputFrameWorker::postRun()
         postOutBuf->request = request;
         outBufs.push_back(postOutBuf);
         postOutBuf = nullptr;
-        inPostBuf->cambuf = mPostWorkingBuf->cambuf;
-        inPostBuf->request = mPostWorkingBuf->request;
-        mPostPipeline->processFrame(inPostBuf, outBufs, mMsg->pMsg.processingSettings);
+        if (mOutputBuffer == nullptr) {
+            inPostBuf->cambuf = mPostWorkingBuf->cambuf;
+            inPostBuf->request = mPostWorkingBuf->request;
+            mPostPipeline->processFrame(inPostBuf, outBufs, mMsg->pMsg.processingSettings);
+        }
     }
     if (status != OK)
         goto exit;

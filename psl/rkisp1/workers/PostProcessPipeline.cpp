@@ -440,8 +440,8 @@ PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
             croph = in->cambuf->height();
         }
         // should align to 2
-        cropw &= ~0x1;
-        croph &= ~0x1;
+        cropw &= ~0x3;
+        croph &= ~0x3;
         cropleft = (in->cambuf->width() - cropw) / 2;
         croptop = (in->cambuf->height() - croph) / 2;
 
@@ -1490,8 +1490,8 @@ PostProcessUnitDigitalZoom::processFrame(const std::shared_ptr<PostProcBuffer>& 
     // should align to 2
     mapleft &= ~0x1;
     maptop &= ~0x1;
-    mapwidth &= ~0x1;
-    mapheight &= ~0x1;
+    mapwidth &= ~0x3;
+    mapheight &= ~0x3;
     // do digital zoom
     LOGD("%s: crop region(%d,%d,%d,%d) from (%d,%d), infmt %d,%d, outfmt %d,%d",
          __FUNCTION__, mapleft, maptop, mapwidth, mapheight,
