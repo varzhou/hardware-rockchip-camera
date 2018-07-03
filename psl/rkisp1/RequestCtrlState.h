@@ -44,6 +44,10 @@ struct RequestCtrlState {
 
     bool shutterDone;
     uint8_t intent;          /**< Capture intent, needed for precapture */
+    //3a metadata received frome Control loop
+    bool mClMetaReceived;
+    //imgunit process done
+    bool mImgProcessDone;
 };
 
 } // namespace camera2

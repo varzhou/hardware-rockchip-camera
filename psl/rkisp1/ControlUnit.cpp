@@ -60,6 +60,7 @@ ControlUnit::ControlUnit(ImguUnit *thePU,
         mSofSequence(0),
         mShutterDoneReqId(-1)
 {
+    cl_result_callback_ops::metadata_result_callback = &sMetadatCb;
 }
 
 status_t
@@ -220,7 +221,7 @@ ControlUnit::init()
         return UNKNOWN_ERROR;
     }
 
-    if (mCtrlLoop->init(sensorName) != NO_ERROR) {
+    if (mCtrlLoop->init(sensorName, this) != NO_ERROR) {
         LOGE("Error initializing 3A control");
         return UNKNOWN_ERROR;
     }
@@ -301,6 +302,9 @@ void RequestCtrlState::init(Camera3Request *req,
         return;
     }
 
+    mClMetaReceived = false;
+    mImgProcessDone = false;
+
     /**
      * Apparently we need to have this tags in the results
      */
@@ -328,28 +332,6 @@ void RequestCtrlState::init(Camera3Request *req,
     LOGI("%s:%d: request id(%lld), capture_intent(%d)", __FUNCTION__, __LINE__, id, intent);
     ctrlUnitResult->update(ANDROID_CONTROL_CAPTURE_INTENT, entry.data.u8,
                                                            entry.count);
-    entry = settings->find(ANDROID_CONTROL_MODE);
-    if (entry.count == 1) {
-        ctrlUnitResult->update(ANDROID_CONTROL_MODE, entry.data.u8, entry.count);
-    }
-
-    entry = settings->find(ANDROID_CONTROL_AE_MODE);
-    if (entry.count == 1) {
-        ctrlUnitResult->update(ANDROID_CONTROL_AE_MODE, entry.data.u8, entry.count);
-    }
-
-    /**
-     * We don't have AF, so just update metadata now
-     */
-    entry = settings->find(ANDROID_CONTROL_AF_MODE);
-    if (entry.count > 0)
-        ctrlUnitResult->update(entry);
-
-    uint8_t afTrigger = ANDROID_CONTROL_AF_TRIGGER_IDLE;
-    ctrlUnitResult->update(ANDROID_CONTROL_AF_TRIGGER, &afTrigger, 1);
-
-    uint8_t afState = ANDROID_CONTROL_AF_STATE_INACTIVE;
-    ctrlUnitResult->update(ANDROID_CONTROL_AF_STATE, &afState, 1);
 }
 
 ControlUnit::~ControlUnit()
@@ -654,6 +636,41 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
 
 status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
 {
+    /**
+     * Apparently we need to have this tags in the results
+     */
+    const CameraMetadata* settings = reqState->request->getSettings();
+    CameraMetadata* ctrlUnitResult = reqState->ctrlUnitResult;
+
+    if (CC_UNLIKELY(settings == nullptr)) {
+        LOGE("no settings in request - BUG");
+        return UNKNOWN_ERROR;
+    }
+
+    camera_metadata_ro_entry entry;
+    entry = settings->find(ANDROID_CONTROL_MODE);
+    if (entry.count == 1) {
+        ctrlUnitResult->update(ANDROID_CONTROL_MODE, entry.data.u8, entry.count);
+    }
+
+    entry = settings->find(ANDROID_CONTROL_AE_MODE);
+    if (entry.count == 1) {
+        ctrlUnitResult->update(ANDROID_CONTROL_AE_MODE, entry.data.u8, entry.count);
+    }
+
+    /**
+     * We don't have AF, so just update metadata now
+     */
+    entry = settings->find(ANDROID_CONTROL_AF_MODE);
+    if (entry.count > 0)
+        ctrlUnitResult->update(entry);
+
+    uint8_t afTrigger = ANDROID_CONTROL_AF_TRIGGER_IDLE;
+    ctrlUnitResult->update(ANDROID_CONTROL_AF_TRIGGER, &afTrigger, 1);
+
+    uint8_t afState = ANDROID_CONTROL_AF_STATE_INACTIVE;
+    ctrlUnitResult->update(ANDROID_CONTROL_AF_STATE, &afState, 1);
+
     mMetadata->writeJpegMetadata(*reqState);
 
     uint8_t pipelineDepth;
@@ -685,22 +702,23 @@ ControlUnit::handleNewRequestDone(Message &msg)
     }
 
     reqState = it->second;
-    if (CC_UNLIKELY(reqState.get() == nullptr || reqState->captureSettings.get() == nullptr)) {
+    if (CC_UNLIKELY(reqState.get() == nullptr || reqState->request == nullptr)) {
         LOGE("No valid state or settings for request Id = %d"
              "- Fix the bug!", reqId);
         return UNKNOWN_ERROR;
     }
 
-    rkisp_cl_frame_metadata_s frame_results;
-    frame_results.metas = NULL; 
-    status = mCtrlLoop->getFrameResults(reqId, &frame_results);
+    reqState->mImgProcessDone = true;
+    Camera3Request* request = reqState->request;
+    if (!reqState->mClMetaReceived)
+        return OK;
 
+    request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
     /*
      * Remove the request from Q once we have received all pixel data buffers
      * we expect from ISA. Query the graph config for that.
      */
     mWaitingForCapture.erase(reqId);
-
     return status;
 }
 
@@ -731,7 +749,6 @@ ControlUnit::completeProcessing(std::shared_ptr<RequestCtrlState> &reqState)
          * whatever settings are needed for Processing Unit.
          * This should be moved to any of the processXXXSettings.
          */
-        fillMetadata(reqState);
 
         mImguUnit->completeRequest(reqState->processingSettings, true);
     } else {
@@ -847,6 +864,9 @@ ControlUnit::messageThreadLoop()
         case MESSAGE_ID_NEW_REQUEST_DONE:
             status = handleNewRequestDone(msg);
             break;
+        case MESSAGE_ID_METADATA_RECEIVED:
+            status = handleMetadataReceived(msg);
+            break;
         case MESSAGE_ID_FLUSH:
             status = handleMessageFlush();
             break;
@@ -903,6 +923,64 @@ ControlUnit::notifyCaptureEvent(CaptureMessage *captureMsg)
     }
 
     return true;
+}
+
+status_t
+ControlUnit::metadataReceived(int id, const camera_metadata_t *metas) {
+    Message msg;
+    status_t status = NO_ERROR;
+
+    msg.id = MESSAGE_ID_METADATA_RECEIVED;
+    msg.requestId = id;
+    msg.data.metas = metas;
+    status = mMessageQueue.send(&msg);
+    return status;
+}
+
+status_t
+ControlUnit::handleMetadataReceived(Message &msg) {
+    status_t status = OK;
+    std::shared_ptr<RequestCtrlState> reqState = nullptr;
+    int reqId = msg.requestId;
+
+    std::map<int, std::shared_ptr<RequestCtrlState>>::iterator it =
+                                    mWaitingForCapture.find(reqId);
+    if (it == mWaitingForCapture.end()) {
+        LOGE("Unexpected request done event received for request %d - Fix the bug", reqId);
+        return UNKNOWN_ERROR;
+    }
+
+    reqState = it->second;
+    if (CC_UNLIKELY(reqState.get() == nullptr || reqState->request == nullptr)) {
+        LOGE("No valid state or request for request Id = %d"
+             "- Fix the bug!", reqId);
+        return UNKNOWN_ERROR;
+    }
+
+    reqState->ctrlUnitResult->append(msg.data.metas);
+    reqState->mClMetaReceived = true;
+
+    if (!reqState->mImgProcessDone)
+        return OK;
+
+    fillMetadata(reqState);
+
+    Camera3Request* request = reqState->request;
+    request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
+    mWaitingForCapture.erase(reqId);
+
+    return status;
+}
+
+/**
+ * Static callback forwarding methods from CL to instance
+ */
+void ControlUnit::sMetadatCb(const struct cl_result_callback_ops* ops,
+                             const int id, struct rkisp_cl_frame_metadata_s *result) {
+    LOGI("@%s %d: frame %d result meta received", __FUNCTION__, __LINE__, id);
+    ControlUnit *ctl = const_cast<ControlUnit*>(static_cast<const ControlUnit*>(ops));
+
+    ctl->metadataReceived(id, result->metas);
 }
 
 } // namespace camera2

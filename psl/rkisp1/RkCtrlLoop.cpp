@@ -38,7 +38,8 @@ RkCtrlLoop::RkCtrlLoop(int camId):
 }
 
 
-status_t RkCtrlLoop::init(const char* sensorName)
+status_t RkCtrlLoop::init(const char* sensorName,
+                          const cl_result_callback_ops_t *cb)
 {
     status_t status = OK;
     /* get AIQ xml path */
@@ -60,7 +61,7 @@ status_t RkCtrlLoop::init(const char* sensorName)
         }
     }
 
-    bool ret = (rkisp_cl_init(&mControlLoopCtx , iq_file_full_path.c_str()) == 0 ? true : false);
+    bool ret = (rkisp_cl_init(&mControlLoopCtx , iq_file_full_path.c_str(), cb) == 0 ? true : false);
     CheckError(ret == false, UNKNOWN_ERROR, "@%s, Error in isp control loop init", __FUNCTION__);
     return status;
 }
@@ -105,19 +106,6 @@ status_t RkCtrlLoop::setFrameParams(const int request_frame_id, rkisp_cl_frame_m
     }
     return NO_ERROR;
 
-}
-
-status_t RkCtrlLoop::getFrameResults(const int result_frame_id, rkisp_cl_frame_metadata_s* result_metas)
-{
-    int ret = 0;
-
-    ret = rkisp_cl_get_frame_metas(mControlLoopCtx, result_frame_id, result_metas);
-    if (ret < 0) {
-        LOGE("%s: rkisp control loop get frame results failed !", __FUNCTION__);
-        return UNKNOWN_ERROR;
-    }
-
-    return NO_ERROR;
 }
 
 status_t RkCtrlLoop::stop()

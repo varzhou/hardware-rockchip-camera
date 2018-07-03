@@ -792,7 +792,7 @@ ImguUnit::startProcessing(DeviceMessage pollmsg)
         mRequestToWorkMap.erase(reqId);
 
         // Report request error when anything wrong
-        if (status != OK)
+        if (status != OK || deviceError)
             request->setError();
 
         //HACK: return metadata after updated it
@@ -804,8 +804,6 @@ ImguUnit::startProcessing(DeviceMessage pollmsg)
         for (const auto &listener : mListeners)
             listener->notifyCaptureEvent(&outMsg);
 
-        /* return null metadata if device error occured */
-        request->mCallback->metadataDone(request, deviceError ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
         mMessagesUnderwork.erase(mMessagesUnderwork.begin());
     }
 

@@ -28,6 +28,12 @@
 #include "RequestCtrlState.h"
 #include "RkCtrlLoop.h"
 
+extern "C" {
+    typedef void (metadata_result_callback)(
+        const struct cl_result_callback_ops *ops,
+        const int id, struct rkisp_cl_frame_metadata_s *result);
+}
+
 namespace android {
 namespace camera2 {
 
@@ -46,7 +52,8 @@ struct ProcUnitSettings;
  * each request and to run the 3A algorithms.
  *
  */
-class ControlUnit : public IMessageHandler, public ICaptureEventListener
+class ControlUnit : public IMessageHandler, public ICaptureEventListener,
+                    private cl_result_callback_ops
 {
 public:
     explicit ControlUnit(ImguUnit *thePU,
@@ -73,6 +80,7 @@ public:  /* private types */
         MESSAGE_ID_NEW_REQUEST,
         MESSAGE_ID_NEW_SHUTTER,
         MESSAGE_ID_NEW_REQUEST_DONE,
+        MESSAGE_ID_METADATA_RECEIVED,
         MESSAGE_ID_FLUSH,
         MESSAGE_ID_MAX
     };
@@ -89,6 +97,10 @@ public:  /* private types */
         int requestId;
         int64_t tv_sec;
         int64_t tv_usec;
+    };
+
+    struct MessageMetadata {
+        CameraMetadata metas;
     };
 
     // union of all message data
@@ -135,6 +147,7 @@ private:  /* Methods */
     status_t handleMessageExit();
     status_t handleNewRequest(Message &msg);
     status_t handleNewRequestDone(Message &msg);
+    status_t handleMetadataReceived(Message &msg);
     status_t handleNewShutter(Message &msg);
     status_t handleMessageFlush(void);
 
@@ -143,6 +156,7 @@ private:  /* Methods */
     status_t completeProcessing(std::shared_ptr<RequestCtrlState> &reqState);
     status_t acquireRequestStateStruct(std::shared_ptr<RequestCtrlState>& state);
     status_t initStaticMetadata();
+    status_t metadataReceived(int id, const camera_metadata_t *metas);
     status_t fillMetadata(std::shared_ptr<RequestCtrlState> &reqState);
     status_t getDevicesPath();
 
@@ -197,6 +211,11 @@ private:  /* Members */
         KDevPathTypeFlNode
     };
     std::map<enum DevPathType, std::string> mDevPathsMap;
+
+    /**
+     * Static callback forwarding methods from CL to instance
+     */
+    static ::metadata_result_callback sMetadatCb;
 };  // class ControlUnit
 
 }  // namespace camera2

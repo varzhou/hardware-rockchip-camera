@@ -25,7 +25,7 @@ extern "C" {
 /*
  * This file is exposed by rkisp control loop(using rkisp CL instead below) library.
  * rkisp CL is the interfaces aggregation to control the ISP, sensor, lens,
- * flashlight ... settings as user required. 
+ * flashlight ... settings as user required.
  * Example control flow:
  * 1. rkisp_cl_init
  *    This function is used to get the CL runtime context, and SHOULD be called
@@ -34,17 +34,18 @@ extern "C" {
  * 2. rkisp_cl_prepare
  *    After CL is initialized, some running parameters should be configured to
  *    CL before starting. These parameters are include various device paths.
- *    This method can only be called in CL stopped state. 
+ *    This method can only be called in CL stopped state.
  * 3. rkisp_cl_start
  *    When CL is prepared, then we can start the CL. After this methord is
  *    returned, the CL is running in its own thread. It gets statistics from
  *    driver, runs 3A algorimth to generate new ISP parameters ...
  * 4. rkisp_cl_set_frame_params
  *    This method can be called before step 3 which is used to set the
- *    initialized parameters, and should be called for every new frame request. 
- * 5. rkisp_cl_get_frame_metas
- *    After step 4 and received the frame data, we can call this method to get
- *    the real parameters corresponded to this frame.
+ *    initialized parameters, and should be called for every new frame request.
+ * 5. cl_result_callback_ops
+ *    It's the result callback method for the control loop to call into the hal.
+ *    After step 4 and CL complete the calculation for 3a, CL will invoke the
+ *    callback ops to give back the parameters corresponded to this frame.
  * 6. rkisp_cl_stop
  *    Call this to stop the CL. Then we can prepare CL again or deinit the CL.
  * 7. rkisp_cl_deinit
@@ -80,19 +81,41 @@ struct rkisp_cl_frame_metadata_s {
 };
 
 /*
- * Get the control loop context 
+ * Callback methods for the control loop to call into the hal.
+ * CL return back the effective settings and 3A status meta rusults
+ * for specific frame to hal
  * Args:
- *    |cl_ctx|: if initialization is successful, |*cl_ctx| will be filled by
- *              CL library. 
- *    |tuning_file_path|: tuning file used by 3A algorithm library. 
+ *    |ops|: the hook to get the implemention instance of the interface
+ *    |id|: frame index that settings will be quried.
+ *    |result|: frame metadatas applied for quried frame and 3A results.
+ *             |result| may be NOT valid after this method is returned,CL is
+ *             responsible for the allocation and release of the result buffer
+ *
  * Returns:
  *    -EINVAL: failed
  *    0      : success
  */
-int rkisp_cl_init(void** cl_ctx, const char* tuning_file_path);
+typedef struct cl_result_callback_ops {
+
+    void (*metadata_result_callback)(const struct cl_result_callback_ops *ops,
+                                     const int id, struct rkisp_cl_frame_metadata_s *result);
+} cl_result_callback_ops_t;
 
 /*
- * Prepare the neccesary conditions before CL running 
+ * Get the control loop context
+ * Args:
+ *    |cl_ctx|: if initialization is successful, |*cl_ctx| will be filled by
+ *              CL library.
+ *    |tuning_file_path|: tuning file used by 3A algorithm library.
+ * Returns:
+ *    -EINVAL: failed
+ *    0      : success
+ */
+int rkisp_cl_init(void** cl_ctx, const char* tuning_file_path,
+                  const cl_result_callback_ops_t *callback_ops);
+
+/*
+ * Prepare the neccesary conditions before CL running
  * Args:
  *    |cl_ctx|: current CL context
  *    |prepare_params|: params to be configured to CL library. |prepare_params|
@@ -126,7 +149,7 @@ int rkisp_cl_start(void* cl_ctx);
  *    |cl_ctx|: current CL context
  *    |request_frame_id|: frame index that settings will be applied.
  *                        If |request_frame_id| <= 0, it means the initial
- *                        params before any statistics have been received. 
+ *                        params before any statistics have been received.
  *
  *    |frame_params|: new frame settings to be applied for specific request.
  *                    if null, it means there is no new settings, and last
@@ -138,20 +161,6 @@ int rkisp_cl_start(void* cl_ctx);
  */
 int rkisp_cl_set_frame_params(const void* cl_ctx, const int request_frame_id,
                               const struct rkisp_cl_frame_metadata_s* frame_params);
-/*
- * Get the effective settings and 3A status for specific frame.
- * Args:
- *    |cl_ctx|: current CL context
- *    |result_frame_id|: frame index that settings will be quried.
- *    |result_metas|: frame metadatas applied for quried frame and 3A results.
- *                    |result_metas| may be NOT valid after this method is
- *                    returned.
- * Returns:
- *    -EINVAL: failed
- *    0      : success
- */
-int rkisp_cl_get_frame_metas(const void* cl_ctx, const int result_frame_id,
-                             struct rkisp_cl_frame_metadata_s* result_metas);
 
 /*
  * Stop the current control loop.

@@ -32,13 +32,13 @@ NAMESPACE_DECLARATION {
 class RkCtrlLoop {
 public:
     explicit RkCtrlLoop(int camId);
-    status_t init(const char* sensorName = nullptr);
+    status_t init(const char* sensorName = nullptr,
+                  const cl_result_callback_ops_t *cb = nullptr);
     void deinit();
 
     status_t start(const struct rkisp_cl_prepare_params_s& params);
     status_t stop();
     status_t setFrameParams(const int request_frame_id, rkisp_cl_frame_metadata_s* frame_params);
-    status_t getFrameResults(const int result_frame_id, rkisp_cl_frame_metadata_s* result_metas);
 
 private:
     // prevent copy constructor and assignment operator
