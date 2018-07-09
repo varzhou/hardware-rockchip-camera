@@ -667,16 +667,22 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
     /**
      * We don't have AF, so just update metadata now
      */
-    entry = settings->find(ANDROID_CONTROL_AF_MODE);
-    if (entry.count > 0)
-        ctrlUnitResult->update(entry);
+    // return 0.0f for the fixed-focus
+    if (!mLensSupported) {
+        float focusDistance = 0.0f;
+        reqState->ctrlUnitResult->update(ANDROID_LENS_FOCUS_DISTANCE,
+                                         &focusDistance, 1);
+        // framework says it can't be off mode for zsl,
+        // so we report EDOF for fixed focus
+        // TODO: need to judge if the request is ZSL ?
+        uint8_t afMode = ANDROID_CONTROL_AF_MODE_EDOF;
+        ctrlUnitResult->update(ANDROID_CONTROL_AF_MODE, &afMode, 1);
+        uint8_t afTrigger = ANDROID_CONTROL_AF_TRIGGER_IDLE;
+        ctrlUnitResult->update(ANDROID_CONTROL_AF_TRIGGER, &afTrigger, 1);
 
-    uint8_t afTrigger = ANDROID_CONTROL_AF_TRIGGER_IDLE;
-    ctrlUnitResult->update(ANDROID_CONTROL_AF_TRIGGER, &afTrigger, 1);
-
-    uint8_t afState = ANDROID_CONTROL_AF_STATE_INACTIVE;
-    ctrlUnitResult->update(ANDROID_CONTROL_AF_STATE, &afState, 1);
-
+        uint8_t afState = ANDROID_CONTROL_AF_STATE_INACTIVE;
+        ctrlUnitResult->update(ANDROID_CONTROL_AF_STATE, &afState, 1);
+    }
     mMetadata->writeJpegMetadata(*reqState);
 
     uint8_t pipelineDepth;
@@ -684,12 +690,6 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
     //# ANDROID_METADATA_Dynamic android.request.pipelineDepth done
     reqState->ctrlUnitResult->update(ANDROID_REQUEST_PIPELINE_DEPTH,
                                      &pipelineDepth, 1);
-    // return 0.0f for the fixed-focus
-    if (!mLensSupported) {
-        float focusDistance = 0.0f;
-        reqState->ctrlUnitResult->update(ANDROID_LENS_FOCUS_DISTANCE,
-                                         &focusDistance, 1);
-    }
     return OK;
 }
 

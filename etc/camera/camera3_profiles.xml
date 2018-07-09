@@ -55,10 +55,10 @@
             <lens.facing value="BACK"/>
             <!-- Request -->
             <request.maxNumOutputStreams value="1,2,1"/>
-            <request.pipelineMaxDepth value="6"/>
-            <request.maxNumInputStreams value="0"/>
+            <request.pipelineMaxDepth value="4"/>
+            <request.maxNumInputStreams value="1"/>
             <request.partialResultCount value="1"/>
-            <request.availableCapabilities value="BACKWARD_COMPATIBLE"/>
+            <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/>
             <request.availableRequestKeys value="blackLevel.lock,
                 colorCorrection.aberrationMode,
                 colorCorrection.gains,
