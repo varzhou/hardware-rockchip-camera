@@ -373,10 +373,15 @@ ControlUnit::configStreamsDone(bool configChanged)
         mWaitingForCapture.clear();
         mSettingsHistory.clear();
 
+        struct rkisp_cl_prepare_params_s prepareParams = {NULL};
+        prepareParams.staticMeta = PlatformData::getStaticMetadata(mCameraId);
+        if (prepareParams.staticMeta == nullptr) {
+            LOGE("Failed to get camera %d StaticMetadata for CL", mCameraId);
+            return UNKNOWN_ERROR;
+        }
+
         //start 3a when config video stream done
         getDevicesPath();
-
-        struct rkisp_cl_prepare_params_s prepareParams = {NULL};
 
         for (auto &it : mDevPathsMap) {
             switch (it.first) {
@@ -616,7 +621,8 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
     const CameraMetadata *settings = reqState->request->getSettings();
     rkisp_cl_frame_metadata_s frame_metas;
     frame_metas.metas = settings->getAndLock();
-    status = mCtrlLoop->setFrameParams(reqId, &frame_metas);
+    frame_metas.id = reqId;
+    status = mCtrlLoop->setFrameParams(&frame_metas);
     if (status != OK)
         LOGE("CtrlLoop setFrameParams error");
 
@@ -932,7 +938,7 @@ ControlUnit::metadataReceived(int id, const camera_metadata_t *metas) {
 
     msg.id = MESSAGE_ID_METADATA_RECEIVED;
     msg.requestId = id;
-    msg.data.metas = metas;
+    msg.metas = metas;
     status = mMessageQueue.send(&msg);
     return status;
 }
@@ -957,7 +963,7 @@ ControlUnit::handleMetadataReceived(Message &msg) {
         return UNKNOWN_ERROR;
     }
 
-    reqState->ctrlUnitResult->append(msg.data.metas);
+    reqState->ctrlUnitResult->append(msg.metas);
     reqState->mClMetaReceived = true;
 
     if (!reqState->mImgProcessDone)
@@ -976,11 +982,11 @@ ControlUnit::handleMetadataReceived(Message &msg) {
  * Static callback forwarding methods from CL to instance
  */
 void ControlUnit::sMetadatCb(const struct cl_result_callback_ops* ops,
-                             const int id, struct rkisp_cl_frame_metadata_s *result) {
-    LOGI("@%s %d: frame %d result meta received", __FUNCTION__, __LINE__, id);
+                             struct rkisp_cl_frame_metadata_s *result) {
+    LOGI("@%s %d: frame %d result meta received", __FUNCTION__, __LINE__, result->id);
     ControlUnit *ctl = const_cast<ControlUnit*>(static_cast<const ControlUnit*>(ops));
 
-    ctl->metadataReceived(id, result->metas);
+    ctl->metadataReceived(result->id, result->metas);
 }
 
 } // namespace camera2

@@ -69,6 +69,8 @@ struct rkisp_cl_prepare_params_s {
   const char* lens_sd_node_path;
   // flashlight subdev node path
   const char* flashlight_sd_node_path;
+  // static metadata
+  const camera_metadata_t *staticMeta;
   // TODO: sensor mode descriptor and others
 };
 
@@ -76,6 +78,8 @@ struct rkisp_cl_prepare_params_s {
  * and the result metadata retunred from CL
  */
 struct rkisp_cl_frame_metadata_s {
+    //frame id
+    int id;
   // TODO: use camera_metadata from Android directly ?
     const camera_metadata_t *metas;
 };
@@ -86,7 +90,6 @@ struct rkisp_cl_frame_metadata_s {
  * for specific frame to hal
  * Args:
  *    |ops|: the hook to get the implemention instance of the interface
- *    |id|: frame index that settings will be quried.
  *    |result|: frame metadatas applied for quried frame and 3A results.
  *             |result| may be NOT valid after this method is returned,CL is
  *             responsible for the allocation and release of the result buffer
@@ -98,7 +101,7 @@ struct rkisp_cl_frame_metadata_s {
 typedef struct cl_result_callback_ops {
 
     void (*metadata_result_callback)(const struct cl_result_callback_ops *ops,
-                                     const int id, struct rkisp_cl_frame_metadata_s *result);
+                                     struct rkisp_cl_frame_metadata_s *result);
 } cl_result_callback_ops_t;
 
 /*
@@ -147,10 +150,6 @@ int rkisp_cl_start(void* cl_ctx);
  * Set new frame settings for specific request.
  * Args:
  *    |cl_ctx|: current CL context
- *    |request_frame_id|: frame index that settings will be applied.
- *                        If |request_frame_id| <= 0, it means the initial
- *                        params before any statistics have been received.
- *
  *    |frame_params|: new frame settings to be applied for specific request.
  *                    if null, it means there is no new settings, and last
  *                    frame settings will be used for new frame. |frame_params|
@@ -159,7 +158,7 @@ int rkisp_cl_start(void* cl_ctx);
  *    -EINVAL: failed
  *    0      : success
  */
-int rkisp_cl_set_frame_params(const void* cl_ctx, const int request_frame_id,
+int rkisp_cl_set_frame_params(const void* cl_ctx,
                               const struct rkisp_cl_frame_metadata_s* frame_params);
 
 /*

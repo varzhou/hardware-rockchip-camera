@@ -31,7 +31,7 @@
 extern "C" {
     typedef void (metadata_result_callback)(
         const struct cl_result_callback_ops *ops,
-        const int id, struct rkisp_cl_frame_metadata_s *result);
+        struct rkisp_cl_frame_metadata_s *result);
 }
 
 namespace android {
@@ -99,10 +99,6 @@ public:  /* private types */
         int64_t tv_usec;
     };
 
-    struct MessageMetadata {
-        CameraMetadata metas;
-    };
-
     // union of all message data
     union MessageData {
         MessageGeneric generic;
@@ -118,6 +114,7 @@ public:  /* private types */
         MessageData data;
         Camera3Request* request;
         std::shared_ptr<RequestCtrlState> state;
+        CameraMetadata metas;
         CaptureEventType type;
         Message(): id(MESSAGE_ID_EXIT),
             requestId(0),

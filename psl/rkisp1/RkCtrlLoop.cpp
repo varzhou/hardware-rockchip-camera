@@ -95,11 +95,11 @@ status_t RkCtrlLoop::start(const struct rkisp_cl_prepare_params_s& params)
     return NO_ERROR;
 }
 
-status_t RkCtrlLoop::setFrameParams(const int request_frame_id, rkisp_cl_frame_metadata_s* frame_params)
+status_t RkCtrlLoop::setFrameParams(rkisp_cl_frame_metadata_s* frame_params)
 {
     int ret = 0;
 
-    ret = rkisp_cl_set_frame_params(mControlLoopCtx, request_frame_id, frame_params);
+    ret = rkisp_cl_set_frame_params(mControlLoopCtx, frame_params);
     if (ret < 0) {
         LOGE("%s: rkisp control loop set frame params failed !", __FUNCTION__);
         return UNKNOWN_ERROR;
