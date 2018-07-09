@@ -111,7 +111,7 @@ LOCAL_C_INCLUDES += \
     system/core/include \
     system/media/camera/include \
     system/core/include/utils \
-    bionic/libc/kernel/include/uapi \
+    kernel/include/uapi \
     frameworks/av/include \
     hardware/libhardware/include/ \
     hardware/rockchip/librkvpu \
