@@ -109,21 +109,6 @@ ControlUnit::getDevicesPath()
         if (subdev.get())
             mDevPathsMap[KDevPathTypeSensorNode] = subdev->name();
     }
-    // get lens device path
-    entityName = cap->getMediaCtlEntityName("lens");
-    if (entityName == "none") {
-        LOGW("%s: No lens found", __FUNCTION__);
-    } else {
-        status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
-        if (mediaEntity == nullptr || status != NO_ERROR) {
-            LOGE("%s, Could not retrieve Media Entity %s", __FUNCTION__, entityName.c_str());
-            return UNKNOWN_ERROR;
-        }
-
-        mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
-        if (subdev.get())
-            mDevPathsMap[KDevPathTypeLensNode] = subdev->name();
-    }
 
     // get isp input params device path
     entityName = "rkisp1-input-params";
@@ -148,6 +133,21 @@ ControlUnit::getDevicesPath()
     mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
     if (subdev.get())
         mDevPathsMap[KDevPathTypeIspStatsNode] = subdev->name();
+
+    // get lens device path
+    entityName = cap->getMediaCtlEntityName("lens");
+    if (entityName == "none") {
+        LOGW("%s: No lens found", __FUNCTION__);
+    } else {
+        status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
+        if (mediaEntity == nullptr || status != NO_ERROR) {
+            LOGE("%s, Could not retrieve Media Entity %s", __FUNCTION__, entityName.c_str());
+        } else {
+            mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
+            if (subdev.get())
+                mDevPathsMap[KDevPathTypeLensNode] = subdev->name();
+        }
+    }
 
     return OK;
 }
