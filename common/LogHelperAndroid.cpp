@@ -26,6 +26,7 @@
 #include <dlfcn.h>
 
 #include <LogHelperAndroid.h>
+#include <cutils/properties.h>
 #include "LogHelper.h"
 
 #ifdef RKCAMERA_REDEFINE_LOG
@@ -194,7 +195,7 @@ void rk_camera_debug_log(const cam_modules_t module,
 
     struct tm *now;
     now = gmtime((time_t *)&tv.tv_sec);
-    snprintf(new_str_buffer, CDBG_MAX_STR_LEN, "%2d %02d:%02d:%02d.%03ld %d:%d Camera%s%s %d: %s: %s",
+    snprintf(new_str_buffer, CDBG_MAX_STR_LEN, "%2d %02d:%02d:%02d.%03ld %d:%d Camera%s%s:%s",
               now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, tv.tv_usec, getpid(),gettid(),
               cam_dbg_level_to_str[level], cam_loginfo[module].name,
               str_buffer);

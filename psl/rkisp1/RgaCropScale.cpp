@@ -39,7 +39,10 @@ namespace camera2 {
 
 int RgaCropScale::CropScaleNV12Or21(struct Params* in, struct Params* out)
 {
-	rga_info_t src = {0}, dst = {0};
+	rga_info_t src, dst;
+
+    memset(&src, 0, sizeof(rga_info_t));
+    memset(&dst, 0, sizeof(rga_info_t));
 
     if (!in || !out)
         return -1;

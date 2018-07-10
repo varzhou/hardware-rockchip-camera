@@ -20,7 +20,6 @@
 
 // System dependencies
 #include <utils/Log.h>
-#include <cutils/properties.h>
 #include "EnumPrinthelper.h"
 
 #define ENV_CAMERA_HAL_DEBUG  "persist.camera.debug"

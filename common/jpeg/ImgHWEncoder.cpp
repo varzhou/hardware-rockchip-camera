@@ -26,6 +26,8 @@
 namespace android {
 namespace camera2 {
 
+char ImgHWEncoder::sMaker[] = "rock";
+
 ImgHWEncoder::ImgHWEncoder(int cameraid) :
     mCameraId(cameraid),
     mPool(NULL)
@@ -63,9 +65,9 @@ void ImgHWEncoder::deInit()
 
 void ImgHWEncoder::fillRkExifInfo(RkExifInfo &exifInfo, exif_attribute_t* exifAttrs)
 {
-    exifInfo.maker = "rock";
+    exifInfo.maker = sMaker;
     exifInfo.makerchars = 4;  //gallery can't get the maker if maker value longer than 4byte
-    exifInfo.modelstr = "rock";
+    exifInfo.modelstr = sMaker;
     exifInfo.modelchars = 4;  //gallery can't get the tag if the value longer than 4byte, need fix
     exifInfo.Orientation = exifAttrs->orientation;
     memcpy(exifInfo.DateTime, exifAttrs->date_time, 20);

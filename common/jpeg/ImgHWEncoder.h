@@ -26,6 +26,9 @@
 #include "EXIFMetaData.h"
 #include "Exif.h"
 #include "JpegMakerCore.h"
+#ifdef CLIP
+#undef CLIP
+#endif
 #include "release/encode_release/hw_jpegenc.h"
 
 namespace android {
@@ -62,6 +65,7 @@ private:  /* Methods */
     void fillGpsInfo(RkGPSInfo &gpsInfo, exif_attribute_t* exifAttrs);
 
 private:  /* Members */
+    static char sMaker[];
     int mCameraId;
     RkExifInfo mExifInfo;
     RkGPSInfo mGpsInfo;

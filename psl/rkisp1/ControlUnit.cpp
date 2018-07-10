@@ -373,7 +373,9 @@ ControlUnit::configStreamsDone(bool configChanged)
         mWaitingForCapture.clear();
         mSettingsHistory.clear();
 
-        struct rkisp_cl_prepare_params_s prepareParams = {NULL};
+        struct rkisp_cl_prepare_params_s prepareParams;
+
+        memset(&prepareParams, 0, sizeof(struct rkisp_cl_prepare_params_s));
         prepareParams.staticMeta = PlatformData::getStaticMetadata(mCameraId);
         if (prepareParams.staticMeta == nullptr) {
             LOGE("Failed to get camera %d StaticMetadata for CL", mCameraId);

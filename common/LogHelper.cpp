@@ -24,6 +24,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include <cutils/properties.h>
 #include "LogHelper.h"
 #include "LogHelperAndroid.h"
 

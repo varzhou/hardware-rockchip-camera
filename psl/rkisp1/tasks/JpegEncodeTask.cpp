@@ -271,7 +271,7 @@ JpegEncodeTask::handleMessageNewJpegInput(ITaskEventListener::PUTaskEvent &msg)
     package.settings = msg.request->getSettings();
 
     ExifMetaData exifData;
-    CLEAR(exifData);
+    //CLEAR(exifData);
 
     ExifDataCache exifCache;
     CLEAR(exifCache);
