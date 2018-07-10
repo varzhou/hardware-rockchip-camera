@@ -64,7 +64,7 @@ RKISP1CameraHw::init()
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     status_t status = NO_ERROR;
 
-    std::string sensorMediaDevice = PSLConfParser::getSensorMediaDevice();
+    std::string sensorMediaDevice = PSLConfParser::getSensorMediaDevice(mCameraId);
     mMediaCtl = std::make_shared<MediaController>(sensorMediaDevice.c_str());
     status = mMediaCtl->init();
     if (status != NO_ERROR) {
@@ -72,7 +72,7 @@ RKISP1CameraHw::init()
         return status;
     }
 
-    std::string imguMediaDevice = PSLConfParser::getImguMediaDevice();
+    std::string imguMediaDevice = PSLConfParser::getImguMediaDevice(mCameraId);
     if (sensorMediaDevice == imguMediaDevice) {
         LOGI("Using sensor media device as imgu media device");
         mImguMediaCtl = mMediaCtl;

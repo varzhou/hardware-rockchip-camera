@@ -136,6 +136,7 @@ struct SensorDriverDescriptor {
     std::string mSensorName;
     std::string mDeviceName;
     std::string mI2CAddress;
+    std::string mParentMediaDev;
     enum ISP_PORT mIspPort;
     enum SensorDeviceType mSensorDevType;
     int csiPort;
@@ -163,7 +164,7 @@ class CameraHWInfo {
 public:
     CameraHWInfo(); // TODO: proper constructor with member variable initializations
     ~CameraHWInfo() {};
-    status_t init(const std::string &mediaDevicePath);
+    status_t init(const std::vector<std::string> &mediaDevicePath);
 
     const char* boardName(void) const { return mBoardName.c_str(); }
     const char* productName(void) const { return mProductName.c_str(); }
@@ -182,7 +183,7 @@ public:
     std::string mProductName;
     std::string mManufacturerName;
     std::string mBoardName;
-    std::string mMediaControllerPathName;
+    std::vector<std::string> mMediaControllerPathName;
     std::string mMainDevicePathName;
     int mPreviewHALFormat;  // specify the preview format for multi configured streams
     int mCameraDeviceAPIVersion;
@@ -197,10 +198,10 @@ private:
     // the below functions are used to init the mSensorInfo
     status_t initDriverList();
     status_t readProperty();
-    status_t findMediaControllerSensors();
-    status_t findMediaDeviceInfo();
-    status_t initDriverListHelper(unsigned major, unsigned minor, SensorDriverDescriptor& drvInfo);
-    status_t getCSIPortID(const std::string &deviceName, int &portId);
+    status_t findMediaControllerSensors(const std::string &mcPath);
+    status_t findMediaDeviceInfo(const std::string &mcPath);
+    status_t initDriverListHelper(unsigned major, unsigned minor, const std::string &mcPath, SensorDriverDescriptor &drvInfo);
+    status_t getCSIPortID(const std::string &deviceName, const std::string &mcPath, int &portId);
 };
 
 /**

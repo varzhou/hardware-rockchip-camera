@@ -36,8 +36,8 @@ class PSLConfParser : public IPSLConfParser {
 public:
     static IPSLConfParser *getInstance(std::string &xmlConfigName, const std::vector<SensorDriverDescriptor>& sensorNames);
     static void deleteInstance();
-    static std::string getSensorMediaDevice();
-    static std::string getImguMediaDevice();
+    static std::string getSensorMediaDevice(int cameraId);
+    static std::string getImguMediaDevice(int cameraId);
 
     virtual CameraCapInfo *getCameraCapInfo(int cameraId);
     virtual camera_metadata_t *constructDefaultMetadata(int cameraId, int reqTemplate);
@@ -45,8 +45,8 @@ public:
     static const char *getSensorMediaDeviceName() { return "rkisp1"; }
     static const char *getImguEntityMediaDevice() { return "rkisp1"; }
 
-    static std::string getSensorMediaDevicePath();
-    static std::string getMediaDeviceByName(std::string deviceName);
+    static std::vector<std::string> getSensorMediaDevicePath();
+    static std::vector<std::string> getMediaDeviceByName(std::string deviceName);
 
 // disable copy constructor and assignment operator
 private:
@@ -61,8 +61,8 @@ private:
 
     static const int mBufSize = 1*1024;  // For xml file
 
-    static std::string mImguMediaDevice;
-    static std::string mSensorMediaDevice;
+    static std::vector<std::string> mImguMediaDevice;
+    static std::vector<std::string> mSensorMediaDevice;
 
     enum DataField {
         FIELD_INVALID = 0,

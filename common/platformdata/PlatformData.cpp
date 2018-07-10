@@ -557,7 +557,7 @@ CameraHWInfo::CameraHWInfo() :
     CLEAR(mDeviceInfo);
 }
 
-status_t CameraHWInfo::init(const std::string &mediaDevicePath)
+status_t CameraHWInfo::init(const std::vector<std::string> &mediaDevicePath)
 {
     mMediaControllerPathName = mediaDevicePath;
     readProperty();
@@ -585,17 +585,19 @@ status_t CameraHWInfo::initDriverList()
         }
     }
 
-    int mcExist = stat(mMediaControllerPathName.c_str(), &sb);
+    for (auto mcPathName : mMediaControllerPathName) {
+        int mcExist = stat(mcPathName.c_str(), &sb);
 
-    LOGI("mMediaControllerPathName %s\n", mMediaControllerPathName.c_str());
+        LOGI("mMediaControllerPathName %s\n", mcPathName.c_str());
 
-    if (mcExist == 0) {
-        mHasMediaController = true;
-        ret = findMediaControllerSensors();
-        ret |= findMediaDeviceInfo();
-    } else {
-        LOGE("Could not find sensor names");
-        ret = NO_INIT;
+        if (mcExist == 0) {
+            mHasMediaController = true;
+            ret = findMediaControllerSensors(mcPathName);
+            ret |= findMediaDeviceInfo(mcPathName);
+        } else {
+            LOGE("Could not find sensor names");
+            ret = NO_INIT;
+        }
     }
 
     for (unsigned i = 0 ;i < mSensorInfo.size(); ++i)
@@ -644,10 +646,10 @@ status_t CameraHWInfo::readProperty()
     return OK;
 }
 
-status_t CameraHWInfo::findMediaControllerSensors()
+status_t CameraHWInfo::findMediaControllerSensors(const std::string &mcPath)
 {
     status_t ret = OK;
-    int fd = open(mMediaControllerPathName.c_str(), O_RDONLY);
+    int fd = open(mcPath.c_str(), O_RDONLY);
     if (fd == -1) {
         LOGW("Could not openg media controller device: %s!", strerror(errno));
         return ENXIO;
@@ -688,7 +690,7 @@ status_t CameraHWInfo::findMediaControllerSensors()
                 // Go through the subdevs one by one, see which one
                 // corresponds to this driver (if there is an error,
                 // the looping ends at 'while')
-                ret = initDriverListHelper(major, minor, drvInfo);
+                ret = initDriverListHelper(major, minor, mcPath, drvInfo);
             }
         }
     } while (!ret);
@@ -701,10 +703,10 @@ status_t CameraHWInfo::findMediaControllerSensors()
     return ret;
 }
 
-status_t CameraHWInfo::findMediaDeviceInfo()
+status_t CameraHWInfo::findMediaDeviceInfo(const std::string& mcPath)
 {
     status_t ret = OK;
-    int fd = open(mMediaControllerPathName.c_str(), O_RDONLY);
+    int fd = open(mcPath.c_str(), O_RDONLY);
     if (fd == -1) {
         LOGW("Could not openg media controller device: %s!", strerror(errno));
         return UNKNOWN_ERROR;
@@ -738,7 +740,7 @@ status_t CameraHWInfo::findMediaDeviceInfo()
  * \param[OUT] portId CSI port number
  *
  */
-status_t CameraHWInfo::getCSIPortID(const std::string &deviceName, int &portId)
+status_t CameraHWInfo::getCSIPortID(const std::string &deviceName, const std::string &mcPath, int &portId)
 {
     LOGI("@%s", __FUNCTION__);
     status_t status = NO_ERROR;
@@ -758,7 +760,7 @@ status_t CameraHWInfo::getCSIPortID(const std::string &deviceName, int &portId)
     nameTemplateVec.push_back(CSI_RX_PORT_NAME_TEMPLATE3);
     nameTemplateVec.push_back(CSI_RX_PORT_NAME_TEMPLATE4);
 
-    std::shared_ptr<MediaController> mediaCtl = std::make_shared<MediaController>(mMediaControllerPathName.c_str());
+    std::shared_ptr<MediaController> mediaCtl = std::make_shared<MediaController>(mcPath.c_str());
     if (!mediaCtl) {
         LOGE("Error creating MediaController");
         return UNKNOWN_ERROR;
@@ -898,22 +900,26 @@ status_t CameraHWInfo::getAvailableSensorModes(const std::string &sensorName,
 
 void CameraHWInfo::getMediaCtlElementNames(std::vector<std::string> &elementNames) const
 {
-    int fd = open(mMediaControllerPathName.c_str(), O_RDONLY);
-    CheckError(fd == -1, VOID_VALUE, "@%s, Could not open media controller device: %s",
-           __FUNCTION__, strerror(errno));
+    // TODO: return all media devices's elements now, maybe just return
+    // specific media device's elements
+    for (auto mcPath : mMediaControllerPathName) {
+        int fd = open(mcPath.c_str(), O_RDONLY);
+        CheckError(fd == -1, VOID_VALUE, "@%s, Could not open media controller device: %s",
+               __FUNCTION__, strerror(errno));
 
-    struct media_entity_desc entity;
-    CLEAR(entity);
-    entity.id |= MEDIA_ENT_ID_FLAG_NEXT;
-
-    while (ioctl(fd, MEDIA_IOC_ENUM_ENTITIES, &entity) >= 0) {
-        elementNames.push_back(std::string(entity.name));
-        LOGI("@%s, entity name:%s, id:%d", __FUNCTION__, entity.name, entity.id);
+        struct media_entity_desc entity;
+        CLEAR(entity);
         entity.id |= MEDIA_ENT_ID_FLAG_NEXT;
-    }
 
-    CheckError(close(fd) > 0, VOID_VALUE, "@%s, Error in closing media controller: %s",
-           __FUNCTION__, strerror(errno));
+        while (ioctl(fd, MEDIA_IOC_ENUM_ENTITIES, &entity) >= 0) {
+            elementNames.push_back(std::string(entity.name));
+            LOGI("@%s, entity name:%s, id:%d", __FUNCTION__, entity.name, entity.id);
+            entity.id |= MEDIA_ENT_ID_FLAG_NEXT;
+        }
+
+        CheckError(close(fd) > 0, VOID_VALUE, "@%s, Error in closing media controller: %s",
+               __FUNCTION__, strerror(errno));
+    }
 }
 
 std::string CameraHWInfo::getFullMediaCtlElementName(const std::vector<std::string> elementNames,
@@ -931,7 +937,10 @@ std::string CameraHWInfo::getFullMediaCtlElementName(const std::vector<std::stri
     return value;
 }
 
-status_t CameraHWInfo::initDriverListHelper(unsigned major, unsigned minor, SensorDriverDescriptor& drvInfo)
+status_t
+CameraHWInfo::initDriverListHelper(unsigned major, unsigned minor,
+                                   const std::string &mcPath,
+                                   SensorDriverDescriptor& drvInfo)
 {
     LOGI("@%s", __FUNCTION__);
     int portId = 0;
@@ -966,7 +975,7 @@ status_t CameraHWInfo::initDriverListHelper(unsigned major, unsigned minor, Sens
                 drvInfo.mDeviceName = subdevPathNameN.substr(pos + 1);
 
             drvInfo.mIspPort = (ISP_PORT)n; // Unused for media-ctl sensors
-            status = getCSIPortID(drvInfo.mSensorName, portId);
+            status = getCSIPortID(drvInfo.mSensorName, mcPath, portId);
             if (status != NO_ERROR) {
                 LOGE("error getting CSI port id %d", portId);
                 return status;
@@ -1003,6 +1012,7 @@ status_t CameraHWInfo::initDriverListHelper(unsigned major, unsigned minor, Sens
                     LOGW("Could not extract sensor name correctly");
                 }
 
+                drvInfo.mParentMediaDev = mcPath;
                 drvInfo.csiPort = portId;
                 mSensorInfo.push_back(drvInfo);
             }

@@ -37,8 +37,8 @@ namespace camera2 {
 
 IPSLConfParser *PSLConfParser::sInstance = nullptr; // the singleton instance
 
-std::string PSLConfParser::mImguMediaDevice;
-std::string PSLConfParser::mSensorMediaDevice;
+std::vector<std::string> PSLConfParser::mImguMediaDevice;
+std::vector<std::string> PSLConfParser::mSensorMediaDevice;
 
 static const char *NVM_DATA_PATH = "/sys/bus/i2c/devices/";
 
@@ -986,44 +986,46 @@ int PSLConfParser::readNvmData()
     return OK;
 }
 
-std::string PSLConfParser::getSensorMediaDevice()
+std::string PSLConfParser::getSensorMediaDevice(int cameraId)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    if (mSensorMediaDevice.size() > 0)
-        return mSensorMediaDevice;
-
-    return mSensorMediaDevice = getMediaDeviceByName(getSensorMediaDeviceName());
+    if (mSensorMediaDevice.size() == 0)
+        mSensorMediaDevice = getMediaDeviceByName(getSensorMediaDeviceName());
+    // TODO: maybe needn't record the parent media device in sensor info struct
+    return PlatformData::getCameraHWInfo()->mSensorInfo[cameraId].mParentMediaDev;
 }
 
-std::string PSLConfParser::getImguMediaDevice()
+std::string PSLConfParser::getImguMediaDevice(int cameraId)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    if (mImguMediaDevice.size() > 0)
-        return mImguMediaDevice;
+    if (mImguMediaDevice.size() == 0)
+        mImguMediaDevice = getMediaDeviceByName(getImguEntityMediaDevice());
 
-    return mImguMediaDevice = getMediaDeviceByName(getImguEntityMediaDevice());
+    // TODO: maybe needn't record the parent media device in sensor info struct
+    return PlatformData::getCameraHWInfo()->mSensorInfo[cameraId].mParentMediaDev;
 }
 
-std::string PSLConfParser::getSensorMediaDevicePath()
+std::vector<std::string> PSLConfParser::getSensorMediaDevicePath()
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     std::string mediaDeviceName = PSLConfParser::getSensorMediaDeviceName();
-    if (strncmp("nullptr", mediaDeviceName.c_str(), MIN(sizeof("nullptr"),
-        mediaDeviceName.size())) == 0) {
-        return "/dev/media0";
+    if (mediaDeviceName.size() == 0) {
+        std::vector<std::string> mediaDevicePath;
+        mediaDevicePath.push_back("/dev/media0");
+        return mediaDevicePath;
     }
 
    return getMediaDeviceByName(mediaDeviceName);
 }
 
-std::string PSLConfParser::getMediaDeviceByName(std::string driverName)
+std::vector<std::string> PSLConfParser::getMediaDeviceByName(std::string driverName)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     LOGI("@%s, Target name: %s", __FUNCTION__, driverName.c_str());
     const char *MEDIADEVICES = "media";
     const char *DEVICE_PATH = "/dev/";
 
-    std::string mediaDevicePath;
+    std::vector<std::string> mediaDevicePath;
     DIR *dir;
     dirent *dirEnt;
 
@@ -1047,6 +1049,8 @@ std::string PSLConfParser::getMediaDeviceByName(std::string driverName)
     }
 
     status_t retVal = NO_ERROR;
+    // let media0 place before media1
+    std::sort(candidates.begin(), candidates.end());
     for (const auto &candidate : candidates) {
         MediaController controller(candidate.c_str());
         retVal = controller.init();
@@ -1068,8 +1072,8 @@ std::string PSLConfParser::getMediaDeviceByName(std::string driverName)
                     MIN(sizeof(info.driver),
                     driverName.size())) == 0) {
             LOGD("Found device that matches: %s", driverName.c_str());
-            mediaDevicePath += candidate;
-            break;
+            //mediaDevicePath += candidate;
+            mediaDevicePath.push_back(candidate);
         }
     }
 
