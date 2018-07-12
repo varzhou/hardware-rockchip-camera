@@ -716,6 +716,7 @@ ControlUnit::handleNewRequestDone(Message &msg)
         return UNKNOWN_ERROR;
     }
 
+    fillMetadata(reqState);
     reqState->mImgProcessDone = true;
     Camera3Request* request = reqState->request;
     if (!reqState->mClMetaReceived)
@@ -970,8 +971,6 @@ ControlUnit::handleMetadataReceived(Message &msg) {
 
     if (!reqState->mImgProcessDone)
         return OK;
-
-    fillMetadata(reqState);
 
     Camera3Request* request = reqState->request;
     request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
