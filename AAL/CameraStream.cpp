@@ -166,14 +166,23 @@ status_t CameraStream::configure(void)
         LOGE("mProducer = nullptr");
         return BAD_VALUE;
     }
-    /* TODO : stream tpye choose should refer outputFramework*/
+    bool display = false;
+    display = CHECK_FLAG(mStream3->usage, GRALLOC_USAGE_HW_COMPOSER);
+    display |= CHECK_FLAG(mStream3->usage, GRALLOC_USAGE_HW_TEXTURE);
+    display |= CHECK_FLAG(mStream3->usage, GRALLOC_USAGE_HW_RENDER);
+
+    /* TODO : video stream type should be judged by 
+     * GRALLOC_USAGE_HW_VIDEO_ENCODER, but now we make a workround that 
+     * add this usage to all streams for the gpu bug in 
+     * configStreams@RKISP1CameraHw.cpp*/
     if (mStream3->format == HAL_PIXEL_FORMAT_BLOB) {
         mStreamType = STREAM_CAPTURE;
-    } else if (mStream3->format == HAL_PIXEL_FORMAT_YCbCr_420_888) {
-        mStreamType = STREAM_VIDEO;
-    } else {
+    } else if (display) {
         mStreamType = STREAM_PREVIEW;
+    } else {
+        mStreamType = STREAM_VIDEO;
     }
+
     LOGI("%s:%d: format %d, usage %d, stream type %d", __func__, __LINE__, mStream3->format, mStream3->usage, mStreamType);
 
     FrameInfo info;
