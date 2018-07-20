@@ -607,9 +607,6 @@ status_t ImguUnit::processNextRequest()
         status |= lTask->settings(msg->pMsg);
     }
 
-    if (msg->cbMetadataMsg.updateMeta)
-        updateProcUnitResults(*request, msg->pMsg.processingSettings);
-
     if (mFirstRequest) {
         status = kickstart();
         if (status != OK) {
@@ -672,30 +669,6 @@ ImguUnit::kickstart()
     }
 
     mFirstRequest = false;
-    return status;
-}
-
-status_t
-ImguUnit::updateProcUnitResults(Camera3Request &request,
-                                std::shared_ptr<ProcUnitSettings> settings)
-{
-    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    status_t status = NO_ERROR;
-    CameraMetadata *ctrlUnitResult = nullptr;
-
-    ctrlUnitResult = request.getPartialResultBuffer(CONTROL_UNIT_PARTIAL_RESULT);
-
-    if (ctrlUnitResult == nullptr) {
-        LOGE("Failed to retrieve Metadata buffer for reqId = %d find the bug!",
-                request.getId());
-        return UNKNOWN_ERROR;
-    }
-
-    // update DVS metadata
-    updateDVSMetadata(*ctrlUnitResult, settings);
-
-    // update misc metadata (split if need be)
-    updateMiscMetadata(*ctrlUnitResult, settings);
     return status;
 }
 
@@ -875,62 +848,6 @@ status_t ImguUnit::notifyPollEvent(PollEventMessage *pollMsg)
     }
 
     return OK;
-}
-
-/**
- * update misc metadata
- * metadata which somewhat belongs to the PU's turf
- *
- * \param[IN] procUnitResults Metadata copy to update.
- * \param[IN] settings holds input params for processing unit.
- *
- */
-void
-ImguUnit::updateMiscMetadata(CameraMetadata &procUnitResults,
-                             std::shared_ptr<const ProcUnitSettings> settings) const
-{
-    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    if (settings.get() == nullptr) {
-        LOGE("null settings for Metadata update");
-        return;
-    }
-
-    //# ANDROID_METADATA_Dynamic android.control.effectMode done
-    procUnitResults.update(ANDROID_CONTROL_EFFECT_MODE,
-                           &settings->captureSettings->ispControls.effect, 1);
-    //# ANDROID_METADATA_Dynamic android.noiseReduction.mode done
-    procUnitResults.update(ANDROID_NOISE_REDUCTION_MODE,
-                           &settings->captureSettings->ispControls.nr.mode, 1);
-    //# ANDROID_METADATA_Dynamic android.edge.mode done
-    procUnitResults.update(ANDROID_EDGE_MODE,
-                           &settings->captureSettings->ispControls.ee.mode, 1);
-}
-
-/**
- * update the DVS metadata
- * only copying from settings to dynamic
- *
- * \param[IN] procUnitResults Metadata copy to update.
- * \param[IN] settings ProcUnitSettings
- *
- */
-void
-ImguUnit::updateDVSMetadata(CameraMetadata &procUnitResults,
-                            std::shared_ptr<const ProcUnitSettings> settings) const
-{
-    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    if (settings.get() == nullptr) {
-        LOGE("null settings in UDVSMetadata");
-        return;
-    }
-    //# ANDROID_METADATA_Dynamic android.control.videoStabilizationMode copied
-    procUnitResults.update(ANDROID_CONTROL_VIDEO_STABILIZATION_MODE,
-                           &settings->captureSettings->videoStabilizationMode,
-                           1);
-    //# ANDROID_METADATA_Dynamic android.lens.opticalStabilizationMode copied
-    procUnitResults.update(ANDROID_LENS_OPTICAL_STABILIZATION_MODE,
-                           &settings->captureSettings->opticalStabilizationMode,
-                           1);
 }
 
 status_t ImguUnit::handleMessagePoll(DeviceMessage msg)

@@ -660,10 +660,30 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
     if (entry.count == 1) {
         ctrlUnitResult->update(ANDROID_CONTROL_MODE, entry.data.u8, entry.count);
     }
-
-    entry = settings->find(ANDROID_CONTROL_AE_MODE);
+    //# ANDROID_METADATA_Dynamic android.control.videoStabilizationMode copied
+    entry = settings->find(ANDROID_CONTROL_VIDEO_STABILIZATION_MODE);
     if (entry.count == 1) {
-        ctrlUnitResult->update(ANDROID_CONTROL_AE_MODE, entry.data.u8, entry.count);
+        ctrlUnitResult->update(ANDROID_CONTROL_VIDEO_STABILIZATION_MODE, entry.data.u8, entry.count);
+    }
+    //# ANDROID_METADATA_Dynamic android.lens.opticalStabilizationMode copied
+    entry = settings->find(ANDROID_LENS_OPTICAL_STABILIZATION_MODE);
+    if (entry.count == 1) {
+        ctrlUnitResult->update(ANDROID_LENS_OPTICAL_STABILIZATION_MODE, entry.data.u8, entry.count);
+    }
+    //# ANDROID_METADATA_Dynamic android.control.effectMode done
+    entry = settings->find(ANDROID_CONTROL_EFFECT_MODE);
+    if (entry.count == 1) {
+        ctrlUnitResult->update(ANDROID_CONTROL_EFFECT_MODE, entry.data.u8, entry.count);
+    }
+    //# ANDROID_METADATA_Dynamic android.noiseReduction.mode done
+    entry = settings->find(ANDROID_NOISE_REDUCTION_MODE);
+    if (entry.count == 1) {
+        ctrlUnitResult->update(ANDROID_NOISE_REDUCTION_MODE, entry.data.u8, entry.count);
+    }
+    //# ANDROID_METADATA_Dynamic android.edge.mode done
+    entry = settings->find(ANDROID_EDGE_MODE);
+    if (entry.count == 1) {
+        ctrlUnitResult->update(ANDROID_EDGE_MODE, entry.data.u8, entry.count);
     }
 
     /**
@@ -686,7 +706,6 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
         ctrlUnitResult->update(ANDROID_CONTROL_AF_STATE, &afState, 1);
     }
     mMetadata->writeJpegMetadata(*reqState);
-
     uint8_t pipelineDepth;
     mSettingsProcessor->getStaticMetadataCache().getPipelineDepth(pipelineDepth);
     //# ANDROID_METADATA_Dynamic android.request.pipelineDepth done
@@ -716,7 +735,6 @@ ControlUnit::handleNewRequestDone(Message &msg)
         return UNKNOWN_ERROR;
     }
 
-    fillMetadata(reqState);
     reqState->mImgProcessDone = true;
     Camera3Request* request = reqState->request;
     if (!reqState->mClMetaReceived)
@@ -759,6 +777,7 @@ ControlUnit::completeProcessing(std::shared_ptr<RequestCtrlState> &reqState)
          * This should be moved to any of the processXXXSettings.
          */
 
+        fillMetadata(reqState);
         mImguUnit->completeRequest(reqState->processingSettings, true);
     } else {
         LOGE("request or captureSetting is nullptr - Fix the bug!");
