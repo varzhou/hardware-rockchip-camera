@@ -433,6 +433,7 @@ status_t RKISP1CameraHw::reconfigureStreams(UseCase newUseCase,
 
     /* Flush to make sure we return all graph config objects to the pool before
        next stream config. */
+    // mImguUnit->flush() moves to the controlunit for sync
     /* mImguUnit->flush(); */
     mControlUnit->flush();
 

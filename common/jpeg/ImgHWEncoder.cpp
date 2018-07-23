@@ -195,6 +195,8 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     JpegInInfo.doThumbNail = 1;
     JpegInInfo.thumbW = exifMeta->mJpegSetting.thumbWidth;
     JpegInInfo.thumbH = exifMeta->mJpegSetting.thumbHeight;
+    JpegInInfo.thumbW = JpegInInfo.thumbW != 0 ? JpegInInfo.thumbW : 160;
+    JpegInInfo.thumbH = JpegInInfo.thumbH != 0 ? JpegInInfo.thumbH : 120;
     //if thumbData is NULL, do scale, the type above can not be 420_P or 422_UYVY
     JpegInInfo.thumbData = NULL;
     JpegInInfo.thumbDataLen = 0; //don't care when thumbData is Null
@@ -218,6 +220,10 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     JpegOutInfo.outBuflen = outJPEGSize;
     JpegOutInfo.jpegFileLen = 0;
     JpegOutInfo.cacheflush = NULL;
+
+    LOGI("@%s %d: JpegInInfo thumbW:%d, thumbH:%d, thumbqLvl:%d, inputW:%d, inputH:%d, qLvl:%d", __FUNCTION__, __LINE__,
+         JpegInInfo.thumbW, JpegInInfo.thumbH, JpegInInfo.thumbqLvl,
+         JpegInInfo.inputW, JpegInInfo.inputH, JpegInInfo.qLvl);
 
     if(hw_jpeg_encode(&JpegInInfo, &JpegOutInfo) < 0 || JpegOutInfo.jpegFileLen <= 0){
         LOGE("@%s %d: hw jpeg encode fail.", __FUNCTION__, __LINE__);
