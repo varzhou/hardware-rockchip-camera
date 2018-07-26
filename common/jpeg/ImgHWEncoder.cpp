@@ -46,6 +46,8 @@ status_t ImgHWEncoder::init()
     status_t status = NO_ERROR;
     LOGI("@%s enter", __FUNCTION__);
 
+    memset(&mExifInfo, 0, sizeof(RkExifInfo));
+    memset(&mGpsInfo, 0, sizeof(RkGPSInfo));
     if (create_vpu_memory_pool_allocator(&mPool, 1, 200*200*2) < 0) {
         LOGE("@%s %d: create vpu memory failed ", __FUNCTION__, __LINE__);
         return UNKNOWN_ERROR;
@@ -102,6 +104,8 @@ void ImgHWEncoder::fillRkExifInfo(RkExifInfo &exifInfo, exif_attribute_t* exifAt
     exifInfo.DigitalZoomRatio.num = exifAttrs->zoom_ratio.num;
     exifInfo.DigitalZoomRatio.denom = exifAttrs->zoom_ratio.den;
     exifInfo.SceneCaptureType = exifAttrs->scene_capture_type;
+    exifInfo.makernote = NULL;
+    exifInfo.makernotechars = 0;
 }
 
 void ImgHWEncoder::fillGpsInfo(RkGPSInfo &gpsInfo, exif_attribute_t* exifAttrs)
