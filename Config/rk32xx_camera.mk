@@ -36,9 +36,9 @@ PRODUCT_COPY_FILES += \
     hardware/rockchip/camera/SiliconImage/isi/drv/OV5648/calib/OV5648_lens_CHT-842B-MD_OTP.xml:$(TARGET_COPY_OUT_VENDOR)/etc/OV5648_lens_CHT-842B-MD_OTP.xml \
     hardware/rockchip/camera/SiliconImage/isi/drv/OV5695/calib/OV5695.xml:$(TARGET_COPY_OUT_VENDOR)/etc/OV5695.xml \
     hardware/rockchip/camera/SiliconImage/isi/drv/OV13850/calib/OV13850.xml:$(TARGET_COPY_OUT_VENDOR)/etc/OV13850.xml \
-	hardware/rockchip/camera/SiliconImage/isi/drv/OV13850/calib/OV9750_A.xml:$(TARGET_COPY_OUT_VENDOR)/etc/OV9750_A.xml \
-	hardware/rockchip/camera/SiliconImage/isi/drv/OV13850/calib/OV9750_B.xml:$(TARGET_COPY_OUT_VENDOR)/etc/OV9750_B.xml \
-	hardware/rockchip/camera/SiliconImage/isi/drv/OV13850/calib/IMX258.xml:$(TARGET_COPY_OUT_VENDOR)/etc/IMX258.xml \
+    hardware/rockchip/camera/SiliconImage/isi/drv/OV9750_A/calib/OV9750_A.xml:$(TARGET_COPY_OUT_VENDOR)/etc/OV9750_A.xml \
+    hardware/rockchip/camera/SiliconImage/isi/drv/OV9750_B/calib/OV9750_B.xml:$(TARGET_COPY_OUT_VENDOR)/etc/OV9750_B.xml \
+    hardware/rockchip/camera/SiliconImage/isi/drv/IMX258/calib/IMX258.xml:$(TARGET_COPY_OUT_VENDOR)/etc/IMX258.xml \
     hardware/rockchip/camera/SiliconImage/isi/drv/IMX214/calib/IMX214.xml:$(TARGET_COPY_OUT_VENDOR)/etc/IMX214.xml \
     hardware/rockchip/camera/SiliconImage/isi/drv/IMX214/calib/IMX214_lens_50013A7_OTP.xml:$(TARGET_COPY_OUT_VENDOR)/etc/IMX214_lens_50013A7_OTP.xml \
     hardware/rockchip/camera/SiliconImage/isi/drv/IMX214/calib/IMX214_LG-50013A7.xml:$(TARGET_COPY_OUT_VENDOR)/etc/IMX214_LG-50013A7.xml \
