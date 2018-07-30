@@ -29,7 +29,9 @@ CameraStream::CameraStream(int seqNo, camera3_stream_t * stream,
                                                           mSeqNo(seqNo),
                                                           mCallback(callback),
                                                           mOutputBuffersInHal(0),
-                                                          mStream3(stream)
+                                                          mStream3(stream),
+                                                          mFrameCount(0),
+                                                          mLastFrameCount(0)
 {
 }
 
@@ -84,10 +86,35 @@ status_t CameraStream::capture(std::shared_ptr<CameraBuffer> aBuffer,
     return NO_ERROR;
 }
 
+void CameraStream::showDebugFPS(int streamType)
+{
+    double fps = 0;
+    mFrameCount++;
+    nsecs_t now = systemTime();
+    nsecs_t diff = now - mLastFpsTime;
+    if ((unsigned long)diff > 1000000000) {
+        fps = (((double)(mFrameCount - mLastFrameCount)) *
+                (double)(1000000000)) / (double)diff;
+        switch(streamType) {
+            case STREAM_PREVIEW:
+                LOGI("%s: Preview FPS : %.4f: mFrameCount=%d", __func__, fps, mFrameCount);
+                break;
+            case STREAM_VIDEO:
+                LOGI("%s: Video FPS : %.4f", __func__, fps);
+                break;
+            default:
+                break;
+        }
+        mLastFpsTime = now;
+        mLastFrameCount = mFrameCount;
+    }
+}
+
 status_t CameraStream::captureDone(std::shared_ptr<CameraBuffer> aBuffer,
                                    Camera3Request* request)
 {
     std::lock_guard<std::mutex> l(mPendingLock);
+    showDebugFPS(mStreamType);
     /* Usually the correct request is found at index 0 in the mPendingRequests
      * Vector, but reprocessing requests are allowed to deviate from the FIFO
      * rule. See camera3.h section "S10.3 Reprocessing pipeline characteristics"
@@ -104,15 +131,22 @@ status_t CameraStream::captureDone(std::shared_ptr<CameraBuffer> aBuffer,
             switch (mStreamType) {
             case STREAM_PREVIEW:
                 LOGI("%s:%d: Preview buffer done, instance(%p), requestId(%d)", __FUNCTION__, __LINE__, this, request->getId());
+                aBuffer->dumpImage(CAMERA_DUMP_PREVIEW, "PREVIEW");
                 break;
             case STREAM_CAPTURE:
                 LOGI("%s:%d: Capture buffer done, instance(%p), requestId(%d)", __FUNCTION__, __LINE__, this, request->getId());
+                aBuffer->dumpImage(CAMERA_DUMP_JPEG, ".jpg");
                 break;
             case STREAM_VIDEO:
                 LOGI("%s:%d: Video buffer done, instance(%p), requestId(%d)", __FUNCTION__, __LINE__, this, request->getId());
+                aBuffer->dumpImage(CAMERA_DUMP_VIDEO, "VIDEO");
+                break;
+            case STREAM_ZSL:
+                LOGI("%s:%d: Zsl buffer done, instance(%p), requestId(%d)", __FUNCTION__, __LINE__, this, request->getId());
+                aBuffer->dumpImage(CAMERA_DUMP_ZSL, "ZSL");
                 break;
             default :
-                LOGW("%s:%d: Not support the stream type, is a buf, fix me", __FUNCTION__, __LINE__);
+                LOGW("%s:%d: Not support the stream type, is a bug, fix me", __FUNCTION__, __LINE__);
                 break;
             }
             mPendingRequests.erase(mPendingRequests.begin() + i);
@@ -167,23 +201,33 @@ status_t CameraStream::configure(void)
         return BAD_VALUE;
     }
     bool display = false;
+    bool videoEnc = false;
+    bool zsl = false;
+
     display = CHECK_FLAG(mStream3->usage, GRALLOC_USAGE_HW_COMPOSER);
     display |= CHECK_FLAG(mStream3->usage, GRALLOC_USAGE_HW_TEXTURE);
     display |= CHECK_FLAG(mStream3->usage, GRALLOC_USAGE_HW_RENDER);
 
-    /* TODO : video stream type should be judged by 
-     * GRALLOC_USAGE_HW_VIDEO_ENCODER, but now we make a workround that 
-     * add this usage to all streams for the gpu bug in 
+    videoEnc = CHECK_FLAG(mStream3->usage, GRALLOC_USAGE_HW_VIDEO_ENCODER);
+    zsl = CHECK_FLAG(mStream3->usage, GRALLOC_USAGE_HW_CAMERA_ZSL);
+
+    /* TODO : video stream type should be judged by
+     * GRALLOC_USAGE_HW_VIDEO_ENCODER, but now we make a workround that
+     * add this usage to all streams for the gpu bug in
      * configStreams@RKISP1CameraHw.cpp*/
     if (mStream3->format == HAL_PIXEL_FORMAT_BLOB) {
         mStreamType = STREAM_CAPTURE;
+    } else if (zsl) {
+        mStreamType = STREAM_ZSL;
     } else if (display) {
         mStreamType = STREAM_PREVIEW;
+    /* } else if (videoEnc) { */
     } else {
         mStreamType = STREAM_VIDEO;
     }
 
-    LOGI("%s:%d: format %d, usage %d, stream type %d", __func__, __LINE__, mStream3->format, mStream3->usage, mStreamType);
+    LOGI("%s:%d:CameraStream:%p, mstream3:%p, format %d, usage %d, stream type %d", __func__, __LINE__,
+         this, mStream3, mStream3->format, mStream3->usage, mStreamType);
 
     FrameInfo info;
     mProducer->query(&info);

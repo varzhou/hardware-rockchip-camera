@@ -26,13 +26,15 @@
 #include "PlatformData.h" // for macro MAX_REQUEST_IN_PROCESS_NUM
 #include "ICameraHw.h"
 #include <memory>
+#include "PerformanceTraces.h"
 
 NAMESPACE_DECLARATION {
 
 enum STREAM_TYPE {
     STREAM_PREVIEW = 1,
     STREAM_CAPTURE = 1 << 1,
-    STREAM_VIDEO = 1 << 2
+    STREAM_VIDEO = 1 << 2,
+    STREAM_ZSL = 1 << 3
 };
 
 class IRequestCallback;
@@ -88,6 +90,7 @@ public:
 private: /* Methods */
     // CameraStreamNode override API
     virtual status_t configure(void);
+    void showDebugFPS(int streamType);
 
 private: /* Members */
     bool mActive;   /* Tracks the status of the stream during config time*/
@@ -100,6 +103,9 @@ private: /* Members */
     camera3_stream_t * mStream3; /* one stream of config_streams from client which not owned here */
     std::vector<Camera3Request*>      mPendingRequests;
     std::mutex mPendingLock; /* Protects mPendingRequests */
+    int mFrameCount;
+    int mLastFrameCount;
+    nsecs_t mLastFpsTime;
 };
 
 } NAMESPACE_DECLARATION_END

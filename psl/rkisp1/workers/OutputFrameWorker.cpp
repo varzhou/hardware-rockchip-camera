@@ -36,9 +36,7 @@ OutputFrameWorker::OutputFrameWorker(std::shared_ptr<V4L2VideoNode> node, int ca
                 mNeedPostProcess(false),
                 mNodeName(nodeName),
                 mPostPipeline(new PostProcessPipeLine(this, cameraId)),
-                mPostProcItemsPool("PostBufPool"),
-                mFrameCount(0),
-                mLastFrameCount(0)
+                mPostProcItemsPool("PostBufPool")
 {
     if (mNode)
         LOGI("@%s, instance(%p), mStream(%p), device name:%s", __FUNCTION__, this, mStream, mNode->name());
@@ -72,31 +70,6 @@ OutputFrameWorker::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
     CameraStream *stream = buf->cambuf->getOwner();
     stream->captureDone(buf->cambuf, buf->request);
     return OK;
-}
-
-void OutputFrameWorker::showDebugFPS(int streamType)
-{
-    double fps = 0;
-    mFrameCount++;
-    nsecs_t now = systemTime();
-    nsecs_t diff = now - mLastFpsTime;
-    if ((unsigned long)diff > 1000000000) {
-        fps = (((double)(mFrameCount - mLastFrameCount)) *
-                (double)(1000000000)) / (double)diff;
-        switch(streamType) {
-            case STREAM_PREVIEW:
-                LOGI("%s: Preview FPS : %.4f: mFrameCount=%d", __func__, fps, mFrameCount);
-                break;
-            case STREAM_VIDEO:
-                LOGI("%s: Video FPS : %.4f", __func__, fps);
-                break;
-            default:
-                LOGW("%s: logging not supported for the stream(%d)", __FUNCTION__, streamType);
-                break;
-        }
-        mLastFpsTime = now;
-        mLastFrameCount = mFrameCount;
-    }
 }
 
 void OutputFrameWorker::addListener(camera3_stream_t* stream)
@@ -306,6 +279,13 @@ status_t OutputFrameWorker::run()
                 break;
             }
     }
+    std::string s(mNode->name());
+    // node name is "/dev/videox", substr is videox
+    std::string substr = s.substr(5,10);
+    // CAMERA_DUMP_RAW only means that the buffers are not
+    // processed after dequed from driver, but not the raw format
+    mPostWorkingBuf->cambuf->dumpImage(CAMERA_DUMP_RAW, substr.c_str());
+
     mOutputBuffer = mOutputBuffers[index];
     mOutputBuffers[index] = nullptr;
     mPostWorkingBufs[index] = nullptr;
@@ -402,24 +382,6 @@ status_t OutputFrameWorker::postRun()
     mPostPipeline->processFrame(tempBuf, outBufs, mMsg->pMsg.processingSettings);
     stream = mOutputBuffer->getOwner();
 
-    stream_type = stream->getStreamType();
-    showDebugFPS(stream_type);
-
-    // Dump the buffers if enabled in flags
-    switch (stream_type) {
-    case STREAM_PREVIEW:
-        mOutputBuffer->dumpImage(CAMERA_DUMP_PREVIEW, "PREVIEW");
-        break;
-    case STREAM_CAPTURE:
-        mOutputBuffer->dumpImage(CAMERA_DUMP_JPEG, ".jpg");
-        break;
-    case STREAM_VIDEO:
-        mOutputBuffer->dumpImage(CAMERA_DUMP_VIDEO, "VIDEO");
-        break;
-    default :
-        LOGW("%s:%d: dump not support for the stream", __func__, __LINE__);
-        break;
-    }
     // call capturedone for the stream of the buffer
     //stream->captureDone(mOutputBuffer, request);
 

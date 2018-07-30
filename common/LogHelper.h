@@ -56,7 +56,7 @@ enum {
 // Dump image related flags
     CAMERA_DUMP_PREVIEW =         1 << 0, // 1
     CAMERA_DUMP_VIDEO =           1 << 1, // 2
-    CAMERA_DUMP_SNAPSHOT =        1 << 2, // 4
+    CAMERA_DUMP_ZSL =             1 << 2, // 4
     CAMERA_DUMP_JPEG =            1 << 3, // 8
     CAMERA_DUMP_RAW =             1 << 4, // 16
 

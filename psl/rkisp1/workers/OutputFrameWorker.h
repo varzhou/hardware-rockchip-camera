@@ -45,7 +45,6 @@ public:
                             int err);
 
 private:
-    void showDebugFPS(int streamType);
     std::shared_ptr<CameraBuffer> findBuffer(Camera3Request* request,
                                              camera3_stream_t* stream);
     status_t prepareBuffer(std::shared_ptr<CameraBuffer>& buffer);
@@ -68,9 +67,6 @@ private:
     SharedItemPool<PostProcBuffer> mPostProcItemsPool;
     std::vector<std::shared_ptr<PostProcBuffer>> mPostWorkingBufs;
     std::shared_ptr<PostProcBuffer> mPostWorkingBuf;
-    int mFrameCount;
-    int mLastFrameCount;
-    nsecs_t mLastFpsTime;
 };
 
 } /* namespace camera2 */
