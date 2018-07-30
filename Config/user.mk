@@ -23,6 +23,9 @@ PRODUCT_PACKAGES += \
 	libisp_isi_drv_OV5645 \
 	libisp_isi_drv_OV5695 \
 	libisp_isi_drv_TC358749XBG \
-	libisp_isi_drv_OV2685
+	libisp_isi_drv_OV2685 \
+	libisp_isi_drv_OV9750_A \
+	libisp_isi_drv_OV9750_B \
+	libisp_isi_drv_IMX258
 
 endif
