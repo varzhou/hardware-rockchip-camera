@@ -9,3 +9,9 @@ V0.0.1
 	- TODOS:
 		- AF
 		- manual 3A controls
+V1.0.1
+	- move all 3A control logics to camera engine(also called control loop)
+	  project, the project path is :
+		- ssh://<user name>@10.10.10.58:29418/camera_engine_rkisp
+	- support AF
+	- have been roughly tested by quality department
