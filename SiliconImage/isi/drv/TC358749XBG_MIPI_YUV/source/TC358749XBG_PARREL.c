@@ -1,3 +1,19 @@
+/******************************************************************************
+ *
+ * The copyright in this software is owned by Rockchip and/or its licensors.
+ * This software is made available subject to the conditions of the license 
+ * terms to be determined and negotiated by Rockchip and you.
+ * THIS SOFTWARE IS PROVIDED TO YOU ON AN "AS IS" BASIS and ROCKCHP AND/OR 
+ * ITS LICENSORS DISCLAIMS ANY AND ALL WARRANTIES AND REPRESENTATIONS WITH 
+ * RESPECT TO SUCH SOFTWARE, WHETHER EXPRESS,IMPLIED, STATUTORY OR OTHERWISE, 
+ * INCLUDING WITHOUT LIMITATION, ANY IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, 
+ * MERCHANTABILITY, SATISFACTROY QUALITY, ACCURACY OR FITNESS FOR A PARTICULAR PURPOSE. 
+ * Except as expressively authorized by Rockchip and/or its licensors, you may not 
+ * (a) disclose, distribute, sell, sub-license, or transfer this software to any third party, 
+ * in whole or part; (b) modify this software, in whole or part; (c) decompile, reverse-engineer, 
+ * dissemble, or attempt to derive any source code from the software.
+ *
+ *****************************************************************************/
 /**
  * @file TC358749XBG.c
  *
@@ -24,18 +40,8 @@
 
 #define TC358749XBG_HDMI2MIPI 1
 
-typedef enum
-{
-	STATUS_POWER_ON	= 0,
-	STATUS_STANDBY	= 1,
-	STATUS_READY	= 2,
-	STATUS_VIDEO_TX	= 3
-} TcStatus;
-
 #define S_DDC5V (1 << 0)
 #define S_SYNC  (1 << 7)
-
-static TcStatus gStatus = STATUS_POWER_ON;
 
 #define ERR_CHECK_RETURN(success, ret, reg, val) do {		\
 	if (ret != success) {					\
@@ -61,14 +67,12 @@ static TcStatus gStatus = STATUS_POWER_ON;
 /******************************************************************************
  * local macro definitions
  *****************************************************************************/
-CREATE_TRACER( TC358749XBG_INFO , "TC358749XBG: ", INFO,    0U );
-CREATE_TRACER( TC358749XBG_WARN , "TC358749XBG: ", WARNING, 0U );
-CREATE_TRACER( TC358749XBG_ERROR, "TC358749XBG: ", ERROR,   1U );
-
-CREATE_TRACER( TC358749XBG_DEBUG, "TC358749XBG: ", INFO,     0U );
-
-CREATE_TRACER( TC358749XBG_REG_INFO , "TC358749XBG: ", INFO, 0U);
-CREATE_TRACER( TC358749XBG_REG_DEBUG, "TC358749XBG: ", INFO, 0U );
+CREATE_TRACER( TC358749XBG_INFO ,      "TC358749XBG: ", INFO,          0U );
+CREATE_TRACER( TC358749XBG_WARN ,      "TC358749XBG: ", WARNING,       0U );
+CREATE_TRACER( TC358749XBG_ERROR,      "TC358749XBG: ", ERROR,         1U );
+CREATE_TRACER( TC358749XBG_DEBUG,      "TC358749XBG: ", INFO,          0U );
+CREATE_TRACER( TC358749XBG_REG_INFO ,  "TC358749XBG: ", INFO,          0U );
+CREATE_TRACER( TC358749XBG_REG_DEBUG,	"TC358749XBG: ", INFO, 		0U );
 
 #define TC358749XBG_SLAVE_ADDR       0x1FU                           /**< i2c slave address of the TC358749XBG camera sensor */
 #define TC358749XBG_SLAVE_ADDR2      0x3FU
@@ -105,8 +109,7 @@ const IsiSensorCaps_t TC358749XBG_g_IsiSensorDefaultConfig;
 
 static uint16_t g_suppoted_mipi_lanenum_type = SUPPORT_MIPI_FOUR_LANE;
 #define DEFAULT_NUM_LANES SUPPORT_MIPI_FOUR_LANE
-static bool bHdmiinExit = false;
-static osThread gHdmiinThreadId;
+
 /******************************************************************************
  * local function prototypes
  *****************************************************************************/
@@ -285,7 +288,8 @@ static uint8_t framerate_count(IsiSensorHandle_t handle)
 	uint8_t hdmi_int=0x00;
 	uint8_t sys_ctrl=0xFF;
 
-	while(!bHdmiinExit){
+    TC358749XBG_Context_t *pTC358749XBGCtx = (TC358749XBG_Context_t *)p_arg;
+    while(!pTC358749XBGCtx->bHdmiinExit){
 		result = IsiI2cReadSensorRegister( handle, 0x8521, &vi_status, 1, BOOL_TRUE );
 		READ_REGISTER_TRACE(result, 0x8521, vi_status);
 		result = IsiI2cReadSensorRegister( handle, 0x8528, &p_color, 1, BOOL_TRUE );
@@ -298,7 +302,7 @@ static uint8_t framerate_count(IsiSensorHandle_t handle)
 		READ_REGISTER_TRACE(result, 0x0014, hdmi_int);
 		result = IsiI2cReadSensorRegister( handle, 0x0002, &sys_ctrl, 1, BOOL_TRUE );
 		READ_REGISTER_TRACE(result, 0x0002, sys_ctrl);
-		TRACE( TC358749XBG_DEBUG, "%s gStatus:%d\n", __FUNCTION__, gStatus);
+		TRACE( TC358749XBG_DEBUG, "%s gStatus:%d\n", __FUNCTION__, pTC358749XBGCtx->gStatus);
 
 		vi_format = vi_status & (0x0f);
 		switch(vi_format) {
@@ -335,7 +339,7 @@ static uint8_t framerate_count(IsiSensorHandle_t handle)
 		property_get("sys.hdmiin.resolution",prop_value, "false");
 		TRACE( TC358749XBG_DEBUG, "%s HDMI IN Resolution:%s\n", __FUNCTION__, prop_value);
 
-		switch(gStatus)
+		switch(pTC358749XBGCtx->gStatus)
 		{
 			// cable connect, detect DDC_5V
 			case STATUS_STANDBY:
@@ -343,7 +347,7 @@ static uint8_t framerate_count(IsiSensorHandle_t handle)
 					result = TC358749XBG_WriteRegArray(handle, TC358749XBG_RS2);
 					TRACE( TC358749XBG_DEBUG, "%s RS2 result: %d\n", __FUNCTION__, result);
 					if (result == RET_SUCCESS)
-						gStatus = STATUS_READY;
+						pTC358749XBGCtx->gStatus = STATUS_READY;
 				}
 				break;
 			// detect video sync signal
@@ -362,26 +366,26 @@ static uint8_t framerate_count(IsiSensorHandle_t handle)
 					}
 					TRACE( TC358749XBG_DEBUG, "%s RS3 result: %d\n", __FUNCTION__, result);
 					if (result == RET_SUCCESS)
-						gStatus = STATUS_VIDEO_TX;
+						pTC358749XBGCtx->gStatus = STATUS_VIDEO_TX;
 				} else if ((sys_status & S_DDC5V) == 0) {
 					// cable disconnect
 					result = TC358749XBG_WriteRegArray(handle, TC358749XBG_RS6);
 					TRACE( TC358749XBG_DEBUG, "%s RS6 result: %d\n", __FUNCTION__, result);
 					if (result == RET_SUCCESS)
-						gStatus = STATUS_STANDBY;
+						pTC358749XBGCtx->gStatus = STATUS_STANDBY;
 				}
 				break;
 			case STATUS_VIDEO_TX:
 				if (abs(fps - framerate_count(handle)) > 3) {
 					TRACE( TC358749XBG_ERROR, "%s framerate change, reinit! vi_format:%d fps:%d\n",
 						__FUNCTION__, vi_format, framerate_count(handle));
-					gStatus = STATUS_READY;
+					pTC358749XBGCtx->gStatus = STATUS_READY;
 					break;
 				}
 				if (last_format != vi_format) {
 					TRACE( TC358749XBG_ERROR, "%s vi_format change, reinit! vi_format:%d fps:%d\n",
 						__FUNCTION__, vi_format, framerate_count(handle));
-					gStatus = STATUS_READY;
+					pTC358749XBGCtx->gStatus = STATUS_READY;
 					break;
 				}
 				if ((sys_status & S_DDC5V) == 0) {
@@ -389,13 +393,13 @@ static uint8_t framerate_count(IsiSensorHandle_t handle)
 					result = TC358749XBG_WriteRegArray(handle, TC358749XBG_RS6);
 					TRACE( TC358749XBG_DEBUG, "%s RS6 result: %d\n", __FUNCTION__, result);
 					if (result == RET_SUCCESS)
-						gStatus = STATUS_STANDBY;
+						pTC358749XBGCtx->gStatus = STATUS_STANDBY;
 				} else if ((sys_status & S_SYNC) == 0) {
 					// video stop on HDMI
 					result = TC358749XBG_WriteRegArray(handle, TC358749XBG_RS5);
 					TRACE( TC358749XBG_DEBUG, "%s RS5 result: %d\n", __FUNCTION__, result);
 					if (result == RET_SUCCESS)
-						gStatus = STATUS_READY;
+						pTC358749XBGCtx->gStatus = STATUS_READY;
 				}
 				break;
 			default:
@@ -486,8 +490,9 @@ static RESULT TC358749XBG_IsiCreateSensorIss
 
 //    result = HalSetClock( pTC358749XBGCtx->IsiCtx.HalHandle, pTC358749XBGCtx->IsiCtx.HalDevID, 10000000U);
 //    RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-		bHdmiinExit = false;
-		osThreadCreate( &gHdmiinThreadId, HdmiinThreadHandler, (void *)pTC358749XBGCtx);
+    pTC358749XBGCtx->bHdmiinExit = false;
+    pTC358749XBGCtx->gStatus = STATUS_POWER_ON;
+    osThreadCreate( &pTC358749XBGCtx->gHdmiinThreadId, HdmiinThreadHandler, (void *)pTC358749XBGCtx);
 
 
 
@@ -532,17 +537,17 @@ static RESULT TC358749XBG_IsiReleaseSensorIss
 
     (void)HalDelRef( pTC358749XBGCtx->IsiCtx.HalHandle );
 
-    MEMSET( pTC358749XBGCtx, 0, sizeof( TC358749XBG_Context_t ) );
-    free ( pTC358749XBGCtx );
-    bHdmiinExit = true;
-	if ( OSLAYER_OK != osThreadWait( &gHdmiinThreadId) )
+    pTC358749XBGCtx->bHdmiinExit = true;
+	if ( OSLAYER_OK != osThreadWait( &pTC358749XBGCtx->gHdmiinThreadId) )
 		TRACE( TC358749XBG_DEBUG, "%s wait hdmiiin listener thread exit\n", __FUNCTION__);
-	if ( OSLAYER_OK != osThreadClose( &gHdmiinThreadId ) )
+	if ( OSLAYER_OK != osThreadClose( &pTC358749XBGCtx->gHdmiinThreadId ) )
 		TRACE( TC358749XBG_DEBUG, "%s hdmiiin listener thread exit\n", __FUNCTION__);
 
-    gStatus = STATUS_POWER_ON;
+    pTC358749XBGCtx->gStatus = STATUS_POWER_ON;
     property_set("sys.hdmiin.resolution", "false");
 
+    MEMSET( pTC358749XBGCtx, 0, sizeof( TC358749XBG_Context_t ) );
+    free ( pTC358749XBGCtx );
     TRACE( TC358749XBG_INFO, "%s (exit)\n", __FUNCTION__);
 
     return ( result );
@@ -1183,7 +1188,7 @@ static RESULT TC358749XBG_IsiSetupSensorIss
 	    #endif
 	#else
 	    result = TC358749XBG_WriteRegArray(handle, TC358749XBG_RS1);
-	    gStatus = STATUS_STANDBY;
+	    pTC358749XBGCtx->gStatus = STATUS_STANDBY;
 	    TRACE( TC358749XBG_DEBUG, "%s write RS1 result: %d\n", __FUNCTION__, result);
 	#endif
 
@@ -3473,7 +3478,7 @@ static RESULT TC358749XBG_IsiIsEvenFieldIss
     {
         return ( RET_WRONG_HANDLE );
     }
-	
+
     if ( pIsiSensorInfo == NULL )
     {
         return ( RET_OUTOFRANGE );
@@ -3528,8 +3533,8 @@ RESULT TC358749XBG_IsiGetSensorIss
         pIsiSensor->pIsiRegisterReadIss                 = TC358749XBG_IsiRegReadIss;
         pIsiSensor->pIsiRegisterWriteIss                = TC358749XBG_IsiRegWriteIss;
         pIsiSensor->pIsiGetResolutionIss                = TC358749XBG_IsiGetResolutionIss;
-		pIsiSensor->pIsiIsEvenFieldIss					= TC358749XBG_IsiIsEvenFieldIss; 
-			
+        pIsiSensor->pIsiIsEvenFieldIss                  = TC358749XBG_IsiIsEvenFieldIss;
+
         /* AEC functions */
         pIsiSensor->pIsiExposureControlIss              = TC358749XBG_IsiExposureControlIss;
         pIsiSensor->pIsiGetGainLimitsIss                = TC358749XBG_IsiGetGainLimitsIss;
@@ -3760,7 +3765,7 @@ IsiCamDrvConfig_t IsiCamDrvConfig =
         0,                      /**< IsiSensor_t.pIsiGetSensorRevisionIss */
         0,                      /**< IsiSensor_t.pIsiRegisterReadIss */
         0,                      /**< IsiSensor_t.pIsiRegisterWriteIss */
-        0,						/**< IsiSensor_t.pIsiIsEvenFieldIss */
+        0,                      /**< IsiSensor_t.pIsiIsEvenFieldIss */
 
         0,                      /**< IsiSensor_t.pIsiExposureControlIss */
         0,                      /**< IsiSensor_t.pIsiGetGainLimitsIss */

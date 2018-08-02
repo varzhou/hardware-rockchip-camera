@@ -1,3 +1,19 @@
+/******************************************************************************
+ *
+ * The copyright in this software is owned by Rockchip and/or its licensors.
+ * This software is made available subject to the conditions of the license 
+ * terms to be determined and negotiated by Rockchip and you.
+ * THIS SOFTWARE IS PROVIDED TO YOU ON AN "AS IS" BASIS and ROCKCHP AND/OR 
+ * ITS LICENSORS DISCLAIMS ANY AND ALL WARRANTIES AND REPRESENTATIONS WITH 
+ * RESPECT TO SUCH SOFTWARE, WHETHER EXPRESS,IMPLIED, STATUTORY OR OTHERWISE, 
+ * INCLUDING WITHOUT LIMITATION, ANY IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, 
+ * MERCHANTABILITY, SATISFACTROY QUALITY, ACCURACY OR FITNESS FOR A PARTICULAR PURPOSE. 
+ * Except as expressively authorized by Rockchip and/or its licensors, you may not 
+ * (a) disclose, distribute, sell, sub-license, or transfer this software to any third party, 
+ * in whole or part; (b) modify this software, in whole or part; (c) decompile, reverse-engineer, 
+ * dissemble, or attempt to derive any source code from the software.
+ *
+ *****************************************************************************/
 #ifndef __TC358749XBG_PRIV_H__
 #define __TC358749XBG_PRIV_H__
 
@@ -11,6 +27,7 @@
 *v0.3.0x00 :
 *	1) add the state machine mechanism;
 *	2) add supported resolution: 1080P30, 1080I60, 576P/I50, 480P/I60;
+*v0.4.0x00 : Static variables are not thread-safe,fix them;
 */
 #define CONFIG_SENSOR_DRV_VERSION KERNEL_VERSION(0, 3, 0)
 
@@ -36,6 +53,14 @@ extern "C"
 * Further defines for driver management
 *****************************************************************************/
 #define TC358749XBG_DRIVER_INIT              (0x00000001)
+
+typedef enum
+{
+    STATUS_POWER_ON	= 0,
+    STATUS_STANDBY	= 1,
+    STATUS_READY	= 2,
+    STATUS_VIDEO_TX	= 3
+} TcStatus;
 
 /*****************************************************************************
  *context structure
@@ -75,6 +100,9 @@ typedef struct TC358749XBG_Context_s
     uint32_t            OldFineIntegrationTime;
 
     IsiSensorMipiInfo   IsiSensorMipiInfo;
+    bool bHdmiinExit;
+    osThread gHdmiinThreadId;
+    TcStatus gStatus;
 } TC358749XBG_Context_t;
 
 #ifdef __cplusplus

@@ -1,13 +1,18 @@
 //HM8040 the same with ov14825
-
 /******************************************************************************
  *
- * Copyright 2010, Dream Chip Technologies GmbH. All rights reserved.
- * No part of this work may be reproduced, modified, distributed, transmitted,
- * transcribed, or translated into any language or computer format, in any form
- * or by any means without written permission of:
- * Dream Chip Technologies GmbH, Steinriede 10, 30827 Garbsen / Berenbostel,
- * Germany
+ * The copyright in this software is owned by Rockchip and/or its licensors.
+ * This software is made available subject to the conditions of the license 
+ * terms to be determined and negotiated by Rockchip and you.
+ * THIS SOFTWARE IS PROVIDED TO YOU ON AN "AS IS" BASIS and ROCKCHP AND/OR 
+ * ITS LICENSORS DISCLAIMS ANY AND ALL WARRANTIES AND REPRESENTATIONS WITH 
+ * RESPECT TO SUCH SOFTWARE, WHETHER EXPRESS,IMPLIED, STATUTORY OR OTHERWISE, 
+ * INCLUDING WITHOUT LIMITATION, ANY IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, 
+ * MERCHANTABILITY, SATISFACTROY QUALITY, ACCURACY OR FITNESS FOR A PARTICULAR PURPOSE. 
+ * Except as expressively authorized by Rockchip and/or its licensors, you may not 
+ * (a) disclose, distribute, sell, sub-license, or transfer this software to any third party, 
+ * in whole or part; (b) modify this software, in whole or part; (c) decompile, reverse-engineer, 
+ * dissemble, or attempt to derive any source code from the software.
  *
  *****************************************************************************/
 /**
@@ -1484,12 +1489,6 @@ static RESULT HM8040_IsiSetupSensorIss
     }
 	#endif
 	
-    #if 0
-    // output of pclk for measurement (only debugging)
-    result = HM8040_IsiRegWriteIss( pHM8040Ctx, 0x3009U, 0x10U );
-    RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-    #endif
-
     /* 4.) setup output format (RAW10|RAW12) */
     result = HM8040_SetupOutputFormat( pHM8040Ctx, pConfig );
     if ( result != RET_SUCCESS )
@@ -4167,6 +4166,7 @@ IsiCamDrvConfig_t IsiCamDrvConfig =
         0,                      /**< IsiSensor_t.pIsiRegisterReadIss */
         0,                      /**< IsiSensor_t.pIsiRegisterWriteIss */
         0,                      /**< IsiSensor_t.pIsiIsEvenFieldIss */
+
         0,                      /**< IsiSensor_t.pIsiExposureControlIss */
         0,                      /**< IsiSensor_t.pIsiGetGainLimitsIss */
         0,                      /**< IsiSensor_t.pIsiGetIntegrationTimeLimitsIss */
