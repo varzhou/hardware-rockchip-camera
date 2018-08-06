@@ -86,7 +86,7 @@ class RKISP1CameraHw: public ICameraHw {
     ImguUnit *mImguUnit;
     ControlUnit *mControlUnit;
     // Vector to store dummy Hw streams
-    std::vector<HwStreamBase *> mDummyHwStreamsVector;
+    std::vector<std::shared_ptr<HwStreamBase>> mDummyHwStreamsVector;
     GraphConfigManager mGCM;
 
     std::shared_ptr<MediaController> mMediaCtl;

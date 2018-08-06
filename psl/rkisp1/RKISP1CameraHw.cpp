@@ -275,7 +275,7 @@ RKISP1CameraHw::configStreams(std::vector<camera3_stream_t*> &activeStreams,
      * Here we could give different gralloc flags depending on the stream
      * format, at the moment we give the same to all
      */
-    /* TODO: usage may different between the streams, 
+    /* TODO: usage may different between the streams,
      * add GRALLOC_USAGE_HW_VIDEO_ENCODER is a temp patch for gpu bug:
      * gpu cant alloc a nv12 buffer when format is
      * HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED. Need gpu provide a patch */
@@ -348,8 +348,8 @@ RKISP1CameraHw::bindStreams(std::vector<CameraStreamNode *> activeStreams)
     // bind all streams to dummy HW stream class.
     for (unsigned int i = 0; i < activeStreams.size(); i++) {
         CameraStreamNode *stream = activeStreams.at(i);
-        HwStreamBase *hwStream = new HwStreamBase(*stream);
-        CameraStream::bind(stream, hwStream);
+        std::shared_ptr<HwStreamBase> hwStream = std::make_shared<HwStreamBase>(*stream);
+        CameraStream::bind(stream, hwStream.get());
         mDummyHwStreamsVector.push_back(hwStream);
     }
 
@@ -455,6 +455,7 @@ status_t RKISP1CameraHw::reconfigureStreams(UseCase newUseCase,
 status_t
 RKISP1CameraHw::flush()
 {
+    mDummyHwStreamsVector.clear();
     return NO_ERROR;
 }
 

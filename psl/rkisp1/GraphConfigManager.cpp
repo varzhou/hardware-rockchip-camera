@@ -59,6 +59,7 @@ GraphConfigManager::GraphConfigManager(int32_t camId,
                                        GraphConfigNodes *testNodes) :
     mCameraId(camId),
     mGraphQueryManager(new GraphQueryManager()),
+    mGraphConfigPool("GraphConfig"),
     mFallback(false)
 {
     const CameraCapInfo *info = PlatformData::getCameraCapInfo(mCameraId);

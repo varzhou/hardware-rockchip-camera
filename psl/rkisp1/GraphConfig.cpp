@@ -171,6 +171,12 @@ status_t GraphConfig::prepare(GraphConfigManager *manager,
 {
     mStreamIds.clear();
     mManager = manager;
+    //it will cause memory leak when recording video many times without
+    //exit camera app. In this case, framework invoke config_streams
+    //many times and do not invoke flush, thereby invoking this function
+    //twice without calling the func fullReset and casue the memory leak.
+    if (mSettings)
+        delete mSettings;
     mSettings = settings;
     mFallback = fallback;
     status_t ret = OK;
