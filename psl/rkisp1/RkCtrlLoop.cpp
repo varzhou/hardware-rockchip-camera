@@ -61,7 +61,7 @@ status_t RkCtrlLoop::init(const char* sensorName,
         }
     }
 
-    bool ret = (rkisp_cl_init(&mControlLoopCtx , iq_file_full_path.c_str(), cb) == 0 ? true : false);
+    bool ret = true;//(rkisp_cl_init(&mControlLoopCtx , iq_file_full_path.c_str(), cb) == 0 ? true : false);
     CheckError(ret == false, UNKNOWN_ERROR, "@%s, Error in isp control loop init", __FUNCTION__);
     return status;
 }
@@ -70,7 +70,7 @@ void RkCtrlLoop::deinit()
 {
     LOGI("@%s", __FUNCTION__);
 
-    rkisp_cl_deinit(mControlLoopCtx);
+   // rkisp_cl_deinit(mControlLoopCtx);
     mControlLoopCtx = NULL;
 }
 
@@ -80,13 +80,13 @@ status_t RkCtrlLoop::start(const struct rkisp_cl_prepare_params_s& params)
 
     LOGI("@%s %d: isp:%s, param:%s, stat:%s, sensor:%s", __FUNCTION__, __LINE__,
          params.isp_sd_node_path, params.isp_vd_params_path, params.isp_vd_stats_path, params.sensor_sd_node_path);
-    ret = rkisp_cl_prepare(mControlLoopCtx, &params);
+    //ret = rkisp_cl_prepare(mControlLoopCtx, &params);
     if (ret < 0) {
         LOGE("%s: rkisp control loop prepare failed !", __FUNCTION__);
         return UNKNOWN_ERROR;
     }
 
-    ret = rkisp_cl_start(mControlLoopCtx);
+    //ret = rkisp_cl_start(mControlLoopCtx);
     if (ret < 0) {
         LOGE("%s: rkisp control loop start failed !", __FUNCTION__);
         return UNKNOWN_ERROR;
@@ -99,7 +99,7 @@ status_t RkCtrlLoop::setFrameParams(rkisp_cl_frame_metadata_s* frame_params)
 {
     int ret = 0;
 
-    ret = rkisp_cl_set_frame_params(mControlLoopCtx, frame_params);
+    //ret = rkisp_cl_set_frame_params(mControlLoopCtx, frame_params);
     if (ret < 0) {
         LOGE("%s: rkisp control loop set frame params failed !", __FUNCTION__);
         return UNKNOWN_ERROR;
@@ -114,7 +114,7 @@ status_t RkCtrlLoop::stop()
     LOGI("@%s %d: enter", __FUNCTION__, __LINE__);
 
     if (mIsStarted == true) {
-        ret = rkisp_cl_stop(mControlLoopCtx);
+       // ret = rkisp_cl_stop(mControlLoopCtx);
         if (ret < 0) {
             LOGE("%s: rkisp control loop stop failed !", __FUNCTION__);
             return UNKNOWN_ERROR;
