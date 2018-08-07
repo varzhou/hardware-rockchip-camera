@@ -26,7 +26,7 @@
 #ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #--------------------------------------------------------------------------
 
-ifeq (1,$(strip $(shell expr $(BOARD_DEFAULT_HAL_VERSION) \>= 3.0)))
+ifeq (1,$(strip $(shell expr $(BOARD_DEFAULT_CAMERA_HAL_VERSION) \>= 3.0)))
 LOCAL_PATH:= $(call my-dir)
 include $(call all-subdir-makefiles)
 
