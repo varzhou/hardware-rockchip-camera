@@ -30,7 +30,7 @@
 #include "SettingsProcessor.h"
 #include "Metadata.h"
 #include "MediaEntity.h"
-
+using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
 static const int SETTINGS_POOL_SIZE = MAX_REQUEST_IN_PROCESS_NUM * 2;
 
 namespace android {

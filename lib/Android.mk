@@ -28,6 +28,9 @@
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := librkisp
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+    LOCAL_PROPRIETARY_MODULE := true
+endif
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_MODULE_STEM := $(LOCAL_MODULE)
@@ -44,6 +47,9 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE_RELATIVE_PATH := rkisp
 LOCAL_MODULE := librkisp_ae
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+     LOCAL_PROPRIETARY_MODULE := true
+endif
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_MODULE_STEM := $(LOCAL_MODULE)
@@ -60,6 +66,9 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE_RELATIVE_PATH := rkisp
 LOCAL_MODULE := librkisp_awb
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+    LOCAL_PROPRIETARY_MODULE := true
+endif
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_MODULE_STEM := $(LOCAL_MODULE)
@@ -76,6 +85,9 @@ include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
 LOCAL_MODULE_RELATIVE_PATH := rkisp
 LOCAL_MODULE := librkisp_af
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+    LOCAL_PROPRIETARY_MODULE := true
+endif
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_MODULE_STEM := $(LOCAL_MODULE)

@@ -22,7 +22,7 @@
 #include <mutex>
 #include "CommonBuffer.h"
 #include "EXIFMaker.h"
-
+using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
 NAMESPACE_DECLARATION {
 /**
  * \class ImgEncoderCore

@@ -31,7 +31,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <fstream>
-
+#include <CameraMetadata.h>
 // TODO this should come from the crl header file
 // crl is a common code module in sensor driver, which contains
 // basic functions for driver control
@@ -39,7 +39,7 @@
 
 #include "MediaController.h"
 #include "MediaEntity.h"
-
+using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
 NAMESPACE_DECLARATION {
 using std::string;
 

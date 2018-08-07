@@ -19,7 +19,7 @@
 
 #include "PSLConfParser.h"
 
-#include <camera/CameraMetadata.h>
+#include <CameraMetadata.h>
 #include <string>
 #include <dirent.h>
 #include <sys/types.h>
@@ -29,7 +29,7 @@
 #include "LogHelper.h"
 #include "GraphConfigManager.h"
 #include "NodeTypes.h"
-
+using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
 using std::string;
 
 namespace android {

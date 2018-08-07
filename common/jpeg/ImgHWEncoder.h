@@ -20,7 +20,6 @@
 
 #include <memory>
 #include <mutex>
-#include "camera/CameraMetadata.h"
 #include "CameraBuffer.h"
 #include "CommonBuffer.h"
 #include "EXIFMetaData.h"

@@ -21,7 +21,7 @@
 #include "EXIFMaker.h"
 #include "EXIFMetaData.h"
 #include "ImgEncoderCore.h"
-
+using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
 NAMESPACE_DECLARATION {
 // Android requires that camera HAL to include the final size of the compressed
 // image inside the output stream buffer for the BLOB format. And The JPEG blob

@@ -104,16 +104,15 @@ LOCAL_SRC_FILES := \
     $(GCSSSRC) \
     Camera3HALModule.cpp
 
+LOCAL_HEADER_LIBRARIES += \
+       libhardware_headers \
+       libbinder_headers \
+       gl_headers \
+       libutils_headers
 LOCAL_C_INCLUDES += \
-    hardware/libhardware/include \
     hardware/rockchip/libgralloc \
-    hardware/libhardware/modules/gralloc \
-    system/core/include \
     system/media/camera/include \
-    system/core/include/utils \
     kernel/include/uapi \
-    frameworks/av/include \
-    hardware/libhardware/include/ \
     hardware/rockchip/librkvpu \
     hardware/rockchip/jpeghw \
     hardware/rockchip/librga \
@@ -133,7 +132,7 @@ ifeq ($(strip $(Have3AControlLoop)), true)
 CPPHACKS += \
     -DHAVE_3A_CONTROL_LOOP
 endif
-
+LOCAL_CFLAGS += -Wno-error
 LOCAL_CPPFLAGS := $(CPPHACKS)
 
 # Enable large file support.
@@ -164,10 +163,12 @@ LOCAL_CPPFLAGS += $(ALLINCLUDES)
 
 LOCAL_STATIC_LIBRARIES := \
     libyuv_static
-
+LOCAL_STATIC_LIBRARIES += android.hardware.camera.common@1.0-helper
 LOCAL_SHARED_LIBRARIES:= \
+    libnativewindow \
     libcutils \
     libutils \
+    liblog \
     libjpeg \
     libchrome \
     libexpat \
@@ -178,12 +179,13 @@ LOCAL_SHARED_LIBRARIES:= \
     libhardware \
     libjpeghwenc \
     libvpu \
-    libcamera_client \
     libcamera_metadata \
     librga
 
 LOCAL_LDFLAGS := -Wl,-z,defs
-
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+    LOCAL_PROPRIETARY_MODULE := true
+endif
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_MODULE:= camera.$(TARGET_BOARD_HARDWARE)
 LOCAL_MODULE_TAGS:= optional

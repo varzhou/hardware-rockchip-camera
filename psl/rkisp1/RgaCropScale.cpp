@@ -15,7 +15,7 @@
  */
 #include "RgaCropScale.h"
 #include "LogHelper.h"
-#include <Singleton.h>
+#include <utils/Singleton.h>
 #include <RockchipRga.h>
 
 namespace android {

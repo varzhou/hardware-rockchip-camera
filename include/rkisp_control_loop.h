@@ -17,7 +17,7 @@
 #ifndef _RKISP_CONTROL_LOOP_H_
 #define _RKISP_CONTROL_LOOP_H_
 
-#include <camera/CameraMetadata.h>
+#include <CameraMetadata.h>
 #ifdef __cplusplus
 extern "C" {
 #endif

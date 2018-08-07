@@ -18,12 +18,14 @@
 #ifndef _CAMERA3_HAL_METADATAHELPER_H_
 #define _CAMERA3_HAL_METADATAHELPER_H_
 
-#include <camera/CameraMetadata.h>
+#include <CameraMetadata.h>
 #include "LogHelper.h"
 
 /* ********************************************************************
  * Camera metadata auxiliary API
  */
+using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
+using namespace android;
 
 NAMESPACE_DECLARATION {
 namespace MetadataHelper {

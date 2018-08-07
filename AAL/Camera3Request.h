@@ -17,7 +17,7 @@
 #ifndef _CAMERA3_HAL_CAMERA3REQUEST_H_
 #define _CAMERA3_HAL_CAMERA3REQUEST_H_
 
-#include <camera/CameraMetadata.h>
+#include <CameraMetadata.h>
 #include <hardware/camera3.h>
 #include <vector>
 #include <memory>
@@ -26,7 +26,7 @@
 
 #include "CameraStreamNode.h"
 #include "CameraBuffer.h"
-
+using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
 NAMESPACE_DECLARATION {
 
 /**

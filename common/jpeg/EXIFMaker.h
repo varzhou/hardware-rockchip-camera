@@ -18,7 +18,7 @@
 #include <memory>
 #include "ExifCreater.h"
 #include "3ATypes.h"
-#include "camera/CameraMetadata.h"
+#include "CameraMetadata.h"
 #include "EXIFMetaData.h"
 
 

@@ -18,7 +18,7 @@
 #ifndef AAA_RKCTRLLOOP_H_
 #define AAA_RKCTRLLOOP_H_
 
-#include <camera/CameraMetadata.h>
+#include <CameraMetadata.h>
 #include <vector>
 #include <map>
 #include <rkisp_control_loop.h>
