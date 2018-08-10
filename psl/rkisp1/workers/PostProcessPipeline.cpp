@@ -413,19 +413,13 @@ PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
     LOGD("@%s: %s", __FUNCTION__, mName);
     status_t status = OK;
 
-    if (mProcessUnitType == kPostProcessTypeCopy) {
-        if (in->cambuf->data() != out->cambuf->data()) {
-            /*
-             * TODO: buffer size returned from Gralloc is incorrect, workaround
-             * now
-             */
-            size_t min_size = MIN(in->cambuf->size(), out->cambuf->size());
-            memcpy((uint8_t *)out->cambuf->data(),
-                   (uint8_t *)in->cambuf->data(),
-                   min_size);
-
-        }
-    } else if (mProcessUnitType == kPostProcessTypeScaleAndRotation) {
+    /*
+     * use RGA to do memcpy.
+     * TODO: using arm to do memcpy has cache issue, the buffer from framework
+     * may enable cache but not fluch cache when buffer is unlocked.
+     */
+    if (mProcessUnitType == kPostProcessTypeCopy ||
+        mProcessUnitType == kPostProcessTypeScaleAndRotation) {
         int cropw, croph, croptop, cropleft;
         float inratio = (float)in->cambuf->width() / in->cambuf->height();
         float outratio = (float)out->cambuf->width() / out->cambuf->height();
@@ -1458,20 +1452,7 @@ PostProcessUnitDigitalZoom::processFrame(const std::shared_ptr<PostProcBuffer>& 
                               const std::shared_ptr<ProcUnitSettings>& settings) {
     // check if zoom is required
     CameraWindow& crop = settings->cropRegion;
-    if (crop.width() == mApa.width() &&
-        crop.height() == mApa.height() &&
-        crop.left() == mApa.left() &&
-        crop.top() == mApa.top()) {
-        /*
-         * TODO: buffer size returned from Gralloc is incorrect, workaround
-         * now
-         */
-        size_t min_size = MIN(in->cambuf->size(), out->cambuf->size());
-        memcpy((uint8_t *)out->cambuf->data(),
-               (uint8_t *)in->cambuf->data(),
-               min_size);
-        return OK;
-    }
+
     if (!checkFmt(in->cambuf.get(), out->cambuf.get())) {
         LOGE("%s: unsupported format, only support NV12 or NV21 now !", __FUNCTION__);
         return UNKNOWN_ERROR;
