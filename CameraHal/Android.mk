@@ -92,7 +92,7 @@ LOCAL_SRC_FILES:=\
 	SensorListener.cpp\
 
 ifeq ($(strip $(BOARD_USE_DRM)), true)
-ifneq ($(filter rk3368 rk3399 rk3288 rk3366 rk3126c rk3328 rk3326 rk3128h rk322x, $(strip $(TARGET_BOARD_PLATFORM))), )
+ifneq ($(filter rk3368 rk3399 rk3288 rk3366 rk3126c rk3328 rk3326 rk3128h rk322x rk3399pro, $(strip $(TARGET_BOARD_PLATFORM))), )
 LOCAL_SRC_FILES += \
 	camera_mem_gralloc.cpp\
 	camera_mem.cpp
@@ -272,7 +272,7 @@ LOCAL_CFLAGS += -DMALI_PRODUCT_ID_T86X=1
 LOCAL_CFLAGS += -DMALI_AFBC_GRALLOC=1
 endif
 
-ifneq ($(filter rk3399, $(strip $(TARGET_BOARD_PLATFORM))), )
+ifneq ($(filter rk3399 rk3399pro, $(strip $(TARGET_BOARD_PLATFORM))), )
 LOCAL_CFLAGS += -DTARGET_RK3399
 ifeq ($(strip $(TARGET_2ND_ARCH)), )
 LOCAL_CFLAGS += -DHAVE_ARM_NEON
@@ -393,7 +393,7 @@ endif
 endif
 
 ifeq ($(strip $(BOARD_USE_DRM)), true)
-ifneq ($(filter rk3368 rk3399 rk3288 rk3366 rk3126c rk3328 rk3326 rk3128h rk322x, $(strip $(TARGET_BOARD_PLATFORM))), )
+ifneq ($(filter rk3368 rk3399 rk3288 rk3366 rk3126c rk3328 rk3326 rk3128h rk322x rk3399pro, $(strip $(TARGET_BOARD_PLATFORM))), )
 LOCAL_CFLAGS +=-DRK_DRM_GRALLOC=1
 endif
 endif
