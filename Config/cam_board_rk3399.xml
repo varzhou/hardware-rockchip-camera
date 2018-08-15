@@ -18,12 +18,12 @@
 					<SensorGpioPwen ioname="RK30_PIN1_PC3" active="1" delay="1000"></SensorGpioPwen>					
 					<SensorGpioRst ioname="RK30_PIN1_PA3" active="0" delay="0"></SensorGpioRst>
 					<SensorGpioPwdn ioname="RK30_PIN1_PA0" active="0" delay="0"></SensorGpioPwdn>
-					<SensorFacing facing="front"></SensorFacing>
+					<SensorFacing facing="back"></SensorFacing>
 					<SensorInterface interface="MIPI"></SensorInterface>
 					<SensorMirrorFlip mirror="0"></SensorMirrorFlip>
 					<SensorOrientation orientation="180"></SensorOrientation>
 					<SensorPowerupSequence seq="1234"></SensorPowerupSequence>					
-					<SensorFovParemeter h="60.0" v="60.0"></SensorFovParemeter>
+					<SensorFovParemeter h="80.0" v="65.0"></SensorFovParemeter>
 					<SensorAWB_Frame_Skip fps="15"></SensorAWB_Frame_Skip>					
 					<SensorPhy phyMode="CamSys_Phy_Mipi" lane="2"  phyIndex="0" sensorFmt="CamSys_Fmt_Raw_10b"></SensorPhy>
 				</Sensor>
@@ -150,12 +150,12 @@
 					<SensorGpioPwen ioname="RK30_PIN1_PC3" active="1" delay="1000"></SensorGpioPwen>					
 					<SensorGpioRst ioname="RK30_PIN1_PA4" active="0" delay="0"></SensorGpioRst>
 					<SensorGpioPwdn ioname="RK30_PIN1_PA1" active="0" delay="0"></SensorGpioPwdn>
-					<SensorFacing facing="back"></SensorFacing>
+					<SensorFacing facing="front"></SensorFacing>
 					<SensorInterface interface="MIPI"></SensorInterface>
 					<SensorMirrorFlip mirror="0"></SensorMirrorFlip>
 					<SensorOrientation orientation="180"></SensorOrientation>
 					<SensorPowerupSequence seq="1234"></SensorPowerupSequence>					
-					<SensorFovParemeter h="60.0" v="60.0"></SensorFovParemeter>
+					<SensorFovParemeter h="80.0" v="65.0"></SensorFovParemeter>
 					<SensorAWB_Frame_Skip fps="15"></SensorAWB_Frame_Skip>					
 					<SensorPhy phyMode="CamSys_Phy_Mipi" lane="2"  phyIndex="1" sensorFmt="CamSys_Fmt_Raw_10b"></SensorPhy>
 				</Sensor>
