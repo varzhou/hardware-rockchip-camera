@@ -216,14 +216,13 @@ ControlUnit::init()
 
     if (!cap || cap->sensorType() == SENSOR_TYPE_RAW) {
         mCtrlLoop = new RkCtrlLoop(mCameraId);
+        if (mCtrlLoop->init(sensorName, this) != NO_ERROR) {
+            LOGE("Error initializing 3A control");
+            return UNKNOWN_ERROR;
+        }
     } else {
-        LOGE("SoC camera 3A control missing");
-        return UNKNOWN_ERROR;
-    }
-
-    if (mCtrlLoop->init(sensorName, this) != NO_ERROR) {
-        LOGE("Error initializing 3A control");
-        return UNKNOWN_ERROR;
+        LOGW("SoC camera 3A control missing");
+        //return UNKNOWN_ERROR;
     }
 
     mSettingsProcessor = new SettingsProcessor(mCameraId, mStreamCfgProv);
@@ -407,10 +406,12 @@ ControlUnit::configStreamsDone(bool configChanged)
             }
         }
 
-        status = mCtrlLoop->start(prepareParams);
-        if (CC_UNLIKELY(status != OK)) {
-            LOGE("Failed to start 3a control loop!");
-            return status;
+        if (mCtrlLoop) {
+            status = mCtrlLoop->start(prepareParams);
+            if (CC_UNLIKELY(status != OK)) {
+                LOGE("Failed to start 3a control loop!");
+                return status;
+            }
         }
     }
 
@@ -620,20 +621,21 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
         reqState->captureSettings->makernote.size = 0;
     }
 
-    const CameraMetadata *settings = reqState->request->getSettings();
-    rkisp_cl_frame_metadata_s frame_metas;
-    frame_metas.metas = settings->getAndLock();
-    frame_metas.id = reqId;
-    status = mCtrlLoop->setFrameParams(&frame_metas);
-    if (status != OK)
-        LOGE("CtrlLoop setFrameParams error");
+    if (mCtrlLoop) {
+        const CameraMetadata *settings = reqState->request->getSettings();
+        rkisp_cl_frame_metadata_s frame_metas;
+        frame_metas.metas = settings->getAndLock();
+        frame_metas.id = reqId;
+        status = mCtrlLoop->setFrameParams(&frame_metas);
+        if (status != OK)
+            LOGE("CtrlLoop setFrameParams error");
 
-    status = settings->unlock(frame_metas.metas);
-    if (status != OK) {
-        LOGE("unlock frame frame_metas failed");
-        return UNKNOWN_ERROR;
+        status = settings->unlock(frame_metas.metas);
+        if (status != OK) {
+            LOGE("unlock frame frame_metas failed");
+            return UNKNOWN_ERROR;
+        }
     }
-
     /*TODO, needn't this anymore ? zyc*/
     status = completeProcessing(reqState);
     if (status != OK)
@@ -711,6 +713,9 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
     //# ANDROID_METADATA_Dynamic android.request.pipelineDepth done
     reqState->ctrlUnitResult->update(ANDROID_REQUEST_PIPELINE_DEPTH,
                                      &pipelineDepth, 1);
+    // for soc camera
+    if (!mCtrlLoop)
+        reqState->mClMetaReceived = true;
     return OK;
 }
 
@@ -853,7 +858,8 @@ ControlUnit::handleMessageFlush(void)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     status_t status = NO_ERROR;
-    status = mCtrlLoop->stop();
+    if (mCtrlLoop)
+        status = mCtrlLoop->stop();
     if (CC_UNLIKELY(status != OK)) {
         LOGE("Failed to stop 3a control loop!");
     }

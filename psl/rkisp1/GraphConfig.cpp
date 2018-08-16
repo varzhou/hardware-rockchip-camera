@@ -1766,7 +1766,8 @@ status_t GraphConfig::parseSensorNodeInfo(Node* sensorNode,
     ret = sensorNode->getValue(GCSS_KEY_CSI_PORT, info.csiPort);
     if (CC_UNLIKELY(ret  !=  css_err_none)) {
        LOGE("Error: Couldn't get csi port from the graph");
-       return UNKNOWN_ERROR;
+       // DVP sensor has no csiPort
+       //return UNKNOWN_ERROR;
     }
 
     ret = sensorNode->getValue(GCSS_KEY_SENSOR_NAME, info.name);
@@ -1807,7 +1808,8 @@ status_t GraphConfig::parseSensorNodeInfo(Node* sensorNode,
     ret = sensorNode->getValue(GCSS_KEY_BAYER_ORDER, info.nativeBayer);
     if (CC_UNLIKELY(ret != css_err_none)) {
         LOGE("Error: Couldn't get native bayer order from sensor");
-        return UNKNOWN_ERROR;
+        // SOC sensor has no bayer_order
+        //return UNKNOWN_ERROR;
     }
 
     retErr = getDimensions(sensorNode, info.output.w, info.output.h);
@@ -1938,27 +1940,33 @@ status_t GraphConfig::getMediaCtlData(MediaCtlConfig *mediaCtlConfig)
             mMediaCtl->findMediaEntityById(pad->entity, entityDesc);
             LOGI("@%s, name:%s\n", __FUNCTION__, entityDesc.name);
             string name = entityDesc.name;
-            std::size_t p = name.find(" ");
-            if (p != std::string::npos) {
-                string s;
-                s.append(name, p + 1, 1);
-                port = std::stoi(s);
-                LOGI("@%s, port:%d\n", __FUNCTION__, port);
+            // check if mipi or DVP interface
+            std::size_t mipi = name.find("mipi");
+            if (mipi == std::string::npos) {
+                sourceInfo.dvp = true;
+                mCSIBE = entityName;
+            } else {
+                std::size_t p = name.find(" ");
+                if (p != std::string::npos) {
+                    string s;
+                    s.append(name, p + 1, 1);
+                    port = std::stoi(s);
+                    LOGI("@%s, port:%d\n", __FUNCTION__, port);
+                }
+                // get csi2 and cio2 names
+                //csi2 = csi2_without_port + std::to_string(port);
+                //mCSIBE = CSI_BE + std::to_string(port);
+                csi2 = csi2_without_port;
+                mCSIBE = CSI_BE;
+                /* TODO: should config according to real topology, sensor to isp link is decided by the sensor interface,
+                * link is different for mipi and dvp.
+                *  mipi sensor --- > csi ---> isp
+                * dvp sensor ----> isp
+                */
+                addLinkParams(entityName, 0, csi2, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+                LOGI(" csi2 is:%s, cio2 is:%s\n", csi2.c_str(), mCSIBE.c_str());
             }
         }
-
-        // get csi2 and cio2 names
-        //csi2 = csi2_without_port + std::to_string(port);
-        //mCSIBE = CSI_BE + std::to_string(port);
-        csi2 = csi2_without_port;
-        mCSIBE = CSI_BE;
-        /* TODO: should config according to real topology, sensor to isp link is decided by the sensor interface,
-        * link is different for mipi and dvp.
-        *  mipi sensor --- > csi ---> isp
-        * dvp sensor ----> isp
-        */
-        addLinkParams(entityName, 0, csi2, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
-        LOGI(" csi2 is:%s, cio2 is:%s\n", csi2.c_str(), mCSIBE.c_str());
     } else {
         LOGE("Error: No source");
         return UNKNOWN_ERROR;
@@ -1974,174 +1982,175 @@ status_t GraphConfig::getMediaCtlData(MediaCtlConfig *mediaCtlConfig)
     /*
      * Add Camera properties to mediaCtlConfig
      */
-    int id = 0;
-    ret = sourceNode->getValue(GCSS_KEY_ID, id);
-    if (ret != css_err_none) {
-        LOGE("Error: Couldn't get sensor id from sensor");
-        return UNKNOWN_ERROR;
-    }
-    std::string cameraName = sourceInfo.name + " " + sourceInfo.modeId;
-    cameraProps.outputWidth = sourceInfo.output.w;
-    cameraProps.outputHeight = sourceInfo.output.h;
-    cameraProps.id = id;
-    cameraProps.name = cameraName.c_str();
-    mediaCtlConfig->mCameraProps = cameraProps;
-
-    mediaCtlConfig->mFTCSize.Width = sourceInfo.output.w;
-    mediaCtlConfig->mFTCSize.Height = sourceInfo.output.h;
-
-    Node *pixelFormatterIn = nullptr, *pixelFormatterOut = nullptr;
-    Node *csiBEOutput = nullptr, *csiBESocOutput = nullptr;
-    int pfInW = 0, pfInH = 0, pfOutW = 0, pfOutH = 0, pfLeft = 0, pfTop = 0;
-    bool pfPresent = false;
-
-    // Get csi_be node. If not found, try csi_be_soc. If not found return error.
-    ret = mSettings->getDescendantByString("csi_be:output", &csiBEOutput);
-    if (ret != css_err_none) {
-
-        ret = mSettings->getDescendantByString("csi_be_soc:output", &csiBESocOutput);
+    if (!sourceInfo.dvp) {
+        int id = 0;
+        ret = sourceNode->getValue(GCSS_KEY_ID, id);
         if (ret != css_err_none) {
-            LOGE("Error: Couldn't get csi_be or csi_be_soc nodes from the graph");
+            LOGE("Error: Couldn't get sensor id from sensor");
             return UNKNOWN_ERROR;
         }
-        // get format from _soc
-        ret = csiBESocOutput->getValue(GCSS_KEY_FORMAT, formatStr);
+        std::string cameraName = sourceInfo.name + " " + sourceInfo.modeId;
+        cameraProps.outputWidth = sourceInfo.output.w;
+        cameraProps.outputHeight = sourceInfo.output.h;
+        cameraProps.id = id;
+        cameraProps.name = cameraName.c_str();
+        mediaCtlConfig->mCameraProps = cameraProps;
+
+        mediaCtlConfig->mFTCSize.Width = sourceInfo.output.w;
+        mediaCtlConfig->mFTCSize.Height = sourceInfo.output.h;
+
+        Node *pixelFormatterIn = nullptr, *pixelFormatterOut = nullptr;
+        Node *csiBEOutput = nullptr, *csiBESocOutput = nullptr;
+        int pfInW = 0, pfInH = 0, pfOutW = 0, pfOutH = 0, pfLeft = 0, pfTop = 0;
+        bool pfPresent = false;
+
+        // Get csi_be node. If not found, try csi_be_soc. If not found return error.
+        ret = mSettings->getDescendantByString("csi_be:output", &csiBEOutput);
         if (ret != css_err_none) {
-            LOGE("Error: Couldn't get format from the graph");
-            return UNKNOWN_ERROR;
-        }
-    } else {
-        ret = csiBEOutput->getValue(GCSS_KEY_FORMAT, formatStr);
-        if (ret != css_err_none) {
-            LOGE("Error: Couldn't get format from the graph");
-            return UNKNOWN_ERROR;
-        }
-    }
 
-    /* sanity check, we have at least one CSI-BE */
-    if (CC_UNLIKELY(csiBESocOutput == nullptr && csiBEOutput == nullptr)) {
-        LOGE("Error: CSI BE Output nullptr");
-        return UNKNOWN_ERROR;
-    }
-
-    std::string pixelFormatterInput = "bxt_pixelformatter:input";
-    std::string pixelFormatterOutput = "bxt_pixelformatter:output";
-    std::string inputPort;
-    std::string outputPort;
-    if (csiBEOutput != nullptr) {
-        inputPort = "csi_be:" + pixelFormatterInput;
-        outputPort = "csi_be:" + pixelFormatterOutput;
-    } else {
-        inputPort = "csi_be_soc:" + pixelFormatterInput;
-        outputPort = "csi_be_soc:" + pixelFormatterOutput;
-    }
-
-    /* Get cropping values from the pixel formatter input. Output resolution
-     * comes from the csi be output. Some graphs may not use pixel formatter.*/
-    ret = mSettings->getDescendantByString(inputPort,
-                                            &pixelFormatterIn);
-    if (ret != css_err_none) {
-        LOGW("Couldn't get pixel formatter input, skipping");
-    } else {
-        pfPresent = true;
-        ret = mSettings->getDescendantByString(outputPort,
-                                                &pixelFormatterOut);
-        if (ret != css_err_none) {
-            LOGE("Error: Couldn't get pixel formatter output");
-            return UNKNOWN_ERROR;
-        }
-
-        retErr = getDimensions(pixelFormatterIn, pfInW, pfInH, pfLeft, pfTop);
-        if (retErr != OK) {
-            LOGE("Error: Couldn't get values from pixel formatter input");
-            return UNKNOWN_ERROR;
-        }
-
-        retErr = getDimensions(pixelFormatterOut, pfOutW, pfOutH);
-        if (retErr != OK) {
-            LOGE("Error: Couldn't get values from pixel formatter output");
-            return UNKNOWN_ERROR;
-        }
-    }
-
-    int csiBEOutW = 0, csiBEOutH = 0;
-    int csiBESocOutW = 0, csiBESocOutH = 0;
-    if (csiBEOutput != nullptr) {
-        retErr = getDimensions(csiBEOutput, csiBEOutW,csiBEOutH);
-        if (retErr != OK) {
-            LOGE("Error: Couldn't values from csi be output");
-            return UNKNOWN_ERROR;
-        }
-    } else {
-        retErr = getDimensions(csiBESocOutput, csiBESocOutW, csiBESocOutH);
-        if (retErr != OK) {
-            LOGE("Error: Couldn't get values from csi be soc out");
-            return UNKNOWN_ERROR;
-        }
-        LOGI("pfInW:%d, pfLeft:%d, pfTop:%d,pfOutW:%d,pfOutH:%d,csiBESocOutW:%d,csiBESocOutH:%d",
-              pfInW, pfLeft, pfTop, pfOutW, pfOutH, csiBESocOutW,csiBESocOutH);
-    }
-
-    /* Boolean to tell whether there is pixel formatter cropping.
-     * This affects which selections are made */
-    bool pixelFormatter = false;
-    if (pfInW != pfOutW || pfInH != pfOutH || pfLeft != 0 || pfTop != 0)
-        pixelFormatter = true;
-
-    /*
-     * If CSI BE SOC is not used, we must have ISA. Get video crop, scaled and
-     * non scaled output from ISA and apply the formats. Otherwise add formats
-     * for CSI BE SOC.
-     */
-    Node *isaNode = nullptr;
-    Node *cropVideoIn = nullptr, *cropVideoOut = nullptr;
-    int videoCropW = 0, videoCropH = 0, videoCropT = 0, videoCropL = 0;
-    int videoCropOutW = 0, videoCropOutH = 0;
-
-    /*
-     * First get and set values when CSI BE SOC is not used
-     */
-    if (csiBESocOutput == nullptr) {
-        ret = mSettings->getDescendant(GCSS_KEY_CSI_BE, &isaNode);
-        if (ret != css_err_none) {
-            LOGE("Error: Couldn't get isa node");
-            return UNKNOWN_ERROR;
-        }
-
-        // Check if there is video cropping available. It is zero as default.
-        ret = isaNode->getDescendantByString("csi_be:output",
-                                             &cropVideoOut);
-        if (ret == css_err_none) {
-            ret = isaNode->getDescendantByString("csi_be:input",
-                                                 &cropVideoIn);
-        }
-        if (ret == css_err_none) {
-            retErr = getDimensions(cropVideoIn, videoCropW, videoCropH,
-                    videoCropL, videoCropT);
-            if (retErr != OK) {
-                LOGE("Error: Couldn't get values from crop video input");
+            ret = mSettings->getDescendantByString("csi_be_soc:output", &csiBESocOutput);
+            if (ret != css_err_none) {
+                LOGE("Error: Couldn't get csi_be or csi_be_soc nodes from the graph");
                 return UNKNOWN_ERROR;
             }
-            retErr = getDimensions(cropVideoOut, videoCropOutW, videoCropOutH);
-            if (retErr != OK) {
-                LOGE("Error: Couldn't get values from crop video output");
+            // get format from _soc
+            ret = csiBESocOutput->getValue(GCSS_KEY_FORMAT, formatStr);
+            if (ret != css_err_none) {
+                LOGE("Error: Couldn't get format from the graph");
+                return UNKNOWN_ERROR;
+            }
+        } else {
+            ret = csiBEOutput->getValue(GCSS_KEY_FORMAT, formatStr);
+            if (ret != css_err_none) {
+                LOGE("Error: Couldn't get format from the graph");
                 return UNKNOWN_ERROR;
             }
         }
-    }
 
+        /* sanity check, we have at least one CSI-BE */
+        if (CC_UNLIKELY(csiBESocOutput == nullptr && csiBEOutput == nullptr)) {
+            LOGE("Error: CSI BE Output nullptr");
+            return UNKNOWN_ERROR;
+        }
+
+        std::string pixelFormatterInput = "bxt_pixelformatter:input";
+        std::string pixelFormatterOutput = "bxt_pixelformatter:output";
+        std::string inputPort;
+        std::string outputPort;
+        if (csiBEOutput != nullptr) {
+            inputPort = "csi_be:" + pixelFormatterInput;
+            outputPort = "csi_be:" + pixelFormatterOutput;
+        } else {
+            inputPort = "csi_be_soc:" + pixelFormatterInput;
+            outputPort = "csi_be_soc:" + pixelFormatterOutput;
+        }
+
+        /* Get cropping values from the pixel formatter input. Output resolution
+         * comes from the csi be output. Some graphs may not use pixel formatter.*/
+        ret = mSettings->getDescendantByString(inputPort,
+                                                &pixelFormatterIn);
+        if (ret != css_err_none) {
+            LOGW("Couldn't get pixel formatter input, skipping");
+        } else {
+            pfPresent = true;
+            ret = mSettings->getDescendantByString(outputPort,
+                                                    &pixelFormatterOut);
+            if (ret != css_err_none) {
+                LOGE("Error: Couldn't get pixel formatter output");
+                return UNKNOWN_ERROR;
+            }
+
+            retErr = getDimensions(pixelFormatterIn, pfInW, pfInH, pfLeft, pfTop);
+            if (retErr != OK) {
+                LOGE("Error: Couldn't get values from pixel formatter input");
+                return UNKNOWN_ERROR;
+            }
+
+            retErr = getDimensions(pixelFormatterOut, pfOutW, pfOutH);
+            if (retErr != OK) {
+                LOGE("Error: Couldn't get values from pixel formatter output");
+                return UNKNOWN_ERROR;
+            }
+        }
+
+        int csiBEOutW = 0, csiBEOutH = 0;
+        int csiBESocOutW = 0, csiBESocOutH = 0;
+        if (csiBEOutput != nullptr) {
+            retErr = getDimensions(csiBEOutput, csiBEOutW,csiBEOutH);
+            if (retErr != OK) {
+                LOGE("Error: Couldn't values from csi be output");
+                return UNKNOWN_ERROR;
+            }
+        } else {
+            retErr = getDimensions(csiBESocOutput, csiBESocOutW, csiBESocOutH);
+            if (retErr != OK) {
+                LOGE("Error: Couldn't get values from csi be soc out");
+                return UNKNOWN_ERROR;
+            }
+            LOGI("pfInW:%d, pfLeft:%d, pfTop:%d,pfOutW:%d,pfOutH:%d,csiBESocOutW:%d,csiBESocOutH:%d",
+                  pfInW, pfLeft, pfTop, pfOutW, pfOutH, csiBESocOutW,csiBESocOutH);
+        }
+
+        /* Boolean to tell whether there is pixel formatter cropping.
+         * This affects which selections are made */
+        bool pixelFormatter = false;
+        if (pfInW != pfOutW || pfInH != pfOutH || pfLeft != 0 || pfTop != 0)
+            pixelFormatter = true;
+
+        /*
+         * If CSI BE SOC is not used, we must have ISA. Get video crop, scaled and
+         * non scaled output from ISA and apply the formats. Otherwise add formats
+         * for CSI BE SOC.
+         */
+        Node *isaNode = nullptr;
+        Node *cropVideoIn = nullptr, *cropVideoOut = nullptr;
+        int videoCropW = 0, videoCropH = 0, videoCropT = 0, videoCropL = 0;
+        int videoCropOutW = 0, videoCropOutH = 0;
+
+        /*
+         * First get and set values when CSI BE SOC is not used
+         */
+        if (csiBESocOutput == nullptr) {
+            ret = mSettings->getDescendant(GCSS_KEY_CSI_BE, &isaNode);
+            if (ret != css_err_none) {
+                LOGE("Error: Couldn't get isa node");
+                return UNKNOWN_ERROR;
+            }
+
+            // Check if there is video cropping available. It is zero as default.
+            ret = isaNode->getDescendantByString("csi_be:output",
+                                                 &cropVideoOut);
+            if (ret == css_err_none) {
+                ret = isaNode->getDescendantByString("csi_be:input",
+                                                     &cropVideoIn);
+            }
+            if (ret == css_err_none) {
+                retErr = getDimensions(cropVideoIn, videoCropW, videoCropH,
+                        videoCropL, videoCropT);
+                if (retErr != OK) {
+                    LOGE("Error: Couldn't get values from crop video input");
+                    return UNKNOWN_ERROR;
+                }
+                retErr = getDimensions(cropVideoOut, videoCropOutW, videoCropOutH);
+                if (retErr != OK) {
+                    LOGE("Error: Couldn't get values from crop video output");
+                    return UNKNOWN_ERROR;
+                }
+            }
+        }
+
+        // rkisp1-csi2 0 or 1
+        addFormatParams(csi2, csiBESocOutW, csiBESocOutH,
+                        0, sourceInfo.output.mbusFormat, 0, 0, mediaCtlConfig);
+        addFormatParams(csi2, csiBESocOutW, csiBESocOutH,
+                        1, sourceInfo.output.mbusFormat, 0, 0, mediaCtlConfig);
+    }
     /* Set sensor pixel array parameter to the attributes in 'sensor_mode' node,
      * ignore the attributes in pixel_array and binner node due to upstream driver
      * removed binner and scaler subdev.
      */
     addFormatParams(sourceInfo.pa.name, sourceInfo.output.w, sourceInfo.output.h,
                     0, sourceInfo.output.mbusFormat, 0, 0, mediaCtlConfig);
-
-    // rkisp1-csi2 0 or 1
-    addFormatParams(csi2, csiBESocOutW, csiBESocOutH,
-                    0, sourceInfo.output.mbusFormat, 0, 0, mediaCtlConfig);
-    addFormatParams(csi2, csiBESocOutW, csiBESocOutH,
-                    1, sourceInfo.output.mbusFormat, 0, 0, mediaCtlConfig);
 
     /* Start populating selections into mediaCtlConfig
      * entity name, width, height, left crop, top crop, target, pad, config */
@@ -2351,7 +2360,10 @@ status_t GraphConfig::getImguMediaCtlData(int32_t cameraId,
             } else
                 addSelectionParams(name, nodeWidth, nodeHeight, 0, 0, V4L2_SEL_TGT_CROP, uids[i].pad, mediaCtlConfig);
             /* TODO: related to sensor interface, see getMediaCtlData*/
-            addLinkParams(mCSIBE, 1, kImguName, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+            if (mCSIBE.find("mipi") != std::string::npos)
+                addLinkParams(mCSIBE, 1, kImguName, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+            else // dvp sensor
+                addLinkParams(mCSIBE, 0, kImguName, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
         } else if (GCSS::ItemUID::key2str(uids[i].uid) == GC_OUTPUT) {
             int nodeWidth = 0, nodeHeight = 0;
             int32_t oMbusFormat = gcu::getMBusFormat(get_fourcc(fourccFormat[0],

@@ -18,7 +18,7 @@
 #include <memory>
 #include <mutex>
 #include "CaptureUnitSettings.h"
-#include <linux/rkisp1-config.h>
+//#include <linux/rkisp1-config_v12.h>
 
 #ifndef __CAPTURE_UNIT_H__
 #define __CAPTURE_UNIT_H__

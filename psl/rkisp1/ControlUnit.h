@@ -19,7 +19,7 @@
 #define CAMERA3_HAL_CONTROLUNIT_H_
 #include <memory>
 #include <vector>
-#include <linux/rkisp1-config.h>
+//#include <linux/rkisp1-config_v12.h>
 #include "MessageQueue.h"
 #include "MessageThread.h"
 #include "ImguUnit.h"

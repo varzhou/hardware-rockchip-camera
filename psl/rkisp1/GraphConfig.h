@@ -334,6 +334,7 @@ private:
         string verticalFlip;
         string horizontalFlip;
         string link_freq;
+        bool dvp;
     };
     friend class GraphConfigManager;
     // Private initializer: only used by our friend GraphConfigManager.

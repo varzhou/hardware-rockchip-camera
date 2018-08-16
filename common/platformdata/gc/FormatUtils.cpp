@@ -119,6 +119,9 @@ static const FormatInfo gFormatMapping[] = {
 
     { V4L2_MBUS_FMT_YUYV8_1X16, get_fourcc('N', 'V', '6', '1'), "V4L2_MBUS_FMT_YUYV8_1X16", "YUYV8_1X16", 16, FORMAT_MBUS_YUV },
     { V4L2_MBUS_FMT_YVYU8_1X16, get_fourcc('N', 'V', '1', '6'), "V4L2_MBUS_FMT_YVYU8_1X16", "YVYU8_1X16", 16, FORMAT_MBUS_YUV },
+    { V4L2_MBUS_FMT_YUYV8_2X8, get_fourcc('Y', 'U', 'Y', 'V'), "V4L2_MBUS_FMT_YUYV8_2X8", "YUYV8_2X8", 16, FORMAT_MBUS_YUV },
+    { V4L2_MBUS_FMT_YVYU8_2X8, get_fourcc('Y', 'V', 'Y', 'U'), "V4L2_MBUS_FMT_YVYU8_2X8", "YVYU8_2X8", 16, FORMAT_MBUS_YUV },
+    { V4L2_MBUS_FMT_UYVY8_2X8, get_fourcc('U', 'Y', 'V', 'Y'), "V4L2_MBUS_FMT_UYVY8_2X8", "UYVY8_2X8", 16, FORMAT_MBUS_YUV },
 };
 
 const string pixelCode2String(int32_t code)
