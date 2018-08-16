@@ -140,9 +140,9 @@ status_t MediaCtlHelper::configure(IStreamConfigProvider &graphConfigMgr, IStrea
         }
         pipeFormat.field = 0;
         //TODO: need align, zyc ?
-        if (entity->getType() == DEVICE_VIDEO)
-            pipeFormat.stride = widthToStride(pipeFormat.formatCode, pipeFormat.width);
-        else
+        //if (entity->getType() == DEVICE_VIDEO)
+        //    pipeFormat.stride = widthToStride(pipeFormat.formatCode, pipeFormat.width);
+        //else
             pipeFormat.stride = pipeFormat.width;
 
         status = mMediaCtl->setFormat(pipeFormat);
@@ -261,7 +261,8 @@ status_t MediaCtlHelper::configurePipe(IStreamConfigProvider &graphConfigMgr,
     for (size_t i = 0; i < config->mFormatParams.size(); i++) {
         MediaCtlFormatParams pipeFormat = config->mFormatParams[i];
         pipeFormat.field = 0;
-        pipeFormat.stride = widthToStride(pipeFormat.formatCode, pipeFormat.width);
+        //pipeFormat.stride = widthToStride(pipeFormat.formatCode, pipeFormat.width);
+        pipeFormat.stride = pipeFormat.width;
 
         status = mMediaCtl->setFormat(pipeFormat);
         if (status != NO_ERROR) {
