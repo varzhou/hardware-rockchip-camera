@@ -49,9 +49,18 @@
     <sink name="raw"/>
   </nodes>
   <graphs>
+	<!-- for mipi camera -->
     <graph id="1" name="Full graph">
       <connection source="sensor:port_0" sink="csi_be_soc:input"/>
       <connection source="csi_be_soc:output" sink="imgu:input"/>
+      <connection source="imgu:output" sink="preview"/>
+      <connection source="imgu:output" sink="video"/>
+      <connection source="imgu:output" sink="still"/>
+      <connection source="imgu:output" sink="raw"/>
+    </graph>
+	<!-- for DVP camera -->
+    <graph id="2" name="Full graph">
+      <connection source="sensor:port_0" sink="imgu:input"/>
       <connection source="imgu:output" sink="preview"/>
       <connection source="imgu:output" sink="video"/>
       <connection source="imgu:output" sink="still"/>
