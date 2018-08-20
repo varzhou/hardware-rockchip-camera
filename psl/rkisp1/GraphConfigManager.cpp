@@ -366,8 +366,8 @@ status_t GraphConfigManager::mapStreamToKey(const std::vector<camera3_stream_t*>
     if (availableStreams.size() == 1) {
         mainOutputIndex = 0;
     } else if (availableStreams.size() == 2) {
-        mainOutputIndex = 0;
-        secondaryOutputIndex = 1;
+        mainOutputIndex = (streamSizeGE(availableStreams[0], availableStreams[1])) ? 0 : 1;
+        secondaryOutputIndex = mainOutputIndex ? 0 : 1;
     } else {
         mainOutputIndex = 0;
         // find the maxium size stream
