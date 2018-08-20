@@ -232,7 +232,7 @@
         </Hal_tuning_RKISP1>
 
         <Sensor_info_RKISP1> <!-- Information that parametrizes the behavior or qualities of the physical sensor -->
-            <sensorType value="SENSOR_TYPE_RAW"/> <!-- SENSOR_TYPE_SOC or SENSOR_TYPE_RAW -->
+            <sensorType value="SENSOR_TYPE_SOC"/> <!-- SENSOR_TYPE_SOC or SENSOR_TYPE_RAW -->
             <exposure.sync value="true"/> <!-- compensate expsure sync-->
             <sensor.digitalGain value="false"/> <!-- digital gain support on sensor-->
             <gain.lag value="2"/> <!-- camera3 HAL CPF parameters moved here start-->
@@ -503,7 +503,9 @@
         -->
         <gfxHalToV4L2PixelFmtTable.impl_defined_preview value="V4L2_PIX_FMT_NV12"/>
         <gfxHalToV4L2PixelFmtTable.impl_defined_video value="V4L2_PIX_FMT_NV12"/>
+	<!--
         <gfxHalToV4L2PixelFmtTable.raw_sensor sensorId="0" value="V4L2_PIX_FMT_SBGGR10"/>
+	-->
         <gfxHalToV4L2PixelFmtTable.ycbcr_420_888 value="V4L2_PIX_FMT_NV12"/>
     </hal_tuning>
 
