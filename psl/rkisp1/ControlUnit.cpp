@@ -707,6 +707,14 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
         uint8_t afState = ANDROID_CONTROL_AF_STATE_INACTIVE;
         ctrlUnitResult->update(ANDROID_CONTROL_AF_STATE, &afState, 1);
     }
+
+    bool flash_available = false;
+    uint8_t flash_mode = ANDROID_FLASH_MODE_OFF;
+    mSettingsProcessor->getStaticMetadataCache().getFlashInfoAvailable(flash_available);
+    if (!flash_available)
+        reqState->ctrlUnitResult->update(ANDROID_FLASH_MODE,
+                                         &flash_mode, 1);
+
     mMetadata->writeJpegMetadata(*reqState);
     uint8_t pipelineDepth;
     mSettingsProcessor->getStaticMetadataCache().getPipelineDepth(pipelineDepth);
@@ -714,8 +722,17 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
     reqState->ctrlUnitResult->update(ANDROID_REQUEST_PIPELINE_DEPTH,
                                      &pipelineDepth, 1);
     // for soc camera
-    if (!mCtrlLoop)
+    if (!mCtrlLoop) {
+        uint8_t awbMode = ANDROID_CONTROL_AWB_MODE_AUTO;
+        ctrlUnitResult->update(ANDROID_CONTROL_AWB_MODE, &awbMode, 1);
+        uint8_t awbState = ANDROID_CONTROL_AWB_STATE_CONVERGED;
+        ctrlUnitResult->update(ANDROID_CONTROL_AWB_STATE, &awbState, 1);
+        uint8_t aeMode = ANDROID_CONTROL_AE_MODE_ON;
+        ctrlUnitResult->update(ANDROID_CONTROL_AE_MODE, &aeMode, 1);
+        uint8_t aeState = ANDROID_CONTROL_AE_STATE_CONVERGED;
+        ctrlUnitResult->update(ANDROID_CONTROL_AE_STATE, &aeState, 1);
         reqState->mClMetaReceived = true;
+    }
     return OK;
 }
 
