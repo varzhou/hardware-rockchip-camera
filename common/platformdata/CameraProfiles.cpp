@@ -1263,6 +1263,7 @@ void CameraProfiles::getDataFromXmlFile(void)
 
     if (mStaticMeta.size() > 0) {
         for (unsigned int i = 0; i < mStaticMeta.size(); i++) {
+            sort_camera_metadata(mStaticMeta.at(i));
             currentMeta = mStaticMeta.at(i);
             if (currentMeta == nullptr) {
                 LOGE("can't get the static metadata");

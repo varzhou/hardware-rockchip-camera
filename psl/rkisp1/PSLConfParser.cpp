@@ -100,6 +100,178 @@ CameraCapInfo* PSLConfParser::getCameraCapInfo(int cameraId)
     return mCaps[cameraId];
 }
 
+void PSLConfParser::checkRequestMetadata(const camera_metadata *request, int cameraId)
+{
+    const camera_metadata *staticMeta = PlatformData::getStaticMetadata(cameraId);
+    camera_metadata_ro_entry entry;
+    camera_metadata_ro_entry ro_entry;
+    int ret = find_camera_metadata_ro_entry(staticMeta,
+                                  ANDROID_REQUEST_AVAILABLE_REQUEST_KEYS,
+                                  &ro_entry);
+    if(ret)
+        LOGE("@%s %d: find_camera_metadata_ro_entry error, should not happe, fix me", __FUNCTION__, __LINE__);
+    for(int i = 0; i < ro_entry.count; i++) {
+        ret = find_camera_metadata_ro_entry(request, ro_entry.data.i32[i], &entry);
+        if(ret) {
+            LOGW("@%s %d: request key (%s) not included, CTS:testCameraDeviceXXXTemplate may fail",
+                 __FUNCTION__, __LINE__, METAID2STR(metadataNames, entry.data.i32[i]));
+        }
+    }
+}
+
+uint8_t PSLConfParser::selectAfMode(const camera_metadata_t *staticMeta,
+                                    int reqTemplate)
+{
+    // For initial value, use AF_MODE_OFF. That is the minimum,
+    // for fixed-focus sensors. For request templates the desired
+    // values will be defined below.
+    uint8_t afMode = ANDROID_CONTROL_AF_MODE_OFF;
+
+    const int MAX_AF_MODES = 6;
+    // check this is the maximum number of enums defined by:
+    // camera_metadata_enum_android_control_af_mode_t defined in
+    // camera_metadata_tags.h
+    camera_metadata_ro_entry ro_entry;
+    CLEAR(ro_entry);
+    bool modesAvailable[MAX_AF_MODES];
+    CLEAR(modesAvailable);
+    int ret = find_camera_metadata_ro_entry(staticMeta, ANDROID_CONTROL_AF_AVAILABLE_MODES,
+                                  &ro_entry);
+    if(!ret) {
+        for (size_t i = 0; i < ro_entry.count; i++) {
+            if (ro_entry.data.u8[i] <  MAX_AF_MODES)
+                modesAvailable[ro_entry.data.u8[i]] = true;
+        }
+    } else {
+        LOGE("@%s: Incomplete camera3_profiles.xml: available AF modes missing!!", __FUNCTION__);
+    }
+
+    switch (reqTemplate) {
+       case ANDROID_CONTROL_CAPTURE_INTENT_STILL_CAPTURE:
+       case ANDROID_CONTROL_CAPTURE_INTENT_ZERO_SHUTTER_LAG:
+       case ANDROID_CONTROL_CAPTURE_INTENT_PREVIEW:
+           if (modesAvailable[ANDROID_CONTROL_AF_MODE_CONTINUOUS_PICTURE])
+               afMode = ANDROID_CONTROL_AF_MODE_CONTINUOUS_PICTURE;
+           break;
+       case ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD:
+       case ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_SNAPSHOT:
+           if (modesAvailable[ANDROID_CONTROL_AF_MODE_CONTINUOUS_VIDEO])
+               afMode = ANDROID_CONTROL_AF_MODE_CONTINUOUS_VIDEO;
+           break;
+       case ANDROID_CONTROL_CAPTURE_INTENT_MANUAL:
+           if (modesAvailable[ANDROID_CONTROL_AF_MODE_OFF])
+               afMode = ANDROID_CONTROL_AF_MODE_OFF;
+           break;
+       case ANDROID_CONTROL_CAPTURE_INTENT_START:
+       default:
+           afMode = ANDROID_CONTROL_AF_MODE_AUTO;
+           break;
+       }
+    return afMode;
+}
+
+uint8_t PSLConfParser::selectEdgeMode(const camera_metadata_t *staticMeta,
+                                    int reqTemplate)
+{
+    uint8_t mode = ANDROID_EDGE_MODE_OFF;
+
+    const int MAX_MODES = 4;
+    camera_metadata_ro_entry ro_entry;
+    CLEAR(ro_entry);
+    bool modesAvailable[MAX_MODES];
+    CLEAR(modesAvailable);
+    int ret = find_camera_metadata_ro_entry(staticMeta, ANDROID_EDGE_AVAILABLE_EDGE_MODES,
+                                  &ro_entry);
+    if(!ret) {
+        for (size_t i = 0; i < ro_entry.count; i++) {
+            if (ro_entry.data.u8[i] <  MAX_MODES)
+                modesAvailable[ro_entry.data.u8[i]] = true;
+        }
+    } else {
+        LOGW("@%s: if support ZSL, CTS:CTS#testCameraDeviceZSLTemplate may failed for ANDROID_EDGE_MODE_ZERO_SHUTTER_LAG should be guranteed to supported", __FUNCTION__);
+        return mode;
+    }
+
+    // CTS require different edge modes in corresponding template:
+    // ANDROID_EDGE_MODE_HIGH_QUALITY in ANDROID_CONTROL_CAPTURE_INTENT_STILL_CAPTURE
+    // ANDROID_EDGE_MODE_FAST in ANDROID_CONTROL_CAPTURE_INTENT_PREVIEW
+    // ANDROID_EDGE_MODE_ZERO_SHUTTER_LAG in
+    // ANDROID_CONTROL_CAPTURE_INTENT_ZERO_SHUTTER_LAG
+    switch (reqTemplate) {
+       case ANDROID_CONTROL_CAPTURE_INTENT_STILL_CAPTURE:
+           if (modesAvailable[ANDROID_EDGE_MODE_HIGH_QUALITY])
+               mode = ANDROID_EDGE_MODE_HIGH_QUALITY;
+           else
+               mode = ANDROID_EDGE_MODE_OFF;
+           break;
+       case ANDROID_CONTROL_CAPTURE_INTENT_ZERO_SHUTTER_LAG:
+           if (modesAvailable[ANDROID_EDGE_MODE_ZERO_SHUTTER_LAG])
+               mode = ANDROID_EDGE_MODE_ZERO_SHUTTER_LAG;
+           LOGE("@%s %d: ZERO_SHUTTER_LAG Template require ZERO_SHUTTER_LAG edge mode, CTS#testCameraDeviceZSLTemplate will fail", __FUNCTION__, __LINE__);
+           break;
+       case ANDROID_CONTROL_CAPTURE_INTENT_PREVIEW:
+       case ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD:
+           if (modesAvailable[ANDROID_EDGE_MODE_FAST])
+               mode = ANDROID_EDGE_MODE_FAST;
+           else
+               mode = ANDROID_EDGE_MODE_OFF;
+           break;
+       default:
+           mode = ANDROID_EDGE_MODE_OFF;
+           break;
+       }
+    return mode;
+}
+
+uint8_t PSLConfParser::selectNrMode(const camera_metadata_t *staticMeta,
+                                    int reqTemplate)
+{
+    uint8_t mode = ANDROID_NOISE_REDUCTION_MODE_OFF;
+
+    const int MAX_MODES = 5;
+    camera_metadata_ro_entry ro_entry;
+    CLEAR(ro_entry);
+    bool modesAvailable[MAX_MODES];
+    CLEAR(modesAvailable);
+    int ret = find_camera_metadata_ro_entry(staticMeta, ANDROID_NOISE_REDUCTION_AVAILABLE_NOISE_REDUCTION_MODES,
+                                  &ro_entry);
+    if(!ret) {
+        LOGI("@%s %d: count :%d, %p", __FUNCTION__, __LINE__, ro_entry.count, ro_entry.data.u8);
+        for (size_t i = 0; i < ro_entry.count; i++) {
+            if (ro_entry.data.u8[i] <  MAX_MODES)
+                modesAvailable[ro_entry.data.u8[i]] = true;
+        }
+    } else {
+        return mode;
+    }
+
+    // CTS require different NR modes in corresponding template:
+    switch (reqTemplate) {
+       case ANDROID_CONTROL_CAPTURE_INTENT_STILL_CAPTURE:
+           if (modesAvailable[ANDROID_NOISE_REDUCTION_MODE_HIGH_QUALITY])
+               mode = ANDROID_NOISE_REDUCTION_MODE_HIGH_QUALITY;
+           else
+               mode = ANDROID_NOISE_REDUCTION_MODE_OFF;
+           break;
+       case ANDROID_CONTROL_CAPTURE_INTENT_ZERO_SHUTTER_LAG:
+           if (modesAvailable[ANDROID_NOISE_REDUCTION_MODE_ZERO_SHUTTER_LAG])
+               mode = ANDROID_NOISE_REDUCTION_MODE_ZERO_SHUTTER_LAG;
+           LOGE("@%s %d: ZERO_SHUTTER_LAG Template require ZERO_SHUTTER_LAG Noise reduction mode, CTS#testCameraDeviceZSLTemplate will fail", __FUNCTION__, __LINE__);
+           break;
+       case ANDROID_CONTROL_CAPTURE_INTENT_PREVIEW:
+       case ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD:
+           if (modesAvailable[ANDROID_NOISE_REDUCTION_MODE_FAST])
+               mode = ANDROID_NOISE_REDUCTION_MODE_FAST;
+           else
+               mode = ANDROID_NOISE_REDUCTION_MODE_OFF;
+           break;
+       default:
+           mode = ANDROID_NOISE_REDUCTION_MODE_OFF;
+           break;
+       }
+    return mode;
+}
+
 camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int requestTemplate)
 {
     LOGI("@%s: %d", __FUNCTION__, requestTemplate);
@@ -135,15 +307,40 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
     int64_t bogusValue = 0;  // 8 bytes of bogus
     int64_t bogusValueArray[] = {0, 0, 0, 0, 0};  // 40 bytes of bogus
 
+    uint8_t value_u8;
+    uint8_t value_i32;
+    uint8_t value_f;
+
     uint8_t requestType = ANDROID_REQUEST_TYPE_CAPTURE;
     uint8_t intent = 0;
 
     uint8_t controlMode = ANDROID_CONTROL_MODE_AUTO;
-    uint8_t afMode = ANDROID_CONTROL_AF_MODE_OFF;
+    uint8_t afMode = selectAfMode(staticMeta, requestTemplate);
     uint8_t aeMode = ANDROID_CONTROL_AE_MODE_ON;
     uint8_t awbMode = ANDROID_CONTROL_AWB_MODE_AUTO;
-    uint8_t nrMode = ANDROID_NOISE_REDUCTION_MODE_OFF;
     camera_metadata_entry entry;
+    camera_metadata_entry reqestKey_entry;
+
+    reqestKey_entry = metadata.find(ANDROID_REQUEST_AVAILABLE_REQUEST_KEYS);
+
+#define TAGINFO(tag, value) \
+    for(int i = 0; i < reqestKey_entry.count; i++) { \
+        if (reqestKey_entry.data.i32[i] == tag) { \
+            add_camera_metadata_entry(meta, tag, &value, 1); \
+            break; \
+        } \
+        if (i == reqestKey_entry.count - 1) \
+            LOGW("@%s %d: %s isn't included in request keys, no need to report", __FUNCTION__, __LINE__, METAID2STR(metadataNames, tag)); \
+    }
+#define TAGINFO_ARRAY(tag, value, cnt) \
+    for(int i = 0; i < reqestKey_entry.count; i++) { \
+        if (reqestKey_entry.data.i32[i] == tag) { \
+            add_camera_metadata_entry(meta, tag, value, cnt); \
+            break; \
+        } \
+        if (i == reqestKey_entry.count - 1) \
+            LOGW("@%s %d: %s isn't included in request keys, no need to report", __FUNCTION__, __LINE__, METAID2STR(metadataNames, tag)); \
+    }
 
     switch (requestTemplate) {
     case ANDROID_CONTROL_CAPTURE_INTENT_PREVIEW:
@@ -151,17 +348,6 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
         break;
     case ANDROID_CONTROL_CAPTURE_INTENT_STILL_CAPTURE:
         intent = ANDROID_CONTROL_CAPTURE_INTENT_STILL_CAPTURE;
-        entry = metadata.find(ANDROID_NOISE_REDUCTION_AVAILABLE_NOISE_REDUCTION_MODES);
-        if (entry.count > 0) {
-            nrMode = entry.data.u8[0];
-            for (uint32_t i = 0; i < entry.count; i++) {
-                if (entry.data.u8[i]
-                        == ANDROID_NOISE_REDUCTION_MODE_HIGH_QUALITY) {
-                    nrMode = ANDROID_NOISE_REDUCTION_MODE_HIGH_QUALITY;
-                    break;
-                }
-            }
-        }
         break;
     case ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD:
         intent = ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD;
@@ -171,17 +357,6 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
         break;
     case ANDROID_CONTROL_CAPTURE_INTENT_ZERO_SHUTTER_LAG:
         intent = ANDROID_CONTROL_CAPTURE_INTENT_ZERO_SHUTTER_LAG;
-        entry = metadata.find(ANDROID_NOISE_REDUCTION_AVAILABLE_NOISE_REDUCTION_MODES);
-        if (entry.count > 0) {
-            nrMode = entry.data.u8[0];
-            for (uint32_t i = 0; i < entry.count; i++) {
-                if (entry.data.u8[i]
-                        == ANDROID_NOISE_REDUCTION_MODE_ZERO_SHUTTER_LAG) {
-                    nrMode = ANDROID_NOISE_REDUCTION_MODE_ZERO_SHUTTER_LAG;
-                    break;
-                }
-            }
-        }
         break;
     case ANDROID_CONTROL_CAPTURE_INTENT_MANUAL:
         controlMode = ANDROID_CONTROL_MODE_OFF;
@@ -197,26 +372,22 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
         break;
     }
 
-    camera_metadata_ro_entry ro_entry;
-    find_camera_metadata_ro_entry(staticMeta, ANDROID_CONTROL_MAX_REGIONS,
-                                  &ro_entry);
+    entry = metadata.find(ANDROID_CONTROL_MAX_REGIONS);
     // AE, AWB, AF
-    if (ro_entry.count == 3) {
+    if (entry.count == 3) {
         int meteringRegion[METERING_RECT_SIZE] = {0,0,0,0,0};
-        if (ro_entry.data.i32[0] == 1) {
-            add_camera_metadata_entry(meta, ANDROID_CONTROL_AE_REGIONS,
-                                      meteringRegion, METERING_RECT_SIZE);
-        }
-        if (ro_entry.data.i32[2] == 1) {
-            add_camera_metadata_entry(meta, ANDROID_CONTROL_AF_REGIONS,
-                                      meteringRegion, METERING_RECT_SIZE);
-        }
+        if (entry.data.i32[0] == 1)
+            TAGINFO_ARRAY(ANDROID_CONTROL_AE_REGIONS, meteringRegion, METERING_RECT_SIZE);
+
+        if (entry.data.i32[2] == 1)
+            TAGINFO_ARRAY(ANDROID_CONTROL_AF_REGIONS, meteringRegion, METERING_RECT_SIZE);
         // we do not support AWB region
     }
-#define TAGINFO(tag, data) \
-    add_camera_metadata_entry(meta, tag, &data, 1)
-#define TAGINFO_ARRAY(tag, data, count) \
-    add_camera_metadata_entry(meta, tag, data, count)
+
+    uint8_t nrMode = selectNrMode(staticMeta, requestTemplate);
+    uint8_t edgeMode = selectEdgeMode(staticMeta, requestTemplate);
+    TAGINFO(ANDROID_NOISE_REDUCTION_MODE, nrMode);
+    TAGINFO(ANDROID_EDGE_MODE, edgeMode);
 
     TAGINFO(ANDROID_CONTROL_CAPTURE_INTENT, intent);
 
@@ -226,39 +397,62 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
     TAGINFO(ANDROID_CONTROL_VIDEO_STABILIZATION_MODE, bogusValue);
     TAGINFO(ANDROID_CONTROL_AE_MODE, aeMode);
     TAGINFO(ANDROID_CONTROL_AE_LOCK, bogusValue);
-    uint8_t value = ANDROID_CONTROL_AE_PRECAPTURE_TRIGGER_IDLE;
-    TAGINFO(ANDROID_CONTROL_AE_PRECAPTURE_TRIGGER, value);
-    value = ANDROID_CONTROL_AF_TRIGGER_IDLE;
-    TAGINFO(ANDROID_CONTROL_AF_TRIGGER, value);
-    value = ANDROID_LENS_OPTICAL_STABILIZATION_MODE_OFF;
-    TAGINFO(ANDROID_LENS_OPTICAL_STABILIZATION_MODE, value);
+    value_u8 = ANDROID_CONTROL_AE_PRECAPTURE_TRIGGER_IDLE;
+    TAGINFO(ANDROID_CONTROL_AE_PRECAPTURE_TRIGGER, value_u8);
+    value_u8 = ANDROID_CONTROL_AF_TRIGGER_IDLE;
+    TAGINFO(ANDROID_CONTROL_AF_TRIGGER, value_u8);
+    value_u8 = ANDROID_HOT_PIXEL_MODE_FAST;
+    TAGINFO(ANDROID_HOT_PIXEL_MODE, value_u8);
+    value_u8 = ANDROID_STATISTICS_HOT_PIXEL_MAP_MODE_OFF;
+    TAGINFO(ANDROID_STATISTICS_HOT_PIXEL_MAP_MODE, value_u8);
+    value_u8 = ANDROID_STATISTICS_SCENE_FLICKER_NONE;
+    TAGINFO(ANDROID_STATISTICS_SCENE_FLICKER, value_u8);
+    TAGINFO(ANDROID_CONTROL_AE_EXPOSURE_COMPENSATION, bogusValue);
+
+    // Sensor settings.
+    entry = metadata.find(ANDROID_LENS_INFO_AVAILABLE_APERTURES);
+    if(entry.count > 0)
+        TAGINFO(ANDROID_LENS_APERTURE, entry.data.f[0]);
+
+    entry = metadata.find(ANDROID_LENS_INFO_AVAILABLE_FILTER_DENSITIES);
+    if(entry.count > 0)
+        TAGINFO(ANDROID_LENS_FILTER_DENSITY, entry.data.f[0]);
+
+    entry = metadata.find(ANDROID_LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+    if(entry.count > 0)
+        TAGINFO(ANDROID_LENS_FOCAL_LENGTH, entry.data.f[0]);
+
+    entry = metadata.find(ANDROID_LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION);
+    if(entry.count > 0)
+        TAGINFO(ANDROID_LENS_OPTICAL_STABILIZATION_MODE, entry.data.u8[0]);
+
+    value_f = 0.0;
+    TAGINFO(ANDROID_LENS_FOCUS_DISTANCE, value_f);
+
+    value_u8 = ANDROID_BLACK_LEVEL_LOCK_OFF;
+    TAGINFO(ANDROID_BLACK_LEVEL_LOCK, value_u8);
+
     int32_t mode = ANDROID_SENSOR_TEST_PATTERN_MODE_OFF;
     TAGINFO(ANDROID_SENSOR_TEST_PATTERN_MODE, mode);
     TAGINFO(ANDROID_SENSOR_ROLLING_SHUTTER_SKEW, bogusValue);
-    value = ANDROID_HOT_PIXEL_MODE_FAST;
-    TAGINFO(ANDROID_HOT_PIXEL_MODE, value);
-    value = ANDROID_STATISTICS_HOT_PIXEL_MAP_MODE_OFF;
-    TAGINFO(ANDROID_STATISTICS_HOT_PIXEL_MAP_MODE, value);
-    value = ANDROID_STATISTICS_SCENE_FLICKER_NONE;
-    TAGINFO(ANDROID_STATISTICS_SCENE_FLICKER, value);
-    value = ANDROID_STATISTICS_LENS_SHADING_MAP_MODE_OFF;
-    TAGINFO(ANDROID_STATISTICS_LENS_SHADING_MAP_MODE, value);
-    TAGINFO(ANDROID_CONTROL_AE_EXPOSURE_COMPENSATION, bogusValue);
+    TAGINFO(ANDROID_SENSOR_EXPOSURE_TIME, bogusValue);
+    TAGINFO(ANDROID_SENSOR_SENSITIVITY, bogusValue);
+    int64_t frameDuration = 33000000;
+    TAGINFO(ANDROID_SENSOR_FRAME_DURATION, frameDuration);
+
+    // ISP-processing settings.
+    value_u8 = ANDROID_STATISTICS_LENS_SHADING_MAP_MODE_OFF;
+    TAGINFO(ANDROID_STATISTICS_LENS_SHADING_MAP_MODE, value_u8);
 
     TAGINFO(ANDROID_SYNC_FRAME_NUMBER, bogusValue);
 
     // Default fps target range
     int32_t fpsRange[] = {15, 30};
-    camera_metadata_ro_entry fpsRangesEntry;
-
-    fpsRangesEntry.count = 0;
-    find_camera_metadata_ro_entry(
-        staticMeta, ANDROID_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES,
-        &fpsRangesEntry);
-    if ((fpsRangesEntry.count >= 2) && (fpsRangesEntry.count % 2 == 0)) {
+    entry = metadata.find(ANDROID_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+    if ((entry.count >= 2) && (entry.count % 2 == 0)) {
       // The first one in the entry list is used
-      fpsRange[0] = fpsRangesEntry.data.i32[0];
-      fpsRange[1] = fpsRangesEntry.data.i32[1];
+      fpsRange[0] = entry.data.i32[0];
+      fpsRange[1] = entry.data.i32[1];
     } else {
       LOGW("No AE FPS range found in profile, use default [15, 30]");
     }
@@ -268,20 +462,18 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
     }
     TAGINFO_ARRAY(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, fpsRange, 2);
 
-    value = ANDROID_CONTROL_AE_ANTIBANDING_MODE_AUTO;
-    TAGINFO(ANDROID_CONTROL_AE_ANTIBANDING_MODE, value);
+    value_u8 = ANDROID_CONTROL_AE_ANTIBANDING_MODE_AUTO;
+    TAGINFO(ANDROID_CONTROL_AE_ANTIBANDING_MODE, value_u8);
     TAGINFO(ANDROID_CONTROL_AWB_MODE, awbMode);
     TAGINFO(ANDROID_CONTROL_AWB_LOCK, bogusValue);
     TAGINFO(ANDROID_BLACK_LEVEL_LOCK, bogusValue);
     TAGINFO(ANDROID_CONTROL_AWB_STATE, bogusValue);
     TAGINFO(ANDROID_CONTROL_AF_MODE, afMode);
 
-    value = ANDROID_COLOR_CORRECTION_ABERRATION_MODE_OFF;
-    TAGINFO(ANDROID_COLOR_CORRECTION_ABERRATION_MODE, value);
+    value_u8 = ANDROID_COLOR_CORRECTION_ABERRATION_MODE_OFF;
+    TAGINFO(ANDROID_COLOR_CORRECTION_ABERRATION_MODE, value_u8);
 
     TAGINFO(ANDROID_FLASH_MODE, bogusValue);
-
-    TAGINFO(ANDROID_LENS_FOCUS_DISTANCE, bogusValue);
 
     TAGINFO(ANDROID_REQUEST_TYPE, requestType);
     TAGINFO(ANDROID_REQUEST_METADATA_MODE, bogusValue);
@@ -291,13 +483,8 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
 
     TAGINFO(ANDROID_STATISTICS_FACE_DETECT_MODE, bogusValue);
 
-    TAGINFO(ANDROID_LENS_FOCAL_LENGTH, bogusValue);
     // todo enable when region support is implemented
     // TAGINFO_ARRAY(ANDROID_CONTROL_AE_REGIONS, bogusValueArray, 5);
-    TAGINFO(ANDROID_SENSOR_EXPOSURE_TIME, bogusValue);
-    TAGINFO(ANDROID_SENSOR_SENSITIVITY, bogusValue);
-    int64_t frameDuration = 33000000;
-    TAGINFO(ANDROID_SENSOR_FRAME_DURATION, frameDuration);
 
     TAGINFO(ANDROID_JPEG_QUALITY, JPEG_QUALITY_DEFAULT);
     TAGINFO(ANDROID_JPEG_THUMBNAIL_QUALITY, THUMBNAIL_QUALITY_DEFAULT);
@@ -317,17 +504,15 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
 
     entry = metadata.find(ANDROID_TONEMAP_AVAILABLE_TONE_MAP_MODES);
     if (entry.count > 0) {
-        value = entry.data.u8[0];
+        value_u8 = entry.data.u8[0];
         for (uint32_t i = 0; i < entry.count; i++) {
             if (entry.data.u8[i] == ANDROID_TONEMAP_MODE_HIGH_QUALITY) {
-                value = ANDROID_TONEMAP_MODE_HIGH_QUALITY;
+                value_u8 = ANDROID_TONEMAP_MODE_HIGH_QUALITY;
                 break;
             }
         }
-        TAGINFO(ANDROID_TONEMAP_MODE, value);
+        TAGINFO(ANDROID_TONEMAP_MODE, value_u8);
     }
-
-    TAGINFO(ANDROID_NOISE_REDUCTION_MODE, nrMode);
 
     float colorTransform[9] = {1.0, 0.0, 0.0,
                                0.0, 1.0, 0.0,
@@ -346,6 +531,8 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
 
 #undef TAGINFO
 #undef TAGINFO_ARRAY
+
+    checkRequestMetadata(meta, cameraId);
 
     int entryCount = get_camera_metadata_entry_count(meta);
     int dataCount = get_camera_metadata_data_count(meta);
