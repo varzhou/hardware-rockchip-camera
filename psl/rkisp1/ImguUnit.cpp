@@ -159,6 +159,26 @@ ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams)
        return UNKNOWN_ERROR;
     }
 
+    /*
+     * Moved from processNextRequest because this call will cost more than 300ms,
+     * and cause CTS android.hardware.camera2.cts.RecordingTest#testBasicRecording
+     * failed, which compares the frames numbers started to calculated from the
+     * first request in 3 seconds to the recording file's.
+     */
+    status = kickstart();
+    if (status != OK) {
+       return status;
+    }
+
+    /*
+     * TODO:
+     * the interval from configstream done to the first frame produced by ISP driver may
+     * be over 200ms, and this will cause some recording CTS cases fail, so we add some
+     * delay here. The actual delay time may be different for various sensors, so it could
+     * be better to define this in camera_profiles.xml
+     */
+    usleep(200 * 1000);
+
     return OK;
 }
 
@@ -605,13 +625,6 @@ status_t ImguUnit::processNextRequest()
             return UNKNOWN_ERROR;
         }
         status |= lTask->settings(msg->pMsg);
-    }
-
-    if (mFirstRequest) {
-        status = kickstart();
-        if (status != OK) {
-            return status;
-        }
     }
 
     mCurPipeConfig->nodes.clear();
