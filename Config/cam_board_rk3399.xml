@@ -11,14 +11,14 @@
 					<SensorI2cBusNum busnum="1"></SensorI2cBusNum>
 					<SensorI2cAddrByte byte="2"></SensorI2cAddrByte>
 					<SensorI2cRate rate="100000"></SensorI2cRate>
-					<SensorAvdd name="NC" min="28000000" max="28000000" delay="0"></SensorAvdd>
-					<SensorDvdd name="NC" min="12000000" max="12000000" delay="0"></SensorDvdd>
+					<SensorAvdd name="vcc_avdd_2v8" min="0" max="0" delay="5000"></SensorAvdd>
+					<SensorDvdd name="vcc1v8_dvp" min="18000000" max="18000000" delay="5000"></SensorDvdd>
 					<SensorDovdd name="NC" min="18000000" max="18000000" delay="5000"></SensorDovdd>
 					<SensorMclk mclk="24000000" delay="1000"></SensorMclk>
 					<SensorGpioPwen ioname="RK30_PIN1_PC3" active="1" delay="1000"></SensorGpioPwen>					
 					<SensorGpioRst ioname="RK30_PIN1_PA3" active="0" delay="0"></SensorGpioRst>
 					<SensorGpioPwdn ioname="RK30_PIN1_PA0" active="0" delay="0"></SensorGpioPwdn>
-					<SensorFacing facing="back"></SensorFacing>
+					<SensorFacing facing="front"></SensorFacing>
 					<SensorInterface interface="MIPI"></SensorInterface>
 					<SensorMirrorFlip mirror="0"></SensorMirrorFlip>
 					<SensorOrientation orientation="180"></SensorOrientation>
@@ -143,14 +143,14 @@
 					<SensorI2cBusNum busnum="1"></SensorI2cBusNum>
 					<SensorI2cAddrByte byte="2"></SensorI2cAddrByte>
 					<SensorI2cRate rate="100000"></SensorI2cRate>
-					<SensorAvdd name="NC" min="28000000" max="28000000" delay="0"></SensorAvdd>
-					<SensorDvdd name="NC" min="12000000" max="12000000" delay="0"></SensorDvdd>
+					<SensorAvdd name="vcc_avdd_2v8" min="0" max="0" delay="5000"></SensorAvdd>
+					<SensorDvdd name="vcc1v8_dvp" min="18000000" max="18000000" delay="5000"></SensorDvdd>
 					<SensorDovdd name="NC" min="18000000" max="18000000" delay="5000"></SensorDovdd>
 					<SensorMclk mclk="24000000" delay="1000"></SensorMclk>
 					<SensorGpioPwen ioname="RK30_PIN1_PC3" active="1" delay="1000"></SensorGpioPwen>					
 					<SensorGpioRst ioname="RK30_PIN1_PA4" active="0" delay="0"></SensorGpioRst>
 					<SensorGpioPwdn ioname="RK30_PIN1_PA1" active="0" delay="0"></SensorGpioPwdn>
-					<SensorFacing facing="front"></SensorFacing>
+					<SensorFacing facing="back"></SensorFacing>
 					<SensorInterface interface="MIPI"></SensorInterface>
 					<SensorMirrorFlip mirror="0"></SensorMirrorFlip>
 					<SensorOrientation orientation="180"></SensorOrientation>
