@@ -33,8 +33,10 @@ public:
     status_t init();
 
     void writeJpegMetadata(RequestCtrlState &reqState) const;
+    void writeRestMetadata(RequestCtrlState &reqState) const;
 
 private:
+    void checkResultMetadata(CameraMetadata *results, int cameraId) const;
 
 private:
     int mCameraId;

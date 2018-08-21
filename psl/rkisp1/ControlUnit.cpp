@@ -733,6 +733,7 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
         ctrlUnitResult->update(ANDROID_CONTROL_AE_STATE, &aeState, 1);
         reqState->mClMetaReceived = true;
     }
+    mMetadata->writeRestMetadata(*reqState);
     return OK;
 }
 
