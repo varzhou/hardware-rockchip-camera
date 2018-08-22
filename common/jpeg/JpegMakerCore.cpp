@@ -21,6 +21,7 @@
 #include "JpegMakerCore.h"
 #include "PlatformData.h"
 #include "CameraMetadataHelper.h"
+#include <cutils/properties.h>
 
 NAMESPACE_DECLARATION {
 static const unsigned char JPEG_MARKER_SOI[2] = {0xFF, 0xD8};  // JPEG StartOfImage marker
@@ -83,6 +84,14 @@ status_t JpegMakerCore::setupExifWithMetaData(ImgEncoderCore::EncodePackage & pa
 
     if (metaData.mSoftware)
         mExifMaker->setSoftware(metaData.mSoftware);
+
+    char property_value[PROPERTY_VALUE_MAX] = {0};
+
+    property_get("ro.product.manufacturer", property_value, "rockchip");
+    mExifMaker->setMaker(property_value);
+
+    property_get("ro.product.model", property_value, "rockchip_mid");
+    mExifMaker->setModel(property_value);
 
     return status;
 }
