@@ -33,7 +33,7 @@
             <control.afAvailableModes value="OFF"/>
             <control.availableEffects value="OFF"/>
             <control.awbAvailableModes value="AUTO"/>
-            <control.awbLockAvailable value="TRUE"/>
+            <control.awbLockAvailable value="FALSE"/>
             <control.availableSceneModes value="DISABLED"/>
             <control.availableVideoStabilizationModes value="OFF"/>
             <control.maxRegions value="0,0,0"/>
@@ -44,21 +44,19 @@
             <!-- Lens Info-->
             <!-- TODO: availableApertures now is fake for we do not get the OV2685 real apertures -->
             <lens.info.availableApertures value="2.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <lens.info.availableFilterDensities value="0.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <lens.info.availableFocalLengths value="2.04,4.28"/> <!-- HAL may override this value from CMC for RAW sensors -->
+            <lens.info.availableFocalLengths value="2.04"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <lens.info.availableOpticalStabilization value="OFF"/> <!-- OPTIONS: OFF, ON -->
             <lens.info.hyperfocalDistance value="0.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <lens.info.minimumFocusDistance value="0.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <lens.info.shadingMapSize value="0,0"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <lens.info.focusDistanceCalibration value="APPROXIMATE"/>
             <!-- Lens -->
             <lens.facing value="BACK"/>
             <!-- Request -->
             <request.maxNumOutputStreams value="1,2,1"/>
             <request.pipelineMaxDepth value="4"/>
-            <request.maxNumInputStreams value="1"/>
+            <request.maxNumInputStreams value="0"/>
             <request.partialResultCount value="1"/>
-            <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/>
+            <!-- <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/> -->
+            <request.availableCapabilities value="BACKWARD_COMPATIBLE"/>
             <request.availableRequestKeys value="blackLevel.lock,
                 colorCorrection.aberrationMode,
                 colorCorrection.gains,
@@ -68,6 +66,7 @@
                 control.aeLock,
                 control.aeMode,
                 control.aeTargetFpsRange,
+                control.aePrecaptureTrigger,
                 control.afMode,
                 control.afTrigger,
                 control.awbLock,
@@ -83,16 +82,16 @@
                 jpeg.quality,
                 jpeg.thumbnailQuality,
                 jpeg.thumbnailSize,
-                scaler.cropRegion,
-                statistics.faceDetectMode,
-                lens.focalLength,
                 lens.aperture,
-                lens.focusDistance,
-                lens.filterDensity,
+                lens.focalLength,
                 lens.opticalStabilizationMode,
                 noiseReduction.mode,
-                tonemap.curve,
-                tonemap.mode"/>
+                scaler.cropRegion,
+                statistics.faceDetectMode,
+                statistics.hotPixelMapMode,
+                statistics.sceneFlicker,
+                statistics.lensShadingMapMode
+                "/>
 
             <request.availableResultKeys value="colorCorrection.mode,
                 colorCorrection.transform,
@@ -118,7 +117,6 @@
                 control.awbState,
                 sync.frameNumber,
                 flash.mode,
-                hotPixel.mode,
                 jpeg.gpsLocation,
                 jpeg.orientation,
                 jpeg.quality,
@@ -126,8 +124,6 @@
                 jpeg.thumbnailSize,
                 lens.focalLength,
                 lens.aperture,
-                lens.filterDensity,
-                lens.focusDistance,
                 lens.opticalStabilizationMode,
                 request.pipelineDepth,
                 scaler.cropRegion,
@@ -135,56 +131,38 @@
                 sensor.testPatternMode,
                 sensor.timestamp,
                 sensor.rollingShutterSkew,
-                shading.mode,
                 statistics.faceDetectMode,
                 statistics.hotPixelMapMode,
-                statistics.hotPixelMap,
                 statistics.faces,
-                statistics.lensShadingCorrectionMap,
-                statistics.sceneFlicker,
-                statistics.lensShadingMapMode,
                 noiseReduction.mode,
-                tonemap.curve,
-                tonemap.mode"/>
+                statistics.sceneFlicker,
+                statistics.lensShadingMapMode
+                "/>
             <request.availableCharacteristicsKeys value="0"/>
             <!-- Scaler -->
             <scaler.availableMaxDigitalZoom value="3.0"/>
             <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB"/>
             <scaler.availableStreamConfigurations value="BLOB,800x600,OUTPUT,
                 BLOB,640x480,OUTPUT,
-                BLOB,352x288,OUTPUT,
                 BLOB,320x240,OUTPUT,
-                BLOB,176x144,OUTPUT,
                 YCbCr_420_888,800x600,OUTPUT,
                 YCbCr_420_888,640x480,OUTPUT,
-                YCbCr_420_888,352x288,OUTPUT,
                 YCbCr_420_888,320x240,OUTPUT,
-                YCbCr_420_888,176x144,OUTPUT,
                 IMPLEMENTATION_DEFINED,800x600,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
-                IMPLEMENTATION_DEFINED,352x288,OUTPUT,
-                IMPLEMENTATION_DEFINED,320x240,OUTPUT,
-                IMPLEMENTATION_DEFINED,176x144,OUTPUT" />
+                IMPLEMENTATION_DEFINED,320x240,OUTPUT" />
             <scaler.availableMinFrameDurations value="BLOB,800x600,33333333,
                 BLOB,640x480,33333333,
-                BLOB,352x288,33333333,
                 BLOB,320x240,33333333,
-                BLOB,176x144,33333333,
                 YCbCr_420_888,800x600,33333333,
                 YCbCr_420_888,640x480,33333333,
-                YCbCr_420_888,352x288,33333333,
                 YCbCr_420_888,320x240,33333333,
-                YCbCr_420_888,176x144,33333333,
                 IMPLEMENTATION_DEFINED,800x600,33333333,
                 IMPLEMENTATION_DEFINED,640x480,33333333,
-                IMPLEMENTATION_DEFINED,352x288,33333333,
-                IMPLEMENTATION_DEFINED,320x240,33333333,
-                IMPLEMENTATION_DEFINED,176x144,33333333" />
+                IMPLEMENTATION_DEFINED,320x240,33333333" />
             <scaler.availableStallDurations value="BLOB,800x600,33333333,
                                                    BLOB,640x480,33333333,
-                                                   BLOB,352x288,33333333,
-                                                   BLOB,320x240,33333333,
-                                                   BLOB,176x144,33333333" />
+                                                   BLOB,320x240,33333333" />
             <scaler.croppingType value="CENTER_ONLY"/>
             <!-- Sensor Info -->
             <sensor.info.activeArraySize value="0,0,800,600"/>
@@ -206,19 +184,13 @@
             <!-- Info -->
             <info.supportedHardwareLevel value="LIMITED"/>
             <!-- shading -->
-            <shading.availableModes value="OFF"/>
+            <!-- <shading.availableModes value="OFF"/> -->
             <!-- Statistics Info -->
             <statistics.info.availableFaceDetectModes value="OFF"/>
             <statistics.info.histogramBucketCount value="0"/>
             <statistics.info.maxFaceCount value="0"/>
-            <statistics.info.maxHistogramCount value="0"/>
-            <statistics.info.maxSharpnessMapValue value="0"/>
-            <statistics.info.sharpnessMapSize value="0,0"/>
             <statistics.info.availableHotPixelMapModes value="OFF"/>
             <statistics.info.availableLensShadingMapModes value="OFF"/>
-            <!-- Tonemap -->
-            <tonemap.maxCurvePoints value="1024"/>
-            <tonemap.availableToneMapModes value="FAST,HIGH_QUALITY"/>
             <!-- Flash -->
             <flash.colorTemperature value="0"/>
             <flash.maxEnergy value="0"/>
@@ -228,8 +200,6 @@
             <flash.maxEnergy value="10"/>
             <!-- Sync -->
             <sync.maxLatency value="PER_FRAME_CONTROL"/>
-            <!-- Hot Pixel -->
-            <hotPixel.availableHotPixelModes value="FAST"/>
             <!-- Noise Reduction -->
             <noiseReduction.availableNoiseReductionModes value="OFF"/>
 
@@ -287,7 +257,7 @@
             <control.afAvailableModes value="OFF"/>
             <control.availableEffects value="OFF"/>
             <control.awbAvailableModes value="AUTO"/>
-            <control.awbLockAvailable value="TRUE"/>
+            <control.awbLockAvailable value="FALSE"/>
             <control.availableSceneModes value="DISABLED"/>
             <control.availableVideoStabilizationModes value="OFF"/>
             <control.maxRegions value="0,0,0"/>
@@ -298,21 +268,19 @@
             <!-- Lens Info-->
             <!-- TODO: availableApertures now is fake for we do not get the OV2685 real apertures -->
             <lens.info.availableApertures value="2.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <lens.info.availableFilterDensities value="0.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <lens.info.availableFocalLengths value="2.04,4.28"/> <!-- HAL may override this value from CMC for RAW sensors -->
+            <lens.info.availableFocalLengths value="2.04"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <lens.info.availableOpticalStabilization value="OFF"/> <!-- OPTIONS: OFF, ON -->
             <lens.info.hyperfocalDistance value="0.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <lens.info.minimumFocusDistance value="0.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <lens.info.shadingMapSize value="0,0"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <lens.info.focusDistanceCalibration value="APPROXIMATE"/>
             <!-- Lens -->
             <lens.facing value="FRONT"/>
             <!-- Request -->
             <request.maxNumOutputStreams value="1,2,1"/>
             <request.pipelineMaxDepth value="4"/>
-            <request.maxNumInputStreams value="1"/>
+            <request.maxNumInputStreams value="0"/>
             <request.partialResultCount value="1"/>
-            <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/>
+            <!-- <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/> -->
+            <request.availableCapabilities value="BACKWARD_COMPATIBLE"/>
             <request.availableRequestKeys value="blackLevel.lock,
                 colorCorrection.aberrationMode,
                 colorCorrection.gains,
@@ -322,6 +290,7 @@
                 control.aeLock,
                 control.aeMode,
                 control.aeTargetFpsRange,
+                control.aePrecaptureTrigger,
                 control.afMode,
                 control.afTrigger,
                 control.awbLock,
@@ -337,16 +306,16 @@
                 jpeg.quality,
                 jpeg.thumbnailQuality,
                 jpeg.thumbnailSize,
-                scaler.cropRegion,
-                statistics.faceDetectMode,
-                lens.focalLength,
                 lens.aperture,
-                lens.focusDistance,
-                lens.filterDensity,
+                lens.focalLength,
                 lens.opticalStabilizationMode,
                 noiseReduction.mode,
-                tonemap.curve,
-                tonemap.mode"/>
+                scaler.cropRegion,
+                statistics.faceDetectMode,
+                statistics.hotPixelMapMode,
+                statistics.sceneFlicker,
+                statistics.lensShadingMapMode
+                "/>
 
             <request.availableResultKeys value="colorCorrection.mode,
                 colorCorrection.transform,
@@ -372,7 +341,6 @@
                 control.awbState,
                 sync.frameNumber,
                 flash.mode,
-                hotPixel.mode,
                 jpeg.gpsLocation,
                 jpeg.orientation,
                 jpeg.quality,
@@ -380,8 +348,6 @@
                 jpeg.thumbnailSize,
                 lens.focalLength,
                 lens.aperture,
-                lens.filterDensity,
-                lens.focusDistance,
                 lens.opticalStabilizationMode,
                 request.pipelineDepth,
                 scaler.cropRegion,
@@ -389,49 +355,32 @@
                 sensor.testPatternMode,
                 sensor.timestamp,
                 sensor.rollingShutterSkew,
-                shading.mode,
                 statistics.faceDetectMode,
                 statistics.hotPixelMapMode,
-                statistics.hotPixelMap,
                 statistics.faces,
-                statistics.lensShadingCorrectionMap,
-                statistics.sceneFlicker,
-                statistics.lensShadingMapMode,
                 noiseReduction.mode,
-                tonemap.curve,
-                tonemap.mode"/>
+                statistics.sceneFlicker,
+                statistics.lensShadingMapMode
+                "/>
             <request.availableCharacteristicsKeys value="0"/>
             <!-- Scaler -->
             <scaler.availableMaxDigitalZoom value="3.0"/>
             <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB"/>
             <scaler.availableStreamConfigurations value="BLOB,640x480,OUTPUT,
-                BLOB,352x288,OUTPUT,
                 BLOB,320x240,OUTPUT,
-                BLOB,176x144,OUTPUT,
                 YCbCr_420_888,640x480,OUTPUT,
-                YCbCr_420_888,352x288,OUTPUT,
                 YCbCr_420_888,320x240,OUTPUT,
-                YCbCr_420_888,176x144,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
-                IMPLEMENTATION_DEFINED,352x288,OUTPUT,
-                IMPLEMENTATION_DEFINED,320x240,OUTPUT,
-                IMPLEMENTATION_DEFINED,176x144,OUTPUT" />
+                IMPLEMENTATION_DEFINED,320x240,OUTPUT" />
             <scaler.availableMinFrameDurations value="BLOB,640x480,33333333,
-                BLOB,352x288,33333333,
+                BLOB,640x480,33333333,
                 BLOB,320x240,33333333,
-                BLOB,176x144,33333333,
                 YCbCr_420_888,640x480,33333333,
-                YCbCr_420_888,352x288,33333333,
                 YCbCr_420_888,320x240,33333333,
-                YCbCr_420_888,176x144,33333333,
                 IMPLEMENTATION_DEFINED,640x480,33333333,
-                IMPLEMENTATION_DEFINED,352x288,33333333,
-                IMPLEMENTATION_DEFINED,320x240,33333333,
-                IMPLEMENTATION_DEFINED,176x144,33333333" />
+                IMPLEMENTATION_DEFINED,320x240,33333333" />
             <scaler.availableStallDurations value="BLOB,640x480,33333333,
-                                                   BLOB,352x288,33333333,
-                                                   BLOB,320x240,33333333,
-                                                   BLOB,176x144,33333333" />
+                                                   BLOB,320x240,33333333" />
             <scaler.croppingType value="CENTER_ONLY"/>
             <!-- Sensor Info -->
             <sensor.info.activeArraySize value="0,0,640,480"/>
@@ -453,19 +402,13 @@
             <!-- Info -->
             <info.supportedHardwareLevel value="LIMITED"/>
             <!-- shading -->
-            <shading.availableModes value="OFF"/>
+            <!-- <shading.availableModes value="OFF"/> -->
             <!-- Statistics Info -->
             <statistics.info.availableFaceDetectModes value="OFF"/>
             <statistics.info.histogramBucketCount value="0"/>
             <statistics.info.maxFaceCount value="0"/>
-            <statistics.info.maxHistogramCount value="0"/>
-            <statistics.info.maxSharpnessMapValue value="0"/>
-            <statistics.info.sharpnessMapSize value="0,0"/>
             <statistics.info.availableHotPixelMapModes value="OFF"/>
             <statistics.info.availableLensShadingMapModes value="OFF"/>
-            <!-- Tonemap -->
-            <tonemap.maxCurvePoints value="1024"/>
-            <tonemap.availableToneMapModes value="FAST,HIGH_QUALITY"/>
             <!-- Flash -->
             <flash.colorTemperature value="0"/>
             <flash.maxEnergy value="0"/>
@@ -475,9 +418,6 @@
             <flash.maxEnergy value="10"/>
             <!-- Sync -->
             <sync.maxLatency value="PER_FRAME_CONTROL"/>
-            <!-- Hot Pixel -->
-            <hotPixel.availableHotPixelModes value="FAST"/>
-            <!-- Noise Reduction -->
             <noiseReduction.availableNoiseReductionModes value="OFF"/>
 
         </Android_metadata>
