@@ -125,8 +125,8 @@ CPPHACKS = \
     -DCAMERA_HAL_DEBUG \
     -DDUMP_IMAGE \
     -DRKCAMERA_REDEFINE_LOG \
-    -DRK_HW_JPEG_ENCODE \
     -DRK_DRM_GRALLOC=1
+    #-DRK_HW_JPEG_ENCODE \
 
 ifeq ($(strip $(Have3AControlLoop)), true)
 CPPHACKS += \
