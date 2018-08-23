@@ -699,7 +699,8 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
         // framework says it can't be off mode for zsl,
         // so we report EDOF for fixed focus
         // TODO: need to judge if the request is ZSL ?
-        uint8_t afMode = ANDROID_CONTROL_AF_MODE_EDOF;
+        /* uint8_t afMode = ANDROID_CONTROL_AF_MODE_EDOF; */
+        uint8_t afMode = ANDROID_CONTROL_AF_MODE_OFF;
         ctrlUnitResult->update(ANDROID_CONTROL_AF_MODE, &afMode, 1);
         uint8_t afTrigger = ANDROID_CONTROL_AF_TRIGGER_IDLE;
         ctrlUnitResult->update(ANDROID_CONTROL_AF_TRIGGER, &afTrigger, 1);
