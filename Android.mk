@@ -30,9 +30,6 @@ ifeq (1,$(strip $(shell expr $(BOARD_DEFAULT_CAMERA_HAL_VERSION) \>= 3.0)))
 LOCAL_PATH:= $(call my-dir)
 include $(call all-subdir-makefiles)
 
-# prebuilt for config xml files in /etc/camera
-$(shell cp -rf $(LOCAL_PATH)/etc/camera $(TARGET_OUT)/etc/)
-
 include $(CLEAR_VARS)
 
 AALSRC = AAL/Camera3HAL.cpp \

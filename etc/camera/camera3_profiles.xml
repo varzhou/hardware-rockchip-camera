@@ -161,8 +161,8 @@
                 IMPLEMENTATION_DEFINED,640x480,33333333,
                 IMPLEMENTATION_DEFINED,320x240,33333333" />
             <scaler.availableStallDurations value="BLOB,800x600,33333333,
-                                                   BLOB,640x480,33333333,
-                                                   BLOB,320x240,33333333" />
+                BLOB,640x480,33333333,
+                BLOB,320x240,33333333" />
             <scaler.croppingType value="CENTER_ONLY"/>
             <!-- Sensor Info -->
             <sensor.info.activeArraySize value="0,0,800,600"/>
@@ -210,7 +210,7 @@
             <flipping value="" value_v=""/> <!-- value: SENSOR_FLIP_H or "", value_v: SENSOR_FLIP_V or "" -->
             <supportIsoMap value="false"/>
             <graphSettingsFile value="graph_settings_gc2145.xml"/>
-	    <!--
+            <!--
             <iqTuningFile value="OV2685.xml"/>
             -->
         </Hal_tuning_RKISP1>
@@ -380,7 +380,7 @@
                 IMPLEMENTATION_DEFINED,640x480,33333333,
                 IMPLEMENTATION_DEFINED,320x240,33333333" />
             <scaler.availableStallDurations value="BLOB,640x480,33333333,
-                                                   BLOB,320x240,33333333" />
+                BLOB,320x240,33333333" />
             <scaler.croppingType value="CENTER_ONLY"/>
             <!-- Sensor Info -->
             <sensor.info.activeArraySize value="0,0,640,480"/>
@@ -427,7 +427,7 @@
             <flipping value="" value_v=""/> <!-- value: SENSOR_FLIP_H or "", value_v: SENSOR_FLIP_V or "" -->
             <supportIsoMap value="false"/>
             <graphSettingsFile value="graph_settings_gc0312.xml"/>
-	    <!--
+            <!--
             <iqTuningFile value="OV2685.xml"/>
             -->
         </Hal_tuning_RKISP1>
@@ -470,9 +470,9 @@
         -->
         <gfxHalToV4L2PixelFmtTable.impl_defined_preview value="V4L2_PIX_FMT_NV12"/>
         <gfxHalToV4L2PixelFmtTable.impl_defined_video value="V4L2_PIX_FMT_NV12"/>
-	<!--
+        <!--
         <gfxHalToV4L2PixelFmtTable.raw_sensor sensorId="0" value="V4L2_PIX_FMT_SBGGR10"/>
-	-->
+    -->
         <gfxHalToV4L2PixelFmtTable.ycbcr_420_888 value="V4L2_PIX_FMT_NV12"/>
     </hal_tuning>
 

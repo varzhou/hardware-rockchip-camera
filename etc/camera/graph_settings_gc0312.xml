@@ -1,359 +1,359 @@
 <?xml version="1.0" ?>
 <graph_settings>
-  <sensor_modes bayer_order="YUYV" csi_port="0" i2c_address="2-0021" metadata="0" sensor_name="gc0312">
-    <available_bit_per_pixel>
-      <bpp value="8"/>
-    </available_bit_per_pixel>
-    <pll_configs>
-      <pll_config bpp="8" id="0" pixel_rate="180000000" pixel_rate_csi="180000000"/>
-    </pll_configs>
-    <sensor_mode csi_port="0" fps="30" height="480" id="0" min_fll="0" min_llp="0" name="640x480" scaler_pad="1" target="0" width="640">
-      <pixel_array>
-        <input height="480" left="0" top="0" width="640"/>
-        <output height="480" left="0" top="0" width="640"/>
-      </pixel_array>
-      <binner h_factor="1" v_factor="1">
-        <input height="480" left="0" top="0" width="640"/>
-        <output height="480" left="0" top="0" width="640"/>
-      </binner>
-    </sensor_mode>
-  </sensor_modes>
-  <settings active_outputs="2" fps="30" id="1" key="7000">
-    <video format="NV12" height="480" peer="output" stream_id="1" width="640">
-      <pcrp height="480" width="640"/>
-      <prsz height="480" width="640"/>
-    </video>
-    <preview format="NV12" height="480" peer="output" stream_id="1" width="640">
-      <pcrp height="480" width="640"/>
-      <prsz height="480" width="640"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7001">
-    <video format="NV12" height="480" peer="output" stream_id="1" width="640">
-      <pcrp height="480" width="640"/>
-      <prsz height="480" width="640"/>
-    </video>
-    <preview format="NV12" height="288" peer="output" stream_id="1" width="352">
-      <pcrp height="480" width="586"/>
-      <prsz height="288" width="352"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7002">
-    <video format="NV12" height="480" peer="output" stream_id="1" width="640">
-      <pcrp height="480" width="640"/>
-      <prsz height="480" width="640"/>
-    </video>
-    <preview format="NV12" height="240" peer="output" stream_id="1" width="320">
-      <pcrp height="480" width="640"/>
-      <prsz height="240" width="320"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7003">
-    <video format="NV12" height="480" peer="output" stream_id="1" width="640">
-      <pcrp height="480" width="640"/>
-      <prsz height="480" width="640"/>
-    </video>
-    <preview format="NV12" height="144" peer="output" stream_id="1" width="176">
-      <pcrp height="480" width="586"/>
-      <prsz height="144" width="176"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7004">
-    <video format="NV12" height="288" peer="output" stream_id="1" width="352">
-      <pcrp height="480" width="586"/>
-      <prsz height="288" width="352"/>
-    </video>
-    <preview format="NV12" height="288" peer="output" stream_id="1" width="352">
-      <pcrp height="480" width="586"/>
-      <prsz height="288" width="352"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7005">
-    <video format="NV12" height="288" peer="output" stream_id="1" width="352">
-      <pcrp height="480" width="586"/>
-      <prsz height="288" width="352"/>
-    </video>
-    <preview format="NV12" height="240" peer="output" stream_id="1" width="320">
-      <pcrp height="480" width="640"/>
-      <prsz height="240" width="320"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7006">
-    <video format="NV12" height="288" peer="output" stream_id="1" width="352">
-      <pcrp height="480" width="586"/>
-      <prsz height="288" width="352"/>
-    </video>
-    <preview format="NV12" height="144" peer="output" stream_id="1" width="176">
-      <pcrp height="480" width="586"/>
-      <prsz height="144" width="176"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7007">
-    <video format="NV12" height="240" peer="output" stream_id="1" width="320">
-      <pcrp height="480" width="640"/>
-      <prsz height="240" width="320"/>
-    </video>
-    <preview format="NV12" height="240" peer="output" stream_id="1" width="320">
-      <pcrp height="480" width="640"/>
-      <prsz height="240" width="320"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7008">
-    <video format="NV12" height="240" peer="output" stream_id="1" width="320">
-      <pcrp height="480" width="640"/>
-      <prsz height="240" width="320"/>
-    </video>
-    <preview format="NV12" height="144" peer="output" stream_id="1" width="176">
-      <pcrp height="480" width="586"/>
-      <prsz height="144" width="176"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="2" fps="30" id="1" key="7009">
-    <video format="NV12" height="144" peer="output" stream_id="1" width="176">
-      <pcrp height="480" width="586"/>
-      <prsz height="144" width="176"/>
-    </video>
-    <preview format="NV12" height="144" peer="output" stream_id="1" width="176">
-      <pcrp height="480" width="586"/>
-      <prsz height="144" width="176"/>
-    </preview>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="1" fps="30" id="1" key="8000">
-    <video format="NV12" height="480" peer="output" stream_id="1" width="640">
-      <pcrp height="480" width="640"/>
-      <prsz height="480" width="640"/>
-    </video>
-    <preview enabled="0"/>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="1" fps="30" id="1" key="8001">
-    <video format="NV12" height="288" peer="output" stream_id="1" width="352">
-      <pcrp height="480" width="586"/>
-      <prsz height="288" width="352"/>
-    </video>
-    <preview enabled="0"/>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="1" fps="30" id="1" key="8002">
-    <video format="NV12" height="240" peer="output" stream_id="1" width="320">
-      <pcrp height="480" width="640"/>
-      <prsz height="240" width="320"/>
-    </video>
-    <preview enabled="0"/>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
-  <settings active_outputs="1" fps="30" id="1" key="8003">
-    <video format="NV12" height="144" peer="output" stream_id="1" width="176">
-      <pcrp height="480" width="586"/>
-      <prsz height="144" width="176"/>
-    </video>
-    <preview enabled="0"/>
-    <still enabled="0"/>
-    <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
-      <port_0 format="YUYV" height="480" type="port" width="640"/>
-    </sensor>
-    <csi_be_soc>
-      <output format="YUYV" height="480" width="640"/>
-    </csi_be_soc>
-    <imgu stream_id="1">
-      <input format="YUYV" height="480" width="640">
-        <iac height="480" width="640"/>
-      </input>
-      <output format="NV16" height="480" pipe_output_id="0" width="640">
-        <ism height="480" width="640"/>
-      </output>
-    </imgu>
-  </settings>
+    <sensor_modes bayer_order="YUYV" csi_port="0" i2c_address="2-0021" metadata="0" sensor_name="gc0312">
+        <available_bit_per_pixel>
+            <bpp value="8"/>
+        </available_bit_per_pixel>
+        <pll_configs>
+            <pll_config bpp="8" id="0" pixel_rate="180000000" pixel_rate_csi="180000000"/>
+        </pll_configs>
+        <sensor_mode csi_port="0" fps="30" height="480" id="0" min_fll="0" min_llp="0" name="640x480" scaler_pad="1" target="0" width="640">
+            <pixel_array>
+                <input height="480" left="0" top="0" width="640"/>
+                <output height="480" left="0" top="0" width="640"/>
+            </pixel_array>
+            <binner h_factor="1" v_factor="1">
+                <input height="480" left="0" top="0" width="640"/>
+                <output height="480" left="0" top="0" width="640"/>
+            </binner>
+        </sensor_mode>
+    </sensor_modes>
+    <settings active_outputs="2" fps="30" id="1" key="7000">
+        <video format="NV12" height="480" peer="output" stream_id="1" width="640">
+            <pcrp height="480" width="640"/>
+            <prsz height="480" width="640"/>
+        </video>
+        <preview format="NV12" height="480" peer="output" stream_id="1" width="640">
+            <pcrp height="480" width="640"/>
+            <prsz height="480" width="640"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7001">
+        <video format="NV12" height="480" peer="output" stream_id="1" width="640">
+            <pcrp height="480" width="640"/>
+            <prsz height="480" width="640"/>
+        </video>
+        <preview format="NV12" height="288" peer="output" stream_id="1" width="352">
+            <pcrp height="480" width="586"/>
+            <prsz height="288" width="352"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7002">
+        <video format="NV12" height="480" peer="output" stream_id="1" width="640">
+            <pcrp height="480" width="640"/>
+            <prsz height="480" width="640"/>
+        </video>
+        <preview format="NV12" height="240" peer="output" stream_id="1" width="320">
+            <pcrp height="480" width="640"/>
+            <prsz height="240" width="320"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7003">
+        <video format="NV12" height="480" peer="output" stream_id="1" width="640">
+            <pcrp height="480" width="640"/>
+            <prsz height="480" width="640"/>
+        </video>
+        <preview format="NV12" height="144" peer="output" stream_id="1" width="176">
+            <pcrp height="480" width="586"/>
+            <prsz height="144" width="176"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7004">
+        <video format="NV12" height="288" peer="output" stream_id="1" width="352">
+            <pcrp height="480" width="586"/>
+            <prsz height="288" width="352"/>
+        </video>
+        <preview format="NV12" height="288" peer="output" stream_id="1" width="352">
+            <pcrp height="480" width="586"/>
+            <prsz height="288" width="352"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7005">
+        <video format="NV12" height="288" peer="output" stream_id="1" width="352">
+            <pcrp height="480" width="586"/>
+            <prsz height="288" width="352"/>
+        </video>
+        <preview format="NV12" height="240" peer="output" stream_id="1" width="320">
+            <pcrp height="480" width="640"/>
+            <prsz height="240" width="320"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7006">
+        <video format="NV12" height="288" peer="output" stream_id="1" width="352">
+            <pcrp height="480" width="586"/>
+            <prsz height="288" width="352"/>
+        </video>
+        <preview format="NV12" height="144" peer="output" stream_id="1" width="176">
+            <pcrp height="480" width="586"/>
+            <prsz height="144" width="176"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7007">
+        <video format="NV12" height="240" peer="output" stream_id="1" width="320">
+            <pcrp height="480" width="640"/>
+            <prsz height="240" width="320"/>
+        </video>
+        <preview format="NV12" height="240" peer="output" stream_id="1" width="320">
+            <pcrp height="480" width="640"/>
+            <prsz height="240" width="320"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7008">
+        <video format="NV12" height="240" peer="output" stream_id="1" width="320">
+            <pcrp height="480" width="640"/>
+            <prsz height="240" width="320"/>
+        </video>
+        <preview format="NV12" height="144" peer="output" stream_id="1" width="176">
+            <pcrp height="480" width="586"/>
+            <prsz height="144" width="176"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="2" fps="30" id="1" key="7009">
+        <video format="NV12" height="144" peer="output" stream_id="1" width="176">
+            <pcrp height="480" width="586"/>
+            <prsz height="144" width="176"/>
+        </video>
+        <preview format="NV12" height="144" peer="output" stream_id="1" width="176">
+            <pcrp height="480" width="586"/>
+            <prsz height="144" width="176"/>
+        </preview>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="1" fps="30" id="1" key="8000">
+        <video format="NV12" height="480" peer="output" stream_id="1" width="640">
+            <pcrp height="480" width="640"/>
+            <prsz height="480" width="640"/>
+        </video>
+        <preview enabled="0"/>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="1" fps="30" id="1" key="8001">
+        <video format="NV12" height="288" peer="output" stream_id="1" width="352">
+            <pcrp height="480" width="586"/>
+            <prsz height="288" width="352"/>
+        </video>
+        <preview enabled="0"/>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="1" fps="30" id="1" key="8002">
+        <video format="NV12" height="240" peer="output" stream_id="1" width="320">
+            <pcrp height="480" width="640"/>
+            <prsz height="240" width="320"/>
+        </video>
+        <preview enabled="0"/>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
+    <settings active_outputs="1" fps="30" id="1" key="8003">
+        <video format="NV12" height="144" peer="output" stream_id="1" width="176">
+            <pcrp height="480" width="586"/>
+            <prsz height="144" width="176"/>
+        </video>
+        <preview enabled="0"/>
+        <still enabled="0"/>
+        <sensor analogue_gain="100" exposure="500" hflip="0" mode_id="640x480" stream_id="1" vflip="0">
+            <port_0 format="YUYV" height="480" type="port" width="640"/>
+        </sensor>
+        <csi_be_soc>
+            <output format="YUYV" height="480" width="640"/>
+        </csi_be_soc>
+        <imgu stream_id="1">
+            <input format="YUYV" height="480" width="640">
+                <iac height="480" width="640"/>
+            </input>
+            <output format="NV16" height="480" pipe_output_id="0" width="640">
+                <ism height="480" width="640"/>
+            </output>
+        </imgu>
+    </settings>
 </graph_settings>
