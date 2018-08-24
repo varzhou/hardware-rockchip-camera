@@ -22,14 +22,14 @@
 #include <utils/Log.h>
 #include "EnumPrinthelper.h"
 
-#define ENV_CAMERA_HAL_DEBUG  "persist.camera.debug"
-#define ENV_CAMERA_HAL_PERF   "persist.camera.perf"
-#define ENV_CAMERA_HAL_DUMP   "persist.camera.dump"
+#define ENV_CAMERA_HAL_DEBUG  "persist.vendor.camera.debug"
+#define ENV_CAMERA_HAL_PERF   "persist.vendor.camera.perf"
+#define ENV_CAMERA_HAL_DUMP   "persist.vendor.camera.dump"
 // Properties for debugging.
-#define ENV_CAMERA_HAL_DUMP_SKIP_NUM  "persist.camera.dump.skip"
-#define ENV_CAMERA_HAL_DUMP_INTERVAL  "persist.camera.dump.interval"
-#define ENV_CAMERA_HAL_DUMP_COUNT     "persist.camera.dump.count"
-#define ENV_CAMERA_HAL_DUMP_PATH      "persist.camera.dump.path"
+#define ENV_CAMERA_HAL_DUMP_SKIP_NUM  "persist.vendor.camera.dump.skip"
+#define ENV_CAMERA_HAL_DUMP_INTERVAL  "persist.vendor.camera.dump.interval"
+#define ENV_CAMERA_HAL_DUMP_COUNT     "persist.vendor.camera.dump.count"
+#define ENV_CAMERA_HAL_DUMP_PATH      "persist.vendor.camera.dump.path"
 
 #ifdef RKCAMERA_REDEFINE_LOG
 
@@ -40,7 +40,7 @@ typedef enum {
     CAM_LAST_MODULE
 } cam_modules_t;
 
-/* values that persist.camera.global.debug can be set to */
+/* values that persist.vendor.camera.global.debug can be set to */
 /* all camera modules need to map their internal debug levels to this range */
 typedef enum {
     CAM_GLBL_DBG_NONE  = 0,
