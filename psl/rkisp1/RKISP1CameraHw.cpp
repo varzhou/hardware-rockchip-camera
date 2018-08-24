@@ -474,7 +474,6 @@ status_t RKISP1CameraHw::reconfigureStreams(UseCase newUseCase,
 status_t
 RKISP1CameraHw::flush()
 {
-    mDummyHwStreamsVector.clear();
     return NO_ERROR;
 }
 
