@@ -466,7 +466,10 @@ PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
         rgain.height_stride = in->cambuf->height();
 
         rgaout.fd = out->cambuf->dmaBufFd();
+        // HAL_PIXEL_FORMAT_YCbCr_420_888 buffer layout is the same as NV12
+        // in gralloc module implementation
         if (out->cambuf->format() == HAL_PIXEL_FORMAT_YCrCb_NV12 ||
+            out->cambuf->format() == HAL_PIXEL_FORMAT_YCbCr_420_888 ||
             out->cambuf->v4l2Fmt() == V4L2_PIX_FMT_NV12)
             rgaout.fmt = HAL_PIXEL_FORMAT_YCrCb_NV12;
         else
@@ -1434,16 +1437,19 @@ bool PostProcessUnitDigitalZoom::checkFmt(CameraBuffer* in, CameraBuffer* out) {
         return false;
 
     // only support NV12 or NV21 now
-    bool hal_fmt_supported = (in->format() != HAL_PIXEL_FORMAT_YCrCb_NV12 &&
-                             in->format() != HAL_PIXEL_FORMAT_YCrCb_420_SP) ||
-                             (out->format() != HAL_PIXEL_FORMAT_YCrCb_NV12 &&
-                             out->format() != HAL_PIXEL_FORMAT_YCrCb_420_SP);
-    bool v4l_fmt_supported = (in->v4l2Fmt() != V4L2_PIX_FMT_NV12 &&
-                             in->v4l2Fmt() != V4L2_PIX_FMT_NV21) ||
-                             (out->v4l2Fmt() != V4L2_PIX_FMT_NV12 &&
-                             out->v4l2Fmt() != V4L2_PIX_FMT_NV21);
-
-    return (hal_fmt_supported || v4l_fmt_supported);
+    bool in_fmt_supported = in->format() == HAL_PIXEL_FORMAT_YCrCb_NV12 || 
+                            in->format() == HAL_PIXEL_FORMAT_YCbCr_420_888 || 
+                            in->format() == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED || 
+                            in->format() == HAL_PIXEL_FORMAT_YCrCb_420_SP || 
+                            in->v4l2Fmt() == V4L2_PIX_FMT_NV12 || 
+                            in->v4l2Fmt() == V4L2_PIX_FMT_NV21;
+    bool out_fmt_supported = out->format() == HAL_PIXEL_FORMAT_YCrCb_NV12 || 
+                             out->format() == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED || 
+                             out->format() == HAL_PIXEL_FORMAT_YCbCr_420_888 || 
+                             out->format() == HAL_PIXEL_FORMAT_YCrCb_420_SP;
+                             out->v4l2Fmt() == V4L2_PIX_FMT_NV12 || 
+                             out->v4l2Fmt() == V4L2_PIX_FMT_NV21;
+    return (in_fmt_supported && out_fmt_supported);
 }
 
 status_t
@@ -1486,6 +1492,8 @@ PostProcessUnitDigitalZoom::processFrame(const std::shared_ptr<PostProcBuffer>& 
 
     rgain.fd = in->cambuf->dmaBufFd();
     if (in->cambuf->format() == HAL_PIXEL_FORMAT_YCrCb_NV12 ||
+        in->cambuf->format() == HAL_PIXEL_FORMAT_YCbCr_420_888 || 
+        in->cambuf->format() == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED || 
         in->cambuf->v4l2Fmt() == V4L2_PIX_FMT_NV12)
         rgain.fmt = HAL_PIXEL_FORMAT_YCrCb_NV12;
     else
@@ -1501,6 +1509,8 @@ PostProcessUnitDigitalZoom::processFrame(const std::shared_ptr<PostProcBuffer>& 
 
     rgaout.fd = out->cambuf->dmaBufFd();
     if (out->cambuf->format() == HAL_PIXEL_FORMAT_YCrCb_NV12 ||
+        out->cambuf->format() == HAL_PIXEL_FORMAT_YCbCr_420_888 || 
+        out->cambuf->format() == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED || 
         out->cambuf->v4l2Fmt() == V4L2_PIX_FMT_NV12)
         rgaout.fmt = HAL_PIXEL_FORMAT_YCrCb_NV12;
     else
