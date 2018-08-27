@@ -178,6 +178,10 @@ LOCAL_SHARED_LIBRARIES:= \
     libcamera_metadata \
     librga
 
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+    LOCAL_CFLAGS += -DANDROID_VERSION_ABOVE_8_X
+endif
+
 LOCAL_LDFLAGS := -Wl,-z,defs
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
     LOCAL_PROPRIETARY_MODULE := true

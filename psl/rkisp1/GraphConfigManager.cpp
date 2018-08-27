@@ -40,9 +40,14 @@ namespace camera2 {
 
 /* should support at least 4 streams comparetd to HAL1 */
 #define MAX_NUM_STREAMS    4
+
+#if defined(ANDROID_VERSION_ABOVE_8_X)
+const char *GraphConfigManager::DEFAULT_DESCRIPTOR_FILE = "/vendor/etc/camera/graph_descriptor.xml";
+const char *GraphConfigManager::DEFAULT_SETTINGS_FILE = "/vendor/etc/camera/graph_settings.xml";
+#else
 const char *GraphConfigManager::DEFAULT_DESCRIPTOR_FILE = "/etc/camera/graph_descriptor.xml";
 const char *GraphConfigManager::DEFAULT_SETTINGS_FILE = "/etc/camera/graph_settings.xml";
-
+#endif
 GraphConfigNodes::GraphConfigNodes() :
         mDesc(nullptr),
         mSettings(nullptr)

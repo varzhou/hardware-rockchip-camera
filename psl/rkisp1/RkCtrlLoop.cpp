@@ -28,7 +28,11 @@
 #include "RkCtrlLoop.h"
 
 NAMESPACE_DECLARATION {
+#if defined(ANDROID_VERSION_ABOVE_8_X)
+#define RK_3A_TUNING_FILE_PATH  "/vendor/etc/camera/rkisp1/"
+#else
 #define RK_3A_TUNING_FILE_PATH  "/etc/camera/rkisp1/"
+#endif
 
 RkCtrlLoop::RkCtrlLoop(int camId):
         mCameraId(camId),

@@ -33,9 +33,11 @@
 #include "IPSLConfParser.h"
 
 NAMESPACE_DECLARATION {
-
+#if defined(ANDROID_VERSION_ABOVE_8_X)
+static const char *sDefaultXmlFileName = "/vendor/etc/camera/camera3_profiles.xml";
+#else
 static const char *sDefaultXmlFileName = "/etc/camera/camera3_profiles.xml";
-
+#endif
 ChromeCameraProfiles::ChromeCameraProfiles(CameraHWInfo *cameraHWInfo) :
     CameraProfiles(cameraHWInfo)
 {

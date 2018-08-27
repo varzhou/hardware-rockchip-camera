@@ -41,9 +41,11 @@ std::vector<std::string> PSLConfParser::mImguMediaDevice;
 std::vector<std::string> PSLConfParser::mSensorMediaDevice;
 
 static const char *NVM_DATA_PATH = "/sys/bus/i2c/devices/";
-
+#if defined(ANDROID_VERSION_ABOVE_8_X)
+static const char *GRAPH_SETTINGS_FILE_PATH = "/vendor/etc/camera/";
+#else
 static const char *GRAPH_SETTINGS_FILE_PATH = "/etc/camera/";
-
+#endif
 IPSLConfParser *PSLConfParser::getInstance(std::string &xmlConfigName, const std::vector<SensorDriverDescriptor>& sensorNames)
 {
     if (sInstance == nullptr) {
