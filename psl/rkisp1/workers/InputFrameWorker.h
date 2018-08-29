@@ -49,6 +49,7 @@ public:
     }
 
 private:
+    status_t bufferDone(std::shared_ptr<PostProcBuffer> buf);
     std::shared_ptr<CameraBuffer> findInputBuffer(Camera3Request* request,
                                              camera3_stream_t* stream);
     std::vector<std::shared_ptr<CameraBuffer>> findOutputBuffers(Camera3Request* request);
@@ -61,6 +62,9 @@ private:
     std::vector<camera3_stream_t*> mOutputStreams; /* InputFrameWorker doesn't own mStream */
     bool mNeedPostProcess;
     size_t mPipelineDepth;
+    int mBufferReturned;
+    std::mutex mBufDoneLock;
+    std::condition_variable mCondition;
 
     std::unique_ptr<PostProcessPipeLine> mPostPipeline;
 };

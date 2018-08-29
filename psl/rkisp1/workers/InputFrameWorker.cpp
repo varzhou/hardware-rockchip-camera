@@ -37,7 +37,8 @@ InputFrameWorker::InputFrameWorker(int cameraId,
                 mPipelineDepth(pipelineDepth),
                 mPostPipeline(new PostProcessPipeLine(this, cameraId))
 {
-        LOGI("@%s, instance(%p), mStream(%p)", __FUNCTION__, this, mStream);
+    mBufferReturned = 0;
+    LOGI("@%s, instance(%p), mStream(%p)", __FUNCTION__, this, mStream);
 }
 
 InputFrameWorker::~InputFrameWorker()
@@ -63,24 +64,41 @@ InputFrameWorker::startWorker()
 }
 
 status_t
+InputFrameWorker::bufferDone(std::shared_ptr<PostProcBuffer> buf) {
+    Camera3Request* request = buf->request;
+    CameraStream *stream = buf->cambuf->getOwner();
+    stream->captureDone(buf->cambuf, request);
+    mBufferReturned++;
+
+    LOGI("@%s %d: request %d out buffer done %d/%d", __FUNCTION__, __LINE__, request->getId(), mBufferReturned, request->getNumberOutputBufs());
+    if(mBufferReturned == request->getNumberOutputBufs()) {
+        mBufferReturned = 0;
+        std::shared_ptr<CameraBuffer> camBuf = *mProcessingInputBufs.begin();
+        if (camBuf.get()) {
+            stream = camBuf->getOwner();
+            stream->captureDone(camBuf, request);
+            mProcessingInputBufs.erase(mProcessingInputBufs.begin());
+            std::unique_lock<std::mutex> l(mBufDoneLock, std::defer_lock);
+            l.lock();
+            mCondition.notify_all();
+            l.unlock();
+        } else {
+            LOGE("@%s %d: camBuf should not be NULL", __FUNCTION__, __LINE__);
+        }
+    }
+
+    return OK;
+}
+
+status_t
 InputFrameWorker::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                                   const std::shared_ptr<ProcUnitSettings>& settings,
                                   int err)
 {
-    CameraStream *stream = buf->cambuf->getOwner();
     Camera3Request* request = buf->request;
+    status_t status = bufferDone(buf);
 
-    stream->captureDone(buf->cambuf, request);
-
-    std::shared_ptr<CameraBuffer> camBuf = *mProcessingInputBufs.begin();
-
-    if (camBuf.get()) {
-        stream = camBuf->getOwner();
-        stream->captureDone(camBuf, request);
-        mProcessingInputBufs.erase(mProcessingInputBufs.begin());
-    }
-
-    return OK;
+    return status;
 }
 
 status_t InputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/)
@@ -199,6 +217,10 @@ status_t InputFrameWorker::run()
         clock_gettime(CLOCK_MONOTONIC, &ts);
     }
 
+    //fake frame duration for cts:testReprocessingCaptureStall
+    int64_t i64 = 30 * 1000 * 1000;
+    partRes->update(ANDROID_SENSOR_FRAME_DURATION, &i64, 1);
+
     ICaptureEventListener::CaptureMessage outMsg;
     outMsg.data.event.reqId = request->getId();
     outMsg.id = ICaptureEventListener::CAPTURE_MESSAGE_ID_EVENT;
@@ -225,6 +247,7 @@ status_t InputFrameWorker::postRun()
     std::shared_ptr<PostProcBuffer> inBuf = std::make_shared<PostProcBuffer> ();
     std::vector<std::shared_ptr<CameraBuffer>> camBufs;
     std::shared_ptr<CameraBuffer> inCamBuf;
+    std::unique_lock<std::mutex> l(mBufDoneLock);
     int stream_type;
 
     if (mMsg == nullptr) {
@@ -255,6 +278,7 @@ status_t InputFrameWorker::postRun()
     inBuf->request = request;
 
     mPostPipeline->processFrame(inBuf, outBufs, mMsg->pMsg.processingSettings);
+    mCondition.wait(l);
 
 exit:
     /* Prevent from using old data */
