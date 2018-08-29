@@ -53,10 +53,9 @@
             <!-- Request -->
             <request.maxNumOutputStreams value="1,2,1"/>
             <request.pipelineMaxDepth value="4"/>
-            <request.maxNumInputStreams value="0"/>
+            <request.maxNumInputStreams value="1"/>
             <request.partialResultCount value="1"/>
-            <!-- <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/> -->
-            <request.availableCapabilities value="BACKWARD_COMPATIBLE"/>
+            <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/>
             <request.availableRequestKeys value="blackLevel.lock,
                 colorCorrection.aberrationMode,
                 colorCorrection.gains,
@@ -76,6 +75,7 @@
                 control.mode,
                 control.sceneMode,
                 control.videoStabilizationMode,
+                edge.mode,
                 flash.mode,
                 jpeg.gpsLocation,
                 jpeg.orientation,
@@ -116,6 +116,7 @@
                 control.afState,
                 control.awbState,
                 sync.frameNumber,
+                edge.mode,
                 flash.mode,
                 jpeg.gpsLocation,
                 jpeg.orientation,
@@ -141,7 +142,7 @@
             <request.availableCharacteristicsKeys value="0"/>
             <!-- Scaler -->
             <scaler.availableMaxDigitalZoom value="3.0"/>
-            <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB"/>
+            <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB,YCbCr_420_888,2,YCbCr_420_888,BLOB"/>
             <scaler.availableStreamConfigurations value="BLOB,800x600,OUTPUT,
                 BLOB,640x480,OUTPUT,
                 BLOB,320x240,OUTPUT,
@@ -150,7 +151,17 @@
                 YCbCr_420_888,320x240,OUTPUT,
                 IMPLEMENTATION_DEFINED,800x600,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
-                IMPLEMENTATION_DEFINED,320x240,OUTPUT" />
+                IMPLEMENTATION_DEFINED,320x240,OUTPUT,
+                IMPLEMENTATION_DEFINED,1600x1200,INPUT,
+                IMPLEMENTATION_DEFINED,1280x720,INPUT,
+                IMPLEMENTATION_DEFINED,800x600,INPUT,
+                IMPLEMENTATION_DEFINED,640x480,INPUT,
+                IMPLEMENTATION_DEFINED,320x240,INPUT,
+                YCbCr_420_888,1600x1200,INPUT,
+                YCbCr_420_888,1280x720,INPUT,
+                YCbCr_420_888,800x600,INPUT,
+                YCbCr_420_888,640x480,INPUT,
+                YCbCr_420_888,320x240,INPUT" />
             <scaler.availableMinFrameDurations value="BLOB,800x600,33333333,
                 BLOB,640x480,33333333,
                 BLOB,320x240,33333333,
@@ -200,8 +211,12 @@
             <flash.maxEnergy value="10"/>
             <!-- Sync -->
             <sync.maxLatency value="PER_FRAME_CONTROL"/>
+            <!-- maxCaptureStall -->
+            <reprocess.maxCaptureStall value="4"/>
+            <!-- Edge -->
+            <edge.availableEdgeModes value="OFF,FAST,HIGH_QUALITY,ZERO_SHUTTER_LAG"/>
             <!-- Noise Reduction -->
-            <noiseReduction.availableNoiseReductionModes value="OFF"/>
+            <noiseReduction.availableNoiseReductionModes value="OFF,FAST,HIGH_QUALITY,ZERO_SHUTTER_LAG"/>
 
         </Android_metadata>
 
@@ -277,10 +292,9 @@
             <!-- Request -->
             <request.maxNumOutputStreams value="1,2,1"/>
             <request.pipelineMaxDepth value="4"/>
-            <request.maxNumInputStreams value="0"/>
+            <request.maxNumInputStreams value="1"/>
             <request.partialResultCount value="1"/>
-            <!-- <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/> -->
-            <request.availableCapabilities value="BACKWARD_COMPATIBLE"/>
+            <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/>
             <request.availableRequestKeys value="blackLevel.lock,
                 colorCorrection.aberrationMode,
                 colorCorrection.gains,
@@ -300,6 +314,7 @@
                 control.mode,
                 control.sceneMode,
                 control.videoStabilizationMode,
+                edge.mode,
                 flash.mode,
                 jpeg.gpsLocation,
                 jpeg.orientation,
@@ -340,6 +355,7 @@
                 control.afState,
                 control.awbState,
                 sync.frameNumber,
+                edge.mode,
                 flash.mode,
                 jpeg.gpsLocation,
                 jpeg.orientation,
@@ -365,13 +381,17 @@
             <request.availableCharacteristicsKeys value="0"/>
             <!-- Scaler -->
             <scaler.availableMaxDigitalZoom value="3.0"/>
-            <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB"/>
+            <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB,YCbCr_420_888,2,YCbCr_420_888,BLOB"/>
             <scaler.availableStreamConfigurations value="BLOB,640x480,OUTPUT,
                 BLOB,320x240,OUTPUT,
                 YCbCr_420_888,640x480,OUTPUT,
                 YCbCr_420_888,320x240,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
-                IMPLEMENTATION_DEFINED,320x240,OUTPUT" />
+                IMPLEMENTATION_DEFINED,320x240,OUTPUT,
+                IMPLEMENTATION_DEFINED,640x480,INPUT,
+                IMPLEMENTATION_DEFINED,320x240,INPUT,
+                YCbCr_420_888,640x480,INPUT,
+                YCbCr_420_888,320x240,INPUT" />
             <scaler.availableMinFrameDurations value="BLOB,640x480,33333333,
                 BLOB,640x480,33333333,
                 BLOB,320x240,33333333,
@@ -418,7 +438,12 @@
             <flash.maxEnergy value="10"/>
             <!-- Sync -->
             <sync.maxLatency value="PER_FRAME_CONTROL"/>
-            <noiseReduction.availableNoiseReductionModes value="OFF"/>
+            <!-- maxCaptureStall -->
+            <reprocess.maxCaptureStall value="4"/>
+            <!-- Edge -->
+            <edge.availableEdgeModes value="OFF,FAST,HIGH_QUALITY,ZERO_SHUTTER_LAG"/>
+            <!-- Noise Reduction -->
+            <noiseReduction.availableNoiseReductionModes value="OFF,FAST,HIGH_QUALITY,ZERO_SHUTTER_LAG"/>
 
         </Android_metadata>
 
