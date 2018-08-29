@@ -251,6 +251,43 @@ status_t V4L2Subdevice::queryFormats(int pad, std::vector<uint32_t> &formats)
     return NO_ERROR;
 }
 
+status_t V4L2Subdevice::setFrameInterval(struct v4l2_subdev_frame_interval &finterval)
+{
+    LOGI("@%s device = %s", __FUNCTION__, mName.c_str());
+    int ret = 0;
+
+    if (mState == DEVICE_CLOSED) {
+        LOGE("%s invalid device state %d",__FUNCTION__, mState);
+        return INVALID_OPERATION;
+    }
+
+    LOGI("VIDIOC_SUBDEV_S_FRAME_INTERVAL: pad: %d, numerator %d, denominator %d",
+        finterval.pad,
+        finterval.interval.numerator,
+        finterval.interval.denominator);
+    ret = pbxioctl(VIDIOC_SUBDEV_S_FRAME_INTERVAL, &finterval);
+    if (ret < 0) {
+        LOGE("VIDIOC_SUBDEV_S_FRAME_INTERVAL failed: %s", strerror(errno));
+        return UNKNOWN_ERROR;
+    }
+
+    return NO_ERROR;
+}
+
+status_t V4L2Subdevice::setFramerate(int pad, int fps)
+{
+    struct v4l2_subdev_frame_interval finterval;
+
+    LOGI("@%s device = %s", __FUNCTION__, mName.c_str());
+
+    CLEAR(finterval);
+    finterval.pad = 0;
+    finterval.interval.numerator = 10000;
+    finterval.interval.denominator = fps * 10000;
+
+    return setFrameInterval(finterval);
+}
+
 } NAMESPACE_DECLARATION_END
 ////////////////////////////////////////////////////////////////////
 //                          PRIVATE METHODS

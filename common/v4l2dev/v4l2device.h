@@ -322,12 +322,13 @@ public:
     status_t setFormat(int pad, int width, int height, int formatCode, int field, int quantization);
     status_t setSelection(int pad, int target, int top, int left, int width, int height);
     status_t getPadFormat(int padIndex, int &width, int &height, int &code);
-
+    status_t setFramerate(int pad, int fps);
 private:
     status_t setFormat(struct v4l2_subdev_format &aFormat);
     status_t getFormat(struct v4l2_subdev_format &aFormat);
     status_t setSelection(struct v4l2_subdev_selection &aSelection);
 
+    status_t setFrameInterval(struct v4l2_subdev_frame_interval &finterval);
 private:
     enum SubdevState  {
             DEVICE_CLOSED = 0,  /*!< kernel device closed */

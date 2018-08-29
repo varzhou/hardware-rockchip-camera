@@ -58,7 +58,8 @@ ControlUnit::ControlUnit(ImguUnit *thePU,
         mGainDelay(0),
         mLensSupported(false),
         mSofSequence(0),
-        mShutterDoneReqId(-1)
+        mShutterDoneReqId(-1),
+        mSensorSubdev(nullptr)
 {
     cl_result_callback_ops::metadata_result_callback = &sMetadatCb;
 }
@@ -106,8 +107,10 @@ ControlUnit::getDevicesPath()
         }
 
         mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
-        if (subdev.get())
+        if (subdev.get()) {
             mDevPathsMap[KDevPathTypeSensorNode] = subdev->name();
+            mSensorSubdev = subdev;
+        }
     }
 
     // get isp input params device path
@@ -548,6 +551,22 @@ ControlUnit::handleNewRequest(Message &msg)
     return status;
 }
 
+status_t
+ControlUnit::processSoCSettings(const CameraMetadata *settings)
+{
+    // fill target fps range, it needs to be proper in results anyway
+    camera_metadata_ro_entry entry =
+        settings->find(ANDROID_CONTROL_AE_TARGET_FPS_RANGE);
+    if (entry.count == 2) {
+       int32_t maxFps = entry.data.i32[1];
+       // set to driver
+       if (mSensorSubdev.get())
+           mSensorSubdev->setFramerate(0, maxFps);
+    }
+
+    return OK;
+}
+
 /**
  * processRequestForCapture
  *
@@ -635,6 +654,10 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
             LOGE("unlock frame frame_metas failed");
             return UNKNOWN_ERROR;
         }
+    } else {
+        // set SoC sensor's params
+        const CameraMetadata *settings = reqState->request->getSettings();
+        processSoCSettings(settings);
     }
     /*TODO, needn't this anymore ? zyc*/
     status = completeProcessing(reqState);

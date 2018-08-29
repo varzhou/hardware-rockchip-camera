@@ -156,6 +156,7 @@ private:  /* Methods */
     status_t metadataReceived(int id, const camera_metadata_t *metas);
     status_t fillMetadata(std::shared_ptr<RequestCtrlState> &reqState);
     status_t getDevicesPath();
+    status_t processSoCSettings(const CameraMetadata *settings);
 
 private:  /* Members */
     SharedItemPool<RequestCtrlState> mRequestStatePool;
@@ -208,7 +209,7 @@ private:  /* Members */
         KDevPathTypeFlNode
     };
     std::map<enum DevPathType, std::string> mDevPathsMap;
-
+    std::shared_ptr<V4L2Subdevice> mSensorSubdev;
     /**
      * Static callback forwarding methods from CL to instance
      */
