@@ -27,7 +27,7 @@
             <control.aeAvailableAntibandingModes value="OFF,50HZ,60Hz,AUTO"/>
             <control.aeAvailableModes value="ON"/>
             <control.aeLockAvailable value="FALSE"/>
-            <control.aeAvailableTargetFpsRanges value="15,30,30,30"/>
+            <control.aeAvailableTargetFpsRanges value="15,20,20,20,30,30"/>
             <control.aeCompensationRange value="0,0"/>
             <control.aeCompensationStep value="0,1"/>
             <control.afAvailableModes value="OFF"/>
@@ -143,12 +143,18 @@
             <!-- Scaler -->
             <scaler.availableMaxDigitalZoom value="3.0"/>
             <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB,YCbCr_420_888,2,YCbCr_420_888,BLOB"/>
-            <scaler.availableStreamConfigurations value="BLOB,800x600,OUTPUT,
+            <scaler.availableStreamConfigurations value="BLOB,1600x1200,OUTPUT,
+                BLOB,1280x720,OUTPUT,
+                BLOB,800x600,OUTPUT,
                 BLOB,640x480,OUTPUT,
                 BLOB,320x240,OUTPUT,
+                YCbCr_420_888,1600x1200,OUTPUT,
+                YCbCr_420_888,1280x720,OUTPUT,
                 YCbCr_420_888,800x600,OUTPUT,
                 YCbCr_420_888,640x480,OUTPUT,
                 YCbCr_420_888,320x240,OUTPUT,
+                IMPLEMENTATION_DEFINED,1600x1200,OUTPUT,
+                IMPLEMENTATION_DEFINED,1280x720,OUTPUT,
                 IMPLEMENTATION_DEFINED,800x600,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
                 IMPLEMENTATION_DEFINED,320x240,OUTPUT,
@@ -162,27 +168,35 @@
                 YCbCr_420_888,800x600,INPUT,
                 YCbCr_420_888,640x480,INPUT,
                 YCbCr_420_888,320x240,INPUT" />
-            <scaler.availableMinFrameDurations value="BLOB,800x600,33333333,
+            <scaler.availableMinFrameDurations value="BLOB,1600x1200,50125313,
+                BLOB,1280x720,50125313,
+                BLOB,800x600,33333333,
                 BLOB,640x480,33333333,
                 BLOB,320x240,33333333,
+                YCbCr_420_888,1600x1200,50125313,
+                YCbCr_420_888,1280x720,50125313,
                 YCbCr_420_888,800x600,33333333,
                 YCbCr_420_888,640x480,33333333,
                 YCbCr_420_888,320x240,33333333,
+                IMPLEMENTATION_DEFINED,1600x1200,50125313,
+                IMPLEMENTATION_DEFINED,1280x720,50125313,
                 IMPLEMENTATION_DEFINED,800x600,33333333,
                 IMPLEMENTATION_DEFINED,640x480,33333333,
                 IMPLEMENTATION_DEFINED,320x240,33333333" />
-            <scaler.availableStallDurations value="BLOB,800x600,33333333,
-                BLOB,640x480,33333333,
-                BLOB,320x240,33333333" />
+            <scaler.availableStallDurations value="BLOB,1600x1200,50125313,
+                                                   BLOB,1280x720,50125313,
+                                                   BLOB,800x600,33333333,
+                                                   BLOB,640x480,33333333,
+                                                   BLOB,320x240,33333333" />
             <scaler.croppingType value="CENTER_ONLY"/>
             <!-- Sensor Info -->
-            <sensor.info.activeArraySize value="0,0,800,600"/>
+            <sensor.info.activeArraySize value="0,0,1600,1200"/>
             <sensor.info.sensitivityRange value="32,2400"/>
             <sensor.info.colorFilterArrangement value="GRBG"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <sensor.info.exposureTimeRange value="100000,33333333"/>
+            <sensor.info.exposureTimeRange value="100000,53000000"/>
             <sensor.info.maxFrameDuration value="66666666"/>
             <sensor.info.physicalSize value="5.5,4.5"/> <!-- 4224x1.12um 3136x1.12um -->
-            <sensor.info.pixelArraySize value="800x600"/>
+            <sensor.info.pixelArraySize value="1600x1200"/>
             <sensor.info.whiteLevel value="0"/> <!-- HAL may override this value from CMC for RAW sensors -->
             <sensor.info.timestampSource value="UNKNOWN"/>
             <!-- Sensor -->
