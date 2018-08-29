@@ -264,6 +264,9 @@ void Metadata::writeRestMetadata(RequestCtrlState &reqState) const
     i32 = 0;
     RESULT_UPDATE_WITH_VALUE_IF_NEED(ANDROID_SENSOR_TEST_PATTERN_MODE, 1, &i32);
 
+    i64 = 30 * 1000 * 1000;  //fake rolling time
+    RESULT_UPDATE_WITH_VALUE_IF_NEED(ANDROID_SENSOR_FRAME_DURATION, 1, &i64);
+
     i64 = 15 * 1000 * 1000;  //fake rolling time
     RESULT_UPDATE_WITH_VALUE_IF_NEED(ANDROID_SENSOR_ROLLING_SHUTTER_SKEW, 1, &i64);
 
