@@ -483,14 +483,6 @@ RequestThread::captureRequest(Camera3Request* request)
         return status;
     }
 
-    status = mCameraHw->processRequest(request,mRequestsInHAL);
-    if (status == REQBLK_WAIT_ALL_PREVIOUS_COMPLETED
-        || status == REQBLK_WAIT_ONE_REQUEST_COMPLETED) {
-        return status;
-    }
-
-    // handle output buffers
-
     const std::vector<CameraStreamNode*>* outStreams = request->getOutputStreams();
     if (CC_UNLIKELY(outStreams == nullptr)) {
         LOGE("there is no output streams. this should not happen");
@@ -515,6 +507,16 @@ RequestThread::captureRequest(Camera3Request* request)
              }
         }
     }
+    //it may occur that stream captureDone called before stream processRequest
+    //in cameraStream.cpp when mCameraHw->processRequest called before
+    //stream->processRequest in testing CTS reprocess related items because
+    //handling input stream buffer costs few time.
+    status = mCameraHw->processRequest(request,mRequestsInHAL);
+    if (status == REQBLK_WAIT_ALL_PREVIOUS_COMPLETED
+        || status == REQBLK_WAIT_ONE_REQUEST_COMPLETED) {
+        return status;
+    }
+
 
     return status;
 }

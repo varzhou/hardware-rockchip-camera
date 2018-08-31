@@ -450,13 +450,22 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
     mQuery.clear();
     mFallback = false;
 
+    //thera may be 4 output streams and 1 input stream in
+    //CTS:testMandatoryReprocessConfigurations
+    //we only support 4 streams max to config
+    std::vector<camera3_stream_t*> outputStream;
+    for(auto stream : streams) {
+        if(stream->stream_type != CAMERA3_STREAM_INPUT)
+            outputStream.push_back(stream);
+    }
+
     /*
      * Add to the query the number of active outputs
      */
     ItemUID streamCount = {GCSS_KEY_ACTIVE_OUTPUTS};
-    if (streams.size() > MAX_NUM_STREAMS) {
-        LOGE("Maximum number of streams %u exceeded: %zu",
-            MAX_NUM_STREAMS, streams.size());
+    if (outputStream.size() > MAX_NUM_STREAMS) {
+        LOGE("Maximum number of outputStream %u exceeded: %zu",
+            MAX_NUM_STREAMS, outputStream.size());
         return BAD_VALUE;
     }
     /*
@@ -469,7 +478,7 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
     mStreamToSinkIdMap.clear();
 
     int videoStreamCount = 0, stillStreamCount = 0;
-    ret = mapStreamToKey(streams, videoStreamCount, stillStreamCount, needEnableStill);
+    ret = mapStreamToKey(outputStream, videoStreamCount, stillStreamCount, needEnableStill);
     if (ret != OK) {
         LOGE("@%s, call mapStreamToKey fail, ret:%d", __FUNCTION__, ret);
         return ret;
@@ -477,7 +486,7 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
 
 
     // W/A: Only support 2 streams in GC due to ISP pipe outputs.
-    int streamNum = (streams.size() > 2) ? 2 : streams.size();
+    int streamNum = (outputStream.size() > 2) ? 2 : outputStream.size();
 
     mQuery[streamCount] = std::to_string(streamNum);
     // W/A: only pv node is used due to FOV issue,
@@ -519,7 +528,7 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
         mFirstQueryResults[0]->getValue(GCSS_KEY_KEY, id);
         LOGI("CAM[%d]Graph config in use for this stream configuration - SUCCESS, settings id %d", mCameraId, id);
     }
-    dumpStreamConfig(streams); // TODO: remove this when GC integration is done
+    dumpStreamConfig(outputStream); // TODO: remove this when GC integration is done
 
     /*
      * Currently it is enough to refresh information in graph config objects

@@ -224,7 +224,7 @@ status_t ImguUnit::mapStreamWithDeviceNode()
     } else if (streamNum == 2) {
         videoIdx = (streamSizeGE(availableStreams[0], availableStreams[1])) ? 0 : 1;
         previewIdx = videoIdx ? 0 : 1;
-    } else if (streamNum == 3) {
+    } else if (streamNum == 3 || mActiveStreams.inputStream) {
         videoIdx = 0;
         // find the maxium size stream
         for (int i = 0; i < availableStreams.size(); i++) {
