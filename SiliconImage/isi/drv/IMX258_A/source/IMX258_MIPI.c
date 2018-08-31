@@ -41,7 +41,7 @@ CREATE_TRACER( IMX258_NOTICE1, "IMX258: ", TRACE_NOTICE1, 1U );
 
 
 #define IMX258_SLAVE_ADDR       0x20U                           /**< i2c slave address of the IMX258 camera sensor */
-#define IMX258_SLAVE_ADDR2      0x34U
+#define IMX258_SLAVE_ADDR2      0x20U//0x34U
 #define IMX258_SLAVE_AF_ADDR    0x18U         //?                  /**< i2c slave address of the IMX258 integrated AD5820 */
 #define Sensor_OTP_SLAVE_ADDR   0xA0U
 //#define Sensor_OTP_SLAVE_ADDR2   0x34U
@@ -1949,12 +1949,23 @@ static RESULT IMX258_IsiSensorSetStreamingIss
        // RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
         result = IMX258_IsiRegWriteIss ( pIMX258Ctx, 0x0104, 0x01);
         result = IMX258_IsiRegWriteIss ( pIMX258Ctx, IMX258_MODE_SELECT, IMX258_MODE_SELECT_ON);//IMX258_MODE_SELECT,stream on; hkw
+
+		
+		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0104, &RegValue);
+		TRACE( IMX258_ERROR, "CSQ %s frame length low,read reg(0x0104)=0x%02x\n", __FUNCTION__,RegValue);
+
+		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0100, &RegValue);
+		TRACE( IMX258_ERROR, "CSQ %s frame length low,read reg(0x0100)=0x%02x\n", __FUNCTION__,RegValue);
+
         RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
          result = IMX258_IsiRegWriteIss ( pIMX258Ctx, 0x0104, 0x00);
+
+		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0104, &RegValue);
+		TRACE( IMX258_ERROR, "CSQ 111 %s frame length low,read reg(0x0104)=0x%02x\n", __FUNCTION__,RegValue);
         osSleep(10);
        	result = IMX258_IsiRegReadIss ( pIMX258Ctx, IMX258_MODE_SELECT, &RegValue);
       	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-      	TRACE( IMX258_ERROR, "%s Set Stream IMX258_MODE_SELECT_ON,read reg=0x%04x\n", __FUNCTION__);
+      	TRACE( IMX258_ERROR, "%s Set Stream IMX258_MODE_SELECT_ON,read reg=0x%04x\n", __FUNCTION__,RegValue);
       	
       	result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0340, &RegValue);
       	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
@@ -1986,8 +1997,13 @@ static RESULT IMX258_IsiSensorSetStreamingIss
     {
         pIMX258Ctx->Streaming = on;
     }
+	
 
     TRACE( IMX258_INFO, "%s (exit)\n", __FUNCTION__);
+	result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0342, &RegValue);
+	TRACE( IMX258_ERROR, "CSQ %s frame length low,read reg(0x0342)=0x%02x\n", __FUNCTION__,RegValue);
+	result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0343, &RegValue);
+	TRACE( IMX258_ERROR, "CSQ %s frame length low,read reg(0x0343)=0x%02x\n", __FUNCTION__,RegValue);
 
     return ( result );
 }
@@ -4268,7 +4284,7 @@ static RESULT IMX258_IsiGetSensorI2cInfo(sensor_i2c_info_t** pdata)
     pSensorI2cInfo->reg_size = 2;
     pSensorI2cInfo->value_size = 1;
 
-    TRACE( IMX258_DEBUG,  "%s: i2c_addr: 0x%x\n", __FUNCTION__,  pSensorI2cInfo->i2c_addr);
+    TRACE( IMX258_ERROR,  "csq %s: i2c_addr: 0x%x----0x%x\n", __FUNCTION__,  pSensorI2cInfo->i2c_addr,pSensorI2cInfo->i2c_addr2);
 
     {
         IsiSensorCaps_t Caps;

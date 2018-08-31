@@ -26,6 +26,7 @@ PRODUCT_PACKAGES += \
 	libisp_isi_drv_OV2685 \
 	libisp_isi_drv_OV9750_A \
 	libisp_isi_drv_OV9750_B \
-	libisp_isi_drv_IMX258
+	libisp_isi_drv_IMX258_A \
+	libisp_isi_drv_IMX258_B
 
 endif
