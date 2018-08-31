@@ -1952,16 +1952,16 @@ static RESULT IMX258_IsiSensorSetStreamingIss
 
 		
 		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0104, &RegValue);
-		TRACE( IMX258_ERROR, "CSQ %s frame length low,read reg(0x0104)=0x%02x\n", __FUNCTION__,RegValue);
+		TRACE( IMX258_ERROR, "%s frame length low,read reg(0x0104)=0x%02x\n", __FUNCTION__,RegValue);
 
 		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0100, &RegValue);
-		TRACE( IMX258_ERROR, "CSQ %s frame length low,read reg(0x0100)=0x%02x\n", __FUNCTION__,RegValue);
+		TRACE( IMX258_ERROR, "%s frame length low,read reg(0x0100)=0x%02x\n", __FUNCTION__,RegValue);
 
         RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
          result = IMX258_IsiRegWriteIss ( pIMX258Ctx, 0x0104, 0x00);
 
 		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0104, &RegValue);
-		TRACE( IMX258_ERROR, "CSQ 111 %s frame length low,read reg(0x0104)=0x%02x\n", __FUNCTION__,RegValue);
+		TRACE( IMX258_ERROR, "%s frame length low,read reg(0x0104)=0x%02x\n", __FUNCTION__,RegValue);
         osSleep(10);
        	result = IMX258_IsiRegReadIss ( pIMX258Ctx, IMX258_MODE_SELECT, &RegValue);
       	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
@@ -2000,10 +2000,6 @@ static RESULT IMX258_IsiSensorSetStreamingIss
 	
 
     TRACE( IMX258_INFO, "%s (exit)\n", __FUNCTION__);
-	result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0342, &RegValue);
-	TRACE( IMX258_ERROR, "CSQ %s frame length low,read reg(0x0342)=0x%02x\n", __FUNCTION__,RegValue);
-	result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0343, &RegValue);
-	TRACE( IMX258_ERROR, "CSQ %s frame length low,read reg(0x0343)=0x%02x\n", __FUNCTION__,RegValue);
 
     return ( result );
 }
