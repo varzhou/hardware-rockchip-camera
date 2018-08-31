@@ -34,7 +34,7 @@ endif
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
 	LOCAL_PROPRIETARY_MODULE := true
 endif
-LOCAL_MODULE:= libisp_isi_drv_IMX258
+LOCAL_MODULE:= libisp_isi_drv_IMX258_A
 #LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 ifneq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 5.0)))
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
