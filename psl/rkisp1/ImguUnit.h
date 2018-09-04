@@ -70,7 +70,7 @@ private:
     virtual void messageThreadLoop(void);
     status_t handleMessageExit(void);
     status_t requestExitAndWait();
-    status_t mapStreamWithDeviceNode();
+    status_t mapStreamWithDeviceNode(int phyStreamsNum);
     status_t createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig);
     void setStreamListeners(NodeTypes nodeName,
                             std::shared_ptr<OutputFrameWorker>& source);

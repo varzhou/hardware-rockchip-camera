@@ -187,15 +187,15 @@ ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams)
 #define streamSizeGE(s1, s2) (((s1)->width * (s1)->height) >= ((s2)->width * (s2)->height))
 #define streamSizeRatio(s1) ((float)((s1)->width) / (s1)->height)
 
-status_t ImguUnit::mapStreamWithDeviceNode()
+status_t ImguUnit::mapStreamWithDeviceNode(int phyStreamsNum)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     int blobNum = mActiveStreams.blobStreams.size();
     int yuvNum = mActiveStreams.yuvStreams.size();
     int streamNum = blobNum + yuvNum;
 
-    if (blobNum > 1) {
-        LOGE("Don't support blobNum %d", blobNum);
+    if (blobNum > 1 || phyStreamsNum <= 0) {
+        LOGE("Don't support blobNum %d, phyStreamsNum %d", blobNum, phyStreamsNum);
         return BAD_VALUE;
     }
 
@@ -223,7 +223,14 @@ status_t ImguUnit::mapStreamWithDeviceNode()
         videoIdx = 0;
     } else if (streamNum == 2) {
         videoIdx = (streamSizeGE(availableStreams[0], availableStreams[1])) ? 0 : 1;
-        previewIdx = videoIdx ? 0 : 1;
+        if (phyStreamsNum > 1) {
+            previewIdx = videoIdx ? 0 : 1;
+        } else {
+            std::pair<int, NodeTypes> listener;
+            listener.first = videoIdx ? 0 : 1;
+            listener.second = IMGU_NODE_VIDEO;
+            listeners.push_back(listener);
+        }
     } else if (streamNum == 3 || mActiveStreams.inputStream) {
         videoIdx = 0;
         // find the maxium size stream
@@ -232,57 +239,68 @@ status_t ImguUnit::mapStreamWithDeviceNode()
                     videoIdx = i;
         }
 
-        for (int i = 0; i < availableStreams.size(); i++) {
-            if (i == videoIdx) {
-                continue ;
-            } else if (previewIdx == -1) {
-                previewIdx = i;
-                continue ;
-            } else {
-                if (streamSizeEQ(availableStreams[i], availableStreams[videoIdx]))
+        if (phyStreamsNum > 1) {
+            for (int i = 0; i < availableStreams.size(); i++) {
+                if (i == videoIdx) {
                     continue ;
-                if (streamSizeGT(availableStreams[i], availableStreams[previewIdx]))
+                } else if (previewIdx == -1) {
                     previewIdx = i;
-            }
-        }
-
-        // all streams have the same size.
-        if (previewIdx == -1)
-            previewIdx = 1;
-        // deal with listners
-        float videoSizeRatio = streamSizeRatio(availableStreams[videoIdx]);
-        float previewSizeRatio = streamSizeRatio(availableStreams[previewIdx]);
-        float listenerSizeRatio = 0;
-        for (int i = 0; i < availableStreams.size(); i++) {
-            if (i != videoIdx && i != previewIdx) {
-                listenerSizeRatio = streamSizeRatio(availableStreams[i]);
-                std::pair<int, NodeTypes> listener;
-                listener.first = i;
-                float lpRatioDiff = fabs(listenerSizeRatio - previewSizeRatio);
-                float lvRatioDiff = fabs(listenerSizeRatio - videoSizeRatio);
-                if (fabs(lpRatioDiff - lvRatioDiff) <= 0.000001f) {
-                    if (streamSizeEQ(availableStreams[i], availableStreams[videoIdx]))
-                        listener.second = IMGU_NODE_VIDEO;
-                    else if (streamSizeEQ(availableStreams[i], availableStreams[previewIdx]))
-                        listener.second = IMGU_NODE_VF_PREVIEW;
-                    else if (streamSizeGT(availableStreams[previewIdx], availableStreams[videoIdx]))
-                        listener.second = IMGU_NODE_VF_PREVIEW;
-                    else
-                        listener.second = IMGU_NODE_VIDEO;
-                } else if (lpRatioDiff < lvRatioDiff) {
-                    if (streamSizeGE(availableStreams[previewIdx], availableStreams[i]))
-                        listener.second = IMGU_NODE_VF_PREVIEW;
-                    else
-                        listener.second = IMGU_NODE_VIDEO;
+                    continue ;
                 } else {
-                    if (streamSizeGE(availableStreams[videoIdx], availableStreams[i]))
-                        listener.second = IMGU_NODE_VIDEO;
-                    else
-                        listener.second = IMGU_NODE_VF_PREVIEW;
+                    if (streamSizeEQ(availableStreams[i], availableStreams[videoIdx]))
+                        continue ;
+                    if (streamSizeGT(availableStreams[i], availableStreams[previewIdx]))
+                        previewIdx = i;
                 }
-                listeners.push_back(listener);
             }
-        }
+
+            // all streams have the same size.
+            if (previewIdx == -1)
+                previewIdx = 1;
+            // deal with listners
+            float videoSizeRatio = streamSizeRatio(availableStreams[videoIdx]);
+            float previewSizeRatio = streamSizeRatio(availableStreams[previewIdx]);
+            float listenerSizeRatio = 0;
+            for (int i = 0; i < availableStreams.size(); i++) {
+                if (i != videoIdx && i != previewIdx) {
+                    listenerSizeRatio = streamSizeRatio(availableStreams[i]);
+                    std::pair<int, NodeTypes> listener;
+                    listener.first = i;
+                    float lpRatioDiff = fabs(listenerSizeRatio - previewSizeRatio);
+                    float lvRatioDiff = fabs(listenerSizeRatio - videoSizeRatio);
+                    if (fabs(lpRatioDiff - lvRatioDiff) <= 0.000001f) {
+                        if (streamSizeEQ(availableStreams[i], availableStreams[videoIdx]))
+                            listener.second = IMGU_NODE_VIDEO;
+                        else if (streamSizeEQ(availableStreams[i], availableStreams[previewIdx]))
+                            listener.second = IMGU_NODE_VF_PREVIEW;
+                        else if (streamSizeGT(availableStreams[previewIdx], availableStreams[videoIdx]))
+                            listener.second = IMGU_NODE_VF_PREVIEW;
+                        else
+                            listener.second = IMGU_NODE_VIDEO;
+                    } else if (lpRatioDiff < lvRatioDiff) {
+                        if (streamSizeGE(availableStreams[previewIdx], availableStreams[i]))
+                            listener.second = IMGU_NODE_VF_PREVIEW;
+                        else
+                            listener.second = IMGU_NODE_VIDEO;
+                    } else {
+                        if (streamSizeGE(availableStreams[videoIdx], availableStreams[i]))
+                            listener.second = IMGU_NODE_VIDEO;
+                        else
+                            listener.second = IMGU_NODE_VF_PREVIEW;
+                    }
+                    listeners.push_back(listener);
+                }
+            }
+        } else {
+            for (int i = 0; i < availableStreams.size(); i++) {
+                if (i != videoIdx) {
+                    std::pair<int, NodeTypes> listener;
+                    listener.first = i;
+		    listener.second = IMGU_NODE_VIDEO;
+                    listeners.push_back(listener);
+                }
+           }
+       }
     } else {
         LOGE("@%s, ERROR, blobNum:%d, yuvNum:%d", __FUNCTION__, blobNum, yuvNum);
         return UNKNOWN_ERROR;
@@ -373,7 +391,7 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
         return UNKNOWN_ERROR;
     }
 
-    if (mapStreamWithDeviceNode() != OK)
+    if (mapStreamWithDeviceNode(mConfiguredNodesPerName.size()) != OK)
         return UNKNOWN_ERROR;
 
     PipeConfiguration* videoConfig = &(mPipeConfigs[PIPE_VIDEO_INDEX]);
