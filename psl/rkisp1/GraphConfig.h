@@ -488,6 +488,7 @@ private:
 
     string mMainNodeName;
     string mSecondNodeName;
+    bool   mSensorLinkedToCIF;
 };
 
 } // namespace camera2

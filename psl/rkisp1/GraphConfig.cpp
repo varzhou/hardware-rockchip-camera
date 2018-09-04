@@ -71,6 +71,7 @@ const string MEDIACTL_PREVIEWNAME = "rkisp1_selfpath";
 const string MEDIACTL_POSTVIEWNAME = "postview";
 
 const string MEDIACTL_STATNAME = "rkisp1-statistics";
+const string MEDIACTL_VIDEONAME_CIF = "stream_cif";
 
 GraphConfig::GraphConfig() :
         mManager(nullptr),
@@ -88,6 +89,7 @@ GraphConfig::GraphConfig() :
     mStream2TuningMap.clear();
     createKernelListStructures();
     mCSIBE = CSI_BE + "0";
+    mSensorLinkedToCIF = false;
     mMainNodeName.clear();
     mSecondNodeName.clear();
 }
@@ -1929,6 +1931,7 @@ status_t GraphConfig::getMediaCtlData(MediaCtlConfig *mediaCtlConfig)
         int port = 0;
         std::shared_ptr<MediaEntity> entity = nullptr;
         string entityName = sourceInfo.name + " " + sourceInfo.i2cAddress;
+
         LOGI("entityName:%s\n", entityName.c_str());
         status_t ret = mMediaCtl->getMediaEntity(entity, entityName.c_str());
         if (ret != NO_ERROR) {
@@ -1951,6 +1954,8 @@ status_t GraphConfig::getMediaCtlData(MediaCtlConfig *mediaCtlConfig)
             if (mipi == std::string::npos) {
                 sourceInfo.dvp = true;
                 mCSIBE = entityName;
+                if (name.find("cif") != std::string::npos)
+                   mSensorLinkedToCIF = true;
             } else {
                 std::size_t p = name.find(" ");
                 if (p != std::string::npos) {
@@ -2253,13 +2258,18 @@ status_t GraphConfig::getImguMediaCtlData(int32_t cameraId,
     vector<lut> uids;
     uids.clear();
 
-    uids = {
-        { GCSS_KEY_IMGU_STILL, MEDIACTL_STILLNAME, IMGU_NODE_STILL, still, -1 },
-        { GCSS_KEY_INPUT, kImguName, IMGU_NODE_INPUT,input, 0 },
-        { GCSS_KEY_OUTPUT, kImguName, -1, output, MEDIACTL_PAD_OUTPUT_NUM },
-        { GCSS_KEY_IMGU_VIDEO, MEDIACTL_VIDEONAME, IMGU_NODE_VIDEO, video, 0 },
-        { GCSS_KEY_IMGU_PREVIEW, MEDIACTL_PREVIEWNAME, IMGU_NODE_VF_PREVIEW, preview, 0 },
-    };
+    if (!mSensorLinkedToCIF)
+        uids = {
+            { GCSS_KEY_IMGU_STILL, MEDIACTL_STILLNAME, IMGU_NODE_STILL, still, -1 },
+            { GCSS_KEY_INPUT, kImguName, IMGU_NODE_INPUT,input, 0 },
+            { GCSS_KEY_OUTPUT, kImguName, -1, output, MEDIACTL_PAD_OUTPUT_NUM },
+            { GCSS_KEY_IMGU_VIDEO, MEDIACTL_VIDEONAME, IMGU_NODE_VIDEO, video, 0 },
+            { GCSS_KEY_IMGU_PREVIEW, MEDIACTL_PREVIEWNAME, IMGU_NODE_VF_PREVIEW, preview, 0 },
+        };
+    else
+        uids = {
+            { GCSS_KEY_IMGU_VIDEO, MEDIACTL_VIDEONAME_CIF, IMGU_NODE_VIDEO, video, 0 }
+        };
 
     int ispOutWidth = 0, ispOutHeight = 0;
     for (int i = 0; i < uids.size(); i++) {
@@ -2331,7 +2341,7 @@ status_t GraphConfig::getImguMediaCtlData(int32_t cameraId,
             if (ret != OK) {
                 LOGE("pipe log name: %s can't get info!", name.c_str());
                 return UNKNOWN_ERROR;
-            } else {
+            } else if (!mSensorLinkedToCIF) {
                 struct v4l2_selection select;
                 CLEAR(select);
                 /* videodev2.h says don't use *_MPLAEN */
@@ -2348,7 +2358,10 @@ status_t GraphConfig::getImguMediaCtlData(int32_t cameraId,
 
             LOGI("Adding video node: %s", NODE_NAME(pipe));
             addImguVideoNode(uids[i].ipuNodeName, name, mediaCtlConfig);
-            addLinkParams(kImguName, MEDIACTL_PAD_OUTPUT_NUM, name, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+            if (!mSensorLinkedToCIF)
+                addLinkParams(kImguName, MEDIACTL_PAD_OUTPUT_NUM, name, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+            else
+                addLinkParams(mCSIBE, 0, name, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
         } else if (GCSS::ItemUID::key2str(uids[i].uid) == GC_INPUT) {
             int nodeWidth = 0, nodeHeight = 0;
             int32_t iMbusFormat = gcu::getMBusFormat(get_fourcc(fourccFormat[0],
@@ -2396,13 +2409,16 @@ status_t GraphConfig::getImguMediaCtlData(int32_t cameraId,
         }
     }
 
-    LOGI("Adding stats node");
-    /* addImguVideoNode(IMGU_NODE_STAT, MEDIACTL_STATNAME, mediaCtlConfig); */
-    addLinkParams(kImguName, 3, MEDIACTL_STATNAME, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+    if (!mSensorLinkedToCIF) {
+        LOGI("Adding stats node");
+        /* addImguVideoNode(IMGU_NODE_STAT, MEDIACTL_STATNAME, mediaCtlConfig); */
+        addLinkParams(kImguName, 3, MEDIACTL_STATNAME, 0, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
 
-    LOGI("Adding parameter node");
-    /* addImguVideoNode(IMGU_NODE_PARAM, MEDIACTL_PARAMETERNAME, mediaCtlConfig); */
-    addLinkParams(MEDIACTL_PARAMETERNAME, 0, kImguName, 1, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+        LOGI("Adding parameter node");
+        /* addImguVideoNode(IMGU_NODE_PARAM, MEDIACTL_PARAMETERNAME, mediaCtlConfig); */
+        addLinkParams(MEDIACTL_PARAMETERNAME, 0, kImguName, 1, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+    }
+
     return ret;
 }
 

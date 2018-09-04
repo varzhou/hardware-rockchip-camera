@@ -1179,7 +1179,7 @@ std::string PSLConfParser::getSensorMediaDevice(int cameraId)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     if (mSensorMediaDevice.size() == 0)
-        mSensorMediaDevice = getMediaDeviceByName(getSensorMediaDeviceName());
+        mSensorMediaDevice = getMediaDeviceByName(getSensorMediaDeviceName(cameraId));
     // TODO: maybe needn't record the parent media device in sensor info struct
     return PlatformData::getCameraHWInfo()->mSensorInfo[cameraId].mParentMediaDev;
 }
@@ -1188,8 +1188,7 @@ std::string PSLConfParser::getImguMediaDevice(int cameraId)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     if (mImguMediaDevice.size() == 0)
-        mImguMediaDevice = getMediaDeviceByName(getImguEntityMediaDevice());
-
+        mImguMediaDevice = getMediaDeviceByName(getImguEntityMediaDevice(cameraId));
     // TODO: maybe needn't record the parent media device in sensor info struct
     return PlatformData::getCameraHWInfo()->mSensorInfo[cameraId].mParentMediaDev;
 }
@@ -1197,14 +1196,16 @@ std::string PSLConfParser::getImguMediaDevice(int cameraId)
 std::vector<std::string> PSLConfParser::getSensorMediaDevicePath()
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    std::string mediaDeviceName = PSLConfParser::getSensorMediaDeviceName();
-    if (mediaDeviceName.size() == 0) {
-        std::vector<std::string> mediaDevicePath;
-        mediaDevicePath.push_back("/dev/media0");
-        return mediaDevicePath;
+
+    std::vector<std::string> mediaDevicePaths;
+    std::vector<std::string> mediaDevicePath;
+    std::vector<std::string> mediaDeviceNames {"rkisp1", "rkcif"};
+    for (auto it : mediaDeviceNames) {
+       mediaDevicePath = getMediaDeviceByName(it);
+       mediaDevicePaths.insert(mediaDevicePaths.end(), mediaDevicePath.begin(), mediaDevicePath.end());
     }
 
-   return getMediaDeviceByName(mediaDeviceName);
+    return mediaDevicePaths;
 }
 
 std::vector<std::string> PSLConfParser::getMediaDeviceByName(std::string driverName)

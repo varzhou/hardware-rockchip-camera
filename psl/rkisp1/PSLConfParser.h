@@ -42,8 +42,24 @@ public:
     virtual CameraCapInfo *getCameraCapInfo(int cameraId);
     virtual camera_metadata_t *constructDefaultMetadata(int cameraId, int reqTemplate);
 
-    static const char *getSensorMediaDeviceName() { return "rkisp1"; }
-    static const char *getImguEntityMediaDevice() { return "rkisp1"; }
+    static const char *getSensorMediaDeviceName(int cameraId) {
+        const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
+        std::string entityName;
+        entityName = cap->getMediaCtlEntityName("isys_backend");
+        if (entityName.find("isp") != std::string::npos)
+            return "rkisp1";
+        else
+            return "rkcif";
+    }
+    static const char *getImguEntityMediaDevice(int cameraId) {
+        const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
+        std::string entityName;
+        entityName = cap->getMediaCtlEntityName("isys_backend");
+        if (entityName.find("isp") != std::string::npos)
+            return "rkisp1";
+        else
+            return "rkcif";
+    }
 
     static std::vector<std::string> getSensorMediaDevicePath();
     static std::vector<std::string> getMediaDeviceByName(std::string deviceName);
