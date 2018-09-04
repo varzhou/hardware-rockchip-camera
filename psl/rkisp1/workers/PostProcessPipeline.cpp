@@ -485,6 +485,11 @@ PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
 
         if (RgaCropScale::CropScaleNV12Or21(&rgain, &rgaout)) {
             LOGE("%s:  crop&scale by RGA failed...", __FUNCTION__);
+            ImageScalerCore::cropComposeUpscaleNV12_bl(
+                             in->cambuf->data(), in->cambuf->height(), in->cambuf->width(),
+                             cropleft, croptop, cropw, croph,
+                             out->cambuf->data(), out->cambuf->height(), out->cambuf->width(),
+                             0, 0, out->cambuf->width(), out->cambuf->height());
         }
     }
 
@@ -632,28 +637,28 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
             case kPostProcessTypeDigitalZoom :
                 process_unit_name = "digitalzoom";
                 procunit_from = std::make_shared<PostProcessUnitDigitalZoom>
-                    (process_unit_name, common_process_type, mCameraId, buf_type);
+                    (process_unit_name, test_type, mCameraId, buf_type);
                 break;
             case kPostprocessTypeUvnr :
                 process_unit_name = "uvnr";
                 procunit_from = std::make_shared<PostProcessUnit>
-                    (process_unit_name, common_process_type, buf_type);
+                    (process_unit_name, test_type, buf_type);
                 break;
             case kPostProcessTypeCropRotationScale :
                 process_unit_name = "CropRotationScale";
                 procunit_from = std::make_shared<PostProcessUnit>
-                    (process_unit_name, common_process_type, buf_type);
+                    (process_unit_name, test_type, buf_type);
                 break;
             case kPostProcessTypeSwLsc :
                 process_unit_name = "SoftwareLsc";
                 procunit_from = std::make_shared<PostProcessUnitSwLsc>
-                    (process_unit_name, common_process_type, buf_type);
+                    (process_unit_name, test_type, buf_type);
                 break;
             case kPostProcessTypeFaceDetection :
                 process_unit_name = "faceDetection";
                 buf_type = PostProcessUnit::kPostProcBufTypePre;
                 procunit_from = std::make_shared<PostProcessUnit>
-                    (process_unit_name, common_process_type, buf_type);
+                    (process_unit_name, test_type, buf_type);
                 break;
             default:
                 LOGW("%s: have no common process.", __FUNCTION__);
@@ -716,17 +721,17 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                 case kPostProcessTypeScaleAndRotation :
                     process_unit_name = "ScaleRotation";
                     procunit_from = std::make_shared<PostProcessUnit>
-                                    (process_unit_name, stream_proc_type, buf_type);
+                                    (process_unit_name, test_type, buf_type);
                     break;
                 case kPostProcessTypeJpegEncoder :
                     process_unit_name = "JpegEnc";
                     procunit_from = std::make_shared<PostProcessUnitJpegEnc>
-                                    (process_unit_name, stream_proc_type, buf_type);
+                                    (process_unit_name, test_type, buf_type);
                     break;
                 case kPostProcessTypeCopy :
                     process_unit_name = "MemCopy";
                     procunit_from = std::make_shared<PostProcessUnit>
-                                    (process_unit_name, stream_proc_type, buf_type);
+                                    (process_unit_name, test_type, buf_type);
                     break;
                 default:
                     LOGE("%s: unknown stream process unit type 0x%x",
@@ -751,7 +756,14 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                     mStreamToProcUnitMap[proc_map.begin()->first] = procunit_from.get();
                 }
                 /* TODO: should consider in and out format */
-                procunit_from->prepare(in);
+                if (strstr(process_unit_name, "ScaleRotation")) {
+                    FrameInfo outfmt = in;
+                    outfmt.width = proc_map.begin()->first->width;
+                    outfmt.height = proc_map.begin()->first->height;
+                    procunit_from->prepare(outfmt);
+                } else {
+                    procunit_from->prepare(in);
+                }
             }
         }
     }
