@@ -98,12 +98,6 @@ status_t MediaCtlHelper::configure(IStreamConfigProvider &graphConfigMgr, IStrea
         return status;
     }
 
-    status = openVideoNodes();
-    if (status != NO_ERROR) {
-        LOGE("Failed to open video nodes (ret = %d)", status);
-        return status;
-    }
-
     // setting all the Link necessary for the media controller.
     for (unsigned int i = 0; i < mMediaCtlConfig->mLinkParams.size(); i++) {
         MediaCtlLinkParams pipeLink = mMediaCtlConfig->mLinkParams[i];
@@ -112,6 +106,13 @@ status_t MediaCtlHelper::configure(IStreamConfigProvider &graphConfigMgr, IStrea
             LOGE("Cannot set MediaCtl links (ret = %d)", status);
             return status;
         }
+    }
+
+    // open nodes after link setup
+    status = openVideoNodes();
+    if (status != NO_ERROR) {
+        LOGE("Failed to open video nodes (ret = %d)", status);
+        return status;
     }
 
     // HFLIP must be set before setting formats. Other controls need to be set after formats.
