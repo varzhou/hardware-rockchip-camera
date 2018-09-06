@@ -107,14 +107,6 @@ status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/)
     std::vector<camera3_stream_t*> streams = mListeners;
     /* put the main stream to first */
     streams.insert(streams.begin(), mStream);
-    /*
-     * because this outputframeworker handles the requests
-     * from listners also, so the number of driver used buffers
-     * should contain the listners, otherwise it may cause no
-     * available buffer exception when OutputFrameWorker::prepareRun
-     * is called
-     */
-    mPipelineDepth *= mListeners.size() + 1;
     mPostWorkingBufs.resize(mPipelineDepth);
     mPostPipeline->prepare(sourceFmt, streams, mNeedPostProcess);
     mPostPipeline->start();
