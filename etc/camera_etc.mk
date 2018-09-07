@@ -1,6 +1,6 @@
 # prebuilt for config xml files in /vendor/etc/camera or /system/etc/camera
 CUR_PATH := $(TOP)/hardware/rockchip/camera/etc
-ifeq ($(filter box vr stbvr, $(strip $(TARGET_BOARD_PLATFORM_PRODUCT))), )
+ifeq ($(filter box atv vr stbvr, $(strip $(TARGET_BOARD_PLATFORM_PRODUCT))), )
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
 
 PRODUCT_COPY_FILES += \
