@@ -60,7 +60,8 @@ PostProcBufferPools::createBufferPools(int numBufs) {
 
     mBufferPoolSize = numBufs;
 
-    mPostProcItemsPool.init(mBufferPoolSize);
+    mPostProcItemsPool.init(mBufferPoolSize, PostProcBuffer::reset);
+    mCamBuffers.clear();
     for (unsigned int i = 0; i < mBufferPoolSize; i++) {
         std::shared_ptr<PostProcBuffer> postprocbuf = nullptr;
         mPostProcItemsPool.acquireItem(postprocbuf);
@@ -78,14 +79,21 @@ status_t
 PostProcBufferPools::acquireItem(std::shared_ptr<PostProcBuffer> &procbuf) {
     LOG1("@%s", __FUNCTION__);
 
-    return mPostProcItemsPool.acquireItem(procbuf);
+    status_t status = mPostProcItemsPool.acquireItem(procbuf);
+
+    if (status == OK && mCamBuffers.size() > procbuf->index)
+        procbuf->cambuf = mCamBuffers[procbuf->index];
+
+    return status;
 }
 
 std::shared_ptr<PostProcBuffer>
 PostProcBufferPools::acquireItem() {
     std::shared_ptr<PostProcBuffer> procbuf;
 
-    mPostProcItemsPool.acquireItem(procbuf);
+    if (mPostProcItemsPool.acquireItem(procbuf) == OK &&
+        mCamBuffers.size() > procbuf->index)
+        procbuf->cambuf = mCamBuffers[procbuf->index];
 
     return procbuf;
 }
@@ -169,7 +177,7 @@ PostProcessUnit::allocCameraBuffer(const FrameInfo& outfmt) {
         if (!procbuf->cambuf->isLocked()) {
             procbuf->cambuf->lock();
         }
-
+        mInternalBufPool->mCamBuffers.push_back(procbuf->cambuf);
         LOGI("%s:%d: postproc buffer allocated, address(%p)", __func__, __LINE__, procbuf->cambuf.get());
     }
 

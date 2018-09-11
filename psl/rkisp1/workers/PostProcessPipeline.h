@@ -65,6 +65,10 @@ struct PostProcBuffer {
  public:
     PostProcBuffer() : index(-1), cambuf(nullptr) {}
     ~PostProcBuffer() {}
+    static void reset(PostProcBuffer *me) {
+        me->cambuf = nullptr;
+        me->request = nullptr;
+    }
     int index;
     std::shared_ptr<CameraBuffer> cambuf;
     Camera3Request* request;
@@ -78,6 +82,7 @@ class PostProcBufferPools {
     status_t createBufferPools(int numbufs);
     status_t acquireItem(std::shared_ptr<PostProcBuffer> &procbuf);
     std::shared_ptr<PostProcBuffer> acquireItem();
+    std::vector<std::shared_ptr<CameraBuffer>> mCamBuffers;
  private:
     SharedItemPool<PostProcBuffer> mPostProcItemsPool;
     unsigned int mBufferPoolSize;

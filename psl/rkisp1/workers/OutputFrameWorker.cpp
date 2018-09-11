@@ -110,7 +110,7 @@ status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/)
     mPostWorkingBufs.resize(mPipelineDepth);
     mPostPipeline->prepare(sourceFmt, streams, mNeedPostProcess);
     mPostPipeline->start();
-    mPostProcItemsPool.init(mPipelineDepth);
+    mPostProcItemsPool.init(mPipelineDepth, PostProcBuffer::reset);
     for (size_t i = 0; i < mPipelineDepth; i++)
     {
         std::shared_ptr<PostProcBuffer> buffer= nullptr;
