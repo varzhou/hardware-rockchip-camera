@@ -122,6 +122,7 @@ class IPostProcessSource {
  * more than input frames.
  */
 #define STATUS_NEED_NEXT_INPUT_FRAME (-EAGAIN)
+#define STATUS_FORWRAD_TO_NEXT_UNIT (1)
 /*
  * Post process unit is a base class that is used to extend the
  * frame propcess pipeline. A single process unit would do tasks

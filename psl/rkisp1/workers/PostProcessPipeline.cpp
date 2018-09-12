@@ -297,8 +297,10 @@ PostProcessUnit::prepareProcess() {
     mInBufferPool.erase(mInBufferPool.begin());
     // get an output buffer from output buffer queue or internal
     // buffer queue
-    if (mCurPostProcBufOut.get() != nullptr)
+    if (mCurPostProcBufOut.get() != nullptr) {
+        LOGE("%s: %s busy !", __FUNCTION__, mName);
         return;
+    }
     switch (mBufType) {
     case kPostProcBufTypeInt :
         mInternalBufPool->acquireItem(mCurPostProcBufOut);
@@ -317,9 +319,9 @@ PostProcessUnit::prepareProcess() {
     }
 
     if (mCurPostProcBufOut.get() == nullptr) {
-        // drop the input frame
-        mCurPostProcBufIn.reset();
-        mCurProcSettings.reset();
+        // relay to next proc unit
+        LOGW("%s: no output buf for unit %s", __FUNCTION__, mName);
+        relayToNextProcUnit(STATUS_FORWRAD_TO_NEXT_UNIT);
     }
 }
 
@@ -335,8 +337,15 @@ PostProcessUnit::relayToNextProcUnit(int err) {
         return err;
     }
 
-    status = notifyListeners(mCurPostProcBufOut,
-                             mCurProcSettings, err);
+    if (err == STATUS_FORWRAD_TO_NEXT_UNIT &&
+        mBufType != kPostProcBufTypeExt)
+        status = notifyListeners(mCurPostProcBufIn,
+                                 mCurProcSettings, err);
+    else if (mCurPostProcBufOut.get() != nullptr)
+        status = notifyListeners(mCurPostProcBufOut,
+                                 mCurProcSettings, err);
+    else
+        LOGW("%s: %s drop the input frame !", __FUNCTION__, mName);
     mCurPostProcBufOut.reset();
     mCurPostProcBufIn.reset();
     mCurProcSettings.reset();
@@ -365,7 +374,7 @@ PostProcessUnit::doProcess() {
     } while(mThreadRunning && status == STATUS_NEED_NEXT_INPUT_FRAME);
     l.unlock();
 
-    return status;
+    return OK;
 }
 
 void
@@ -683,15 +692,16 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                      __FUNCTION__, process_unit_name,
                      procunit_to.get() ? procunit_to.get()->mName : "first level",
                      last_proc_unit);
-                linkPostProcUnit(procunit_from, procunit_to,
-                                 procunit_to.get() ? kMiddleLevel : kFirstLevel);
-                // also the last stream level ?
                 if (last_proc_unit) {
-                    linkPostProcUnit(procunit_from, procunit_to, kLastLevel);
+                    linkPostProcUnit(procunit_from, procunit_to,
+                        procunit_to.get() ? kLastLevel : kFirstLevel);
                     // link streams callback to last correspond procunit
                     procunit_from->attachListener(mOutputBuffersHandler.get());
                     /* should exist only one stream */
                     mStreamToProcUnitMap[streams[0]] = procunit_from.get();
+                } else {
+                    linkPostProcUnit(procunit_from, procunit_to,
+                        procunit_to.get() ? kMiddleLevel : kFirstLevel);
                 }
                 /* TODO: should consider in and out format */
                 procunit_from->prepare(in);
@@ -754,14 +764,15 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                      __FUNCTION__, process_unit_name,
                      procunit_to.get() ? procunit_to.get()->mName : "first level",
                      last_proc_unit);
-                linkPostProcUnit(procunit_from, procunit_to,
-                                 procunit_to.get() ? kMiddleLevel : kFirstLevel);
-                // also the last stream level ?
                 if (last_proc_unit) {
-                    linkPostProcUnit(procunit_from, procunit_to, kLastLevel);
+                    linkPostProcUnit(procunit_from, procunit_to,
+                        procunit_to.get() ? kLastLevel : kFirstLevel);
                     // link streams callback to last correspond procunit
                     procunit_from->attachListener(mOutputBuffersHandler.get());
                     mStreamToProcUnitMap[proc_map.begin()->first] = procunit_from.get();
+                } else {
+                    linkPostProcUnit(procunit_from, procunit_to,
+                        procunit_to.get() ? kMiddleLevel : kFirstLevel);
                 }
                 /* TODO: should consider in and out format */
                 if (strstr(process_unit_name, "ScaleRotation")) {
@@ -775,6 +786,12 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
             }
         }
     }
+
+    for (int i = 0; i < PostProcessPipeLine::kMaxLevel; i++) {
+        for (auto iter : mPostProcUnitArray[i])
+            LOGI("level %d, unit %s", i, iter->mName);
+    }
+
     LOGD("@%s exit", __FUNCTION__);
 
     return status;
@@ -1476,9 +1493,12 @@ status_t
 PostProcessUnitDigitalZoom::processFrame(const std::shared_ptr<PostProcBuffer>& in,
                               const std::shared_ptr<PostProcBuffer>& out,
                               const std::shared_ptr<ProcUnitSettings>& settings) {
-    // check if zoom is required
     CameraWindow& crop = settings->cropRegion;
 
+    // check if zoom is required
+    if (mBufType != kPostProcBufTypeExt &&
+        crop.width() ==  mApa.width() && crop.height() == mApa.height())
+        return STATUS_FORWRAD_TO_NEXT_UNIT;
     if (!checkFmt(in->cambuf.get(), out->cambuf.get())) {
         LOGE("%s: unsupported format, only support NV12 or NV21 now !", __FUNCTION__);
         return UNKNOWN_ERROR;
