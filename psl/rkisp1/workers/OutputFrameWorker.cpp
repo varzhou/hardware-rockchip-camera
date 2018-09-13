@@ -108,7 +108,7 @@ status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/)
     /* put the main stream to first */
     streams.insert(streams.begin(), mStream);
     mPostWorkingBufs.resize(mPipelineDepth);
-    mPostPipeline->prepare(sourceFmt, streams, mNeedPostProcess);
+    mPostPipeline->prepare(sourceFmt, streams, mNeedPostProcess, mPipelineDepth);
     mPostPipeline->start();
     mPostProcItemsPool.init(mPipelineDepth, PostProcBuffer::reset);
     for (size_t i = 0; i < mPipelineDepth; i++)

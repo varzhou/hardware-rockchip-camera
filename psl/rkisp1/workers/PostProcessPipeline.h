@@ -123,6 +123,7 @@ class IPostProcessSource {
  */
 #define STATUS_NEED_NEXT_INPUT_FRAME (-EAGAIN)
 #define STATUS_FORWRAD_TO_NEXT_UNIT (1)
+#define kDefaultAllocBufferNums     (4)
 /*
  * Post process unit is a base class that is used to extend the
  * frame propcess pipeline. A single process unit would do tasks
@@ -143,7 +144,7 @@ class PostProcessUnit : public IPostProcessListener,
 
     explicit PostProcessUnit(const char* name, int type, uint32_t buftype = kPostProcBufTypeInt);
     virtual ~PostProcessUnit();
-    virtual status_t prepare(const FrameInfo& outfmt);
+    virtual status_t prepare(const FrameInfo& outfmt, int bufNum = kDefaultAllocBufferNums);
     virtual status_t start();
     virtual status_t stop();
     virtual status_t flush();
@@ -184,8 +185,7 @@ class PostProcessUnit : public IPostProcessListener,
      * further process, and could be recycled automatically.
      */
     std::unique_ptr<PostProcBufferPools> mInternalBufPool;
-    static const int kDefaultAllocBufferNums;
-    status_t allocCameraBuffer(const FrameInfo& outfmt);
+    status_t allocCameraBuffer(const FrameInfo& outfmt, int bufNum);
     void prepareProcess();
     status_t doProcess();
     status_t relayToNextProcUnit(int err);
@@ -221,7 +221,7 @@ class PostProcessUnitJpegEnc : public PostProcessUnit
     virtual status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                   const std::shared_ptr<PostProcBuffer>& out,
                                   const std::shared_ptr<ProcUnitSettings>& settings);
-    virtual status_t prepare(const FrameInfo& outfmt);
+    virtual status_t prepare(const FrameInfo& outfmt, int bufNum = kDefaultAllocBufferNums);
  private:
     status_t convertJpeg(std::shared_ptr<CameraBuffer> buffer,
                          std::shared_ptr<CameraBuffer> jpegBuffer,
@@ -241,7 +241,7 @@ class PostProcessUnitSwLsc : public PostProcessUnit
     virtual status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                   const std::shared_ptr<PostProcBuffer>& out,
                                   const std::shared_ptr<ProcUnitSettings>& settings);
-    virtual status_t prepare(const FrameInfo& outfmt);
+    virtual status_t prepare(const FrameInfo& outfmt, int bufNum = kDefaultAllocBufferNums);
  private:
     typedef struct lsc_para
     {
@@ -318,7 +318,8 @@ class PostProcessPipeLine {
     /* construt the pipeline*/
     status_t prepare(const FrameInfo& in,
                      const std::vector<camera3_stream_t*>& streams,
-                     bool& needpostprocess);
+                     bool& needpostprocess,
+                     int   pipelineDepth = kDefaultAllocBufferNums);
     status_t start();
     status_t stop();
     void flush();

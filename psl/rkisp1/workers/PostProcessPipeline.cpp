@@ -127,21 +127,19 @@ PostProcessUnit::~PostProcessUnit() {
     mCurPostProcBufOut.reset();
 }
 
-const int PostProcessUnit::kDefaultAllocBufferNums = 4;
-
 status_t
-PostProcessUnit::prepare(const FrameInfo& outfmt) {
+PostProcessUnit::prepare(const FrameInfo& outfmt, int bufNum) {
     LOGD("@%s", __FUNCTION__);
     status_t status = OK;
 
     if (mBufType == kPostProcBufTypeInt) {
-         status = mInternalBufPool->createBufferPools(kDefaultAllocBufferNums);
+         status = mInternalBufPool->createBufferPools(bufNum);
          if (status) {
             LOGE("%s: init buffer pool failed %d", __FUNCTION__, status);
             return status;
          }
 
-         status = allocCameraBuffer(outfmt);
+         status = allocCameraBuffer(outfmt, bufNum);
          if (status) {
             LOGE("%s: alloc camera buffer failed %d", __FUNCTION__, status);
             return status;
@@ -152,10 +150,10 @@ PostProcessUnit::prepare(const FrameInfo& outfmt) {
 }
 
 status_t
-PostProcessUnit::allocCameraBuffer(const FrameInfo& outfmt) {
+PostProcessUnit::allocCameraBuffer(const FrameInfo& outfmt, int bufNum) {
     LOGD("@%s: %s", __FUNCTION__, mName);
 
-    for (size_t i = 0; i < kDefaultAllocBufferNums; i++) {
+    for (size_t i = 0; i < bufNum; i++) {
         std::shared_ptr<PostProcBuffer> procbuf = nullptr;
         mInternalBufPool->acquireItem(procbuf);
         if (procbuf.get() == nullptr) {
@@ -556,7 +554,8 @@ PostProcessPipeLine::addOutputBuffer(const std::vector<std::shared_ptr<PostProcB
 status_t
 PostProcessPipeLine::prepare(const FrameInfo& in,
                              const std::vector<camera3_stream_t*>& streams,
-                             bool& needpostprocess) {
+                             bool& needpostprocess,
+                             int   pipelineDepth) {
     LOGD("@%s enter", __FUNCTION__);
     status_t status = OK;
     int common_process_type = 0;
@@ -704,7 +703,7 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                         procunit_to.get() ? kMiddleLevel : kFirstLevel);
                 }
                 /* TODO: should consider in and out format */
-                procunit_from->prepare(in);
+                procunit_from->prepare(in, pipelineDepth);
             }
        }
     }
@@ -779,9 +778,9 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                     FrameInfo outfmt = in;
                     outfmt.width = proc_map.begin()->first->width;
                     outfmt.height = proc_map.begin()->first->height;
-                    procunit_from->prepare(outfmt);
+                    procunit_from->prepare(outfmt, pipelineDepth);
                 } else {
-                    procunit_from->prepare(in);
+                    procunit_from->prepare(in, pipelineDepth);
                 }
             }
         }
@@ -1015,7 +1014,7 @@ PostProcessUnitJpegEnc::processFrame(const std::shared_ptr<PostProcBuffer>& in,
 }
 
 status_t
-PostProcessUnitJpegEnc::prepare(const FrameInfo& outfmt) {
+PostProcessUnitJpegEnc::prepare(const FrameInfo& outfmt, int bufNum) {
 
     if (!mJpegTask.get()) {
         LOGI("Create JpegEncodeTask");
@@ -1028,7 +1027,7 @@ PostProcessUnitJpegEnc::prepare(const FrameInfo& outfmt) {
         }
     }
 
-    return PostProcessUnit::prepare(outfmt);
+    return PostProcessUnit::prepare(outfmt, bufNum);
 }
 
 status_t
@@ -1095,7 +1094,7 @@ PostProcessUnitSwLsc::processFrame(const std::shared_ptr<PostProcBuffer>& in,
 }
 
 status_t
-PostProcessUnitSwLsc::prepare(const FrameInfo& outfmt) {
+PostProcessUnitSwLsc::prepare(const FrameInfo& outfmt, int bufNum) {
     if (mLscPara.u32_coef_pic_gr)
         free(mLscPara.u32_coef_pic_gr);
 
@@ -1104,7 +1103,7 @@ PostProcessUnitSwLsc::prepare(const FrameInfo& outfmt) {
     LOGI("%s: widthxheigt %dx%d", __FUNCTION__, mLscPara.width, mLscPara.height);
     lsc_config(&mLscPara);
 
-    return PostProcessUnit::prepare(outfmt);
+    return PostProcessUnit::prepare(outfmt, bufNum);
 }
 
 // parameter defined in rtl
