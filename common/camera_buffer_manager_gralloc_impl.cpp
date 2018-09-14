@@ -133,7 +133,7 @@ uint32_t CameraBufferManager::GetV4L2PixelFormat(buffer_handle_t buffer) {
     case HAL_PIXEL_FORMAT_YCbCr_420_888:
         return V4L2_PIX_FMT_YUV420;
 
-    defalut:
+    default:
       return V4L2_PIX_FMT_NV12;
     }
     LOGF(ERROR) << "Could not convert format "
