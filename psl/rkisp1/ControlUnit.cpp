@@ -757,7 +757,6 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
         ctrlUnitResult->update(ANDROID_CONTROL_AE_STATE, &aeState, 1);
         reqState->mClMetaReceived = true;
     }
-    mMetadata->writeRestMetadata(*reqState);
     return OK;
 }
 
@@ -787,6 +786,7 @@ ControlUnit::handleNewRequestDone(Message &msg)
     //if (!reqState->mClMetaReceived)
         //return OK;
 
+    mMetadata->writeRestMetadata(*reqState);
     request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
     /*
      * Remove the request from Q once we have received all pixel data buffers
@@ -1039,6 +1039,7 @@ ControlUnit::handleMetadataReceived(Message &msg) {
     if (!reqState->mImgProcessDone)
         return OK;
 
+    mMetadata->writeRestMetadata(*reqState);
     Camera3Request* request = reqState->request;
     request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
     mWaitingForCapture.erase(reqId);
