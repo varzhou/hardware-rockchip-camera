@@ -45,6 +45,7 @@ RkCtrlLoop::RkCtrlLoop(int camId):
 status_t RkCtrlLoop::init(const char* sensorName,
                           const cl_result_callback_ops_t *cb)
 {
+    HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
     status_t status = OK;
     /* get AIQ xml path */
     const CameraCapInfo* cap = PlatformData::getCameraCapInfo(mCameraId);
@@ -72,7 +73,7 @@ status_t RkCtrlLoop::init(const char* sensorName,
 
 void RkCtrlLoop::deinit()
 {
-    LOGI("@%s", __FUNCTION__);
+    HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
 
    // rkisp_cl_deinit(mControlLoopCtx);
     mControlLoopCtx = NULL;
@@ -80,6 +81,7 @@ void RkCtrlLoop::deinit()
 
 status_t RkCtrlLoop::start(const struct rkisp_cl_prepare_params_s& params)
 {
+    HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
     int ret = 0;
 
     LOGI("@%s %d: isp:%s, param:%s, stat:%s, sensor:%s", __FUNCTION__, __LINE__,
@@ -115,7 +117,7 @@ status_t RkCtrlLoop::setFrameParams(rkisp_cl_frame_metadata_s* frame_params)
 status_t RkCtrlLoop::stop()
 {
     int ret = 0;
-    LOGI("@%s %d: enter", __FUNCTION__, __LINE__);
+    HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
 
     if (mIsStarted == true) {
        // ret = rkisp_cl_stop(mControlLoopCtx);
