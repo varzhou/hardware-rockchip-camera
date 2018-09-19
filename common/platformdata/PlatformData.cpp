@@ -39,7 +39,7 @@
 
 #include "MediaController.h"
 #include "MediaEntity.h"
-using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
+USING_METADATA_NAMESPACE;
 NAMESPACE_DECLARATION {
 using std::string;
 

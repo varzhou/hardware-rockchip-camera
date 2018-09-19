@@ -29,7 +29,7 @@
 #include "LogHelper.h"
 #include "GraphConfigManager.h"
 #include "NodeTypes.h"
-using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
+USING_METADATA_NAMESPACE;
 using std::string;
 
 namespace android {
