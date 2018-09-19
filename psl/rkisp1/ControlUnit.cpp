@@ -366,7 +366,7 @@ ControlUnit::~ControlUnit()
 }
 
 status_t
-ControlUnit::configStreamsDone(bool configChanged)
+ControlUnit::configStreams(bool configChanged)
 {
     LOGI("@%s: config changed: %d", __FUNCTION__, configChanged);
     status_t status = OK;

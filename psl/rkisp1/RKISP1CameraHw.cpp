@@ -345,13 +345,13 @@ RKISP1CameraHw::configStreams(std::vector<camera3_stream_t*> &activeStreams,
         return status;
     }
 
-    status = mImguUnit->configStreams(configuredStreams);
+    status = mControlUnit->configStreams(configChanged);
     if (status != NO_ERROR) {
-        LOGE("Unable to configure stream for ImguUnit");
+        LOGE("Unable to configure stream for controlUnit");
         return status;
     }
 
-    status = mControlUnit->configStreamsDone(configChanged);
+    status = mImguUnit->configStreams(configuredStreams);
 
     return status;
 }
@@ -466,13 +466,13 @@ status_t RKISP1CameraHw::reconfigureStreams(UseCase newUseCase,
         return status;
     }
 
-    status = mImguUnit->configStreams(streams);
+    status = mControlUnit->configStreams(true);
     if (status != NO_ERROR) {
-        LOGE("Unable to configure stream for ImguUnit");
+        LOGE("Unable to configure stream for controlUnit");
         return status;
     }
 
-    return mControlUnit->configStreamsDone(true);
+    return mImguUnit->configStreams(streams);
 }
 
 status_t

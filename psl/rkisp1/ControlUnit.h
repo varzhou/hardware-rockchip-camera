@@ -63,7 +63,7 @@ public:
     virtual ~ControlUnit();
 
     status_t init();
-    status_t configStreamsDone(bool configChanged);
+    status_t configStreams(bool configChanged);
 
     status_t processRequest(Camera3Request* request,
                             std::shared_ptr<GraphConfig> graphConfig);
