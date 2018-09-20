@@ -142,6 +142,19 @@ ControlUnit::getDevicesPath()
     if (entityName == "none") {
         LOGW("%s: No lens found", __FUNCTION__);
     } else {
+        /*
+         * use subdev path directly, now lens subdev has not been registered
+         * to media system in driver.
+         */
+#if 1
+        struct stat sb;
+        int PathExists = stat(entityName.c_str(), &sb);
+        if (PathExists != 0) {
+            LOGE("Error, could not find lens subdev %s !", entityName.c_str());
+        } else {
+            mDevPathsMap[KDevPathTypeLensNode] = entityName;
+        }
+#else
         status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
         if (mediaEntity == nullptr || status != NO_ERROR) {
             LOGE("%s, Could not retrieve Media Entity %s", __FUNCTION__, entityName.c_str());
@@ -150,6 +163,7 @@ ControlUnit::getDevicesPath()
             if (subdev.get())
                 mDevPathsMap[KDevPathTypeLensNode] = subdev->name();
         }
+#endif
     }
 
     return OK;
