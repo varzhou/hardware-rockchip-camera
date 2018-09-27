@@ -23,6 +23,7 @@
 #include <memory>
 #include <map>
 #include <mutex>
+#include <chrono>             // std::chrono::second
 
 #include "CameraStreamNode.h"
 #include "CameraBuffer.h"
@@ -119,6 +120,8 @@ public:
              int getpartialResultCount() { return mPartialResultBuffers.size(); }
     int getCameraId() {return mCameraId;}
     CameraMetadata* getPartialResultBuffer(unsigned int index);
+    void nofityClmetaFilled();
+    CameraMetadata* getAndWaitforFilledResults(unsigned int index);
     const CameraMetadata* getSettings() const;
 
     const std::vector<camera3_stream_buffer>* getInputBuffers();
@@ -158,6 +161,9 @@ private:  /* types and members */
     // mMembers, mLock and friendship with the SharedObject template
     Members mMembers;
     mutable std::mutex mLock; /* protects mMembers and SharedObjects */
+    bool mIsCLmetadtaFilled;
+    std::mutex mResultLock; /* for PartialResultBuffers*/
+    std::condition_variable mCondition;
     friend class SharedObject<Camera3Request, Camera3Request::Members>;
     friend class SharedObject<const Camera3Request, const Camera3Request::Members>;
 

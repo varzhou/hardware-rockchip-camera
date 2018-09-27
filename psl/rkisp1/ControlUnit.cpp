@@ -656,18 +656,27 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
     }
 
     if (mCtrlLoop) {
-        const CameraMetadata *settings = reqState->request->getSettings();
-        rkisp_cl_frame_metadata_s frame_metas;
-        frame_metas.metas = settings->getAndLock();
-        frame_metas.id = reqId;
-        status = mCtrlLoop->setFrameParams(&frame_metas);
-        if (status != OK)
-            LOGE("CtrlLoop setFrameParams error");
+        // if this request in a reprocess request, no need to setFrameParam to CL.
+        // /* TODO*/
+        // InputFramework should update the result metadata which used updated in CL.
+        if (reqState->request->getNumberInputBufs() == 0) {
+            const CameraMetadata *settings = reqState->request->getSettings();
+            rkisp_cl_frame_metadata_s frame_metas;
+            frame_metas.metas = settings->getAndLock();
+            frame_metas.id = reqId;
+            status = mCtrlLoop->setFrameParams(&frame_metas);
+            if (status != OK)
+                LOGE("CtrlLoop setFrameParams error");
 
-        status = settings->unlock(frame_metas.metas);
-        if (status != OK) {
-            LOGE("unlock frame frame_metas failed");
-            return UNKNOWN_ERROR;
+            status = settings->unlock(frame_metas.metas);
+            if (status != OK) {
+                LOGE("unlock frame frame_metas failed");
+                return UNKNOWN_ERROR;
+            }
+        } else {
+            LOGD("@%s %d: reprocess request:%d, no need setFrameParam", __FUNCTION__, __LINE__, reqId);
+            reqState->mClMetaReceived = true;
+            reqState->request->nofityClmetaFilled();
         }
     } else {
         // set SoC sensor's params
@@ -771,6 +780,7 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
         uint8_t aeState = ANDROID_CONTROL_AE_STATE_CONVERGED;
         ctrlUnitResult->update(ANDROID_CONTROL_AE_STATE, &aeState, 1);
         reqState->mClMetaReceived = true;
+        reqState->request->nofityClmetaFilled();
     }
     return OK;
 }
@@ -1050,6 +1060,7 @@ ControlUnit::handleMetadataReceived(Message &msg) {
 
     reqState->ctrlUnitResult->append(msg.metas);
     reqState->mClMetaReceived = true;
+    reqState->request->nofityClmetaFilled();
 
     if (!reqState->mImgProcessDone)
         return OK;
