@@ -44,6 +44,7 @@ public:
     virtual ~ImguUnit();
     status_t flush(void);
     status_t configStreams(std::vector<camera3_stream_t*> &activeStreams);
+    status_t configStreamsDone();
     void cleanListener();
     status_t completeRequest(std::shared_ptr<ProcUnitSettings> &processingSettings,
                              bool updateMeta);

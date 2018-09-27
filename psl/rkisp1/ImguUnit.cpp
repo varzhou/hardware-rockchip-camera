@@ -159,13 +159,19 @@ ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams)
        return UNKNOWN_ERROR;
     }
 
+    return OK;
+}
+
+status_t
+ImguUnit::configStreamsDone()
+{
     /*
      * Moved from processNextRequest because this call will cost more than 300ms,
      * and cause CTS android.hardware.camera2.cts.RecordingTest#testBasicRecording
      * failed, which compares the frames numbers started to calculated from the
      * first request in 3 seconds to the recording file's.
      */
-    status = kickstart();
+    status_t status = kickstart();
     if (status != OK) {
        return status;
     }
@@ -179,7 +185,7 @@ ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams)
      */
     usleep(200 * 1000);
 
-    return OK;
+    return status;
 }
 
 #define streamSizeGT(s1, s2) (((s1)->width * (s1)->height) > ((s2)->width * (s2)->height))
