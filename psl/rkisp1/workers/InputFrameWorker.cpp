@@ -204,22 +204,16 @@ status_t InputFrameWorker::run()
     // Update request sequence if needed
     Camera3Request* request = mMsg->cbMetadataMsg.request;
     const CameraMetadata* settings = request->getSettings();
-    CameraMetadata *partRes = request->getPartialResultBuffer(CONTROL_UNIT_PARTIAL_RESULT);
     camera_metadata_ro_entry entry;
 
     entry = settings->find(ANDROID_SENSOR_TIMESTAMP);
     if (entry.count == 1) {
-        partRes->update(ANDROID_SENSOR_TIMESTAMP, entry.data.i64, entry.count);
         ts.tv_sec = entry.data.i64[0] / 1000000000;
         ts.tv_nsec = entry.data.i64[0] % 1000000000;
     } else {
         LOGW("@%s %d: input buffer settings do not contain sensor timestamp", __FUNCTION__, __LINE__);
         clock_gettime(CLOCK_MONOTONIC, &ts);
     }
-
-    //fake frame duration for cts:testReprocessingCaptureStall
-    int64_t i64 = 30 * 1000 * 1000;
-    partRes->update(ANDROID_SENSOR_FRAME_DURATION, &i64, 1);
 
     ICaptureEventListener::CaptureMessage outMsg;
     outMsg.data.event.reqId = request->getId();
@@ -230,7 +224,7 @@ status_t InputFrameWorker::run()
     outMsg.data.event.sequence = request->sequenceId();
     notifyListeners(&outMsg);
 
-    LOGI("%s:%d:instance(%p), frame_id(%d), requestId(%d)", __FUNCTION__, __LINE__, this, request->sequenceId(), request->getId());
+    LOGD("%s:%d:instance(%p), frame_id(%d), requestId(%d)", __FUNCTION__, __LINE__, this, request->sequenceId(), request->getId());
 
     return (status < 0) ? status : OK;
 }

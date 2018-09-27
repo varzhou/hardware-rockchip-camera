@@ -677,11 +677,18 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
             LOGD("@%s %d: reprocess request:%d, no need setFrameParam", __FUNCTION__, __LINE__, reqId);
             reqState->mClMetaReceived = true;
             reqState->request->nofityClmetaFilled();
+            /* Result as reprocessing request: The HAL can expect that a reprocessing request is a copy */
+            /* of one of the output results with minor allowed setting changes. */
+            reqState->ctrlUnitResult->append(*reqState->request->getSettings());
         }
     } else {
-        // set SoC sensor's params
-        const CameraMetadata *settings = reqState->request->getSettings();
-        processSoCSettings(settings);
+        if (reqState->request->getNumberInputBufs() == 0) {
+            // set SoC sensor's params
+            const CameraMetadata *settings = reqState->request->getSettings();
+            processSoCSettings(settings);
+        } else {
+            reqState->ctrlUnitResult->append(*reqState->request->getSettings());
+        }
     }
     /*TODO, needn't this anymore ? zyc*/
     status = completeProcessing(reqState);
