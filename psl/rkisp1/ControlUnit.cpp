@@ -320,6 +320,7 @@ void RequestCtrlState::init(Camera3Request *req,
     }
 
     mClMetaReceived = false;
+    mShutterMetaReceived = false;
     mImgProcessDone = false;
 
     /**
@@ -655,11 +656,9 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
         reqState->captureSettings->makernote.size = 0;
     }
 
-    if (mCtrlLoop) {
-        // if this request in a reprocess request, no need to setFrameParam to CL.
-        // /* TODO*/
-        // InputFramework should update the result metadata which used updated in CL.
-        if (reqState->request->getNumberInputBufs() == 0) {
+    // if this request is a reprocess request, no need to setFrameParam to CL.
+    if (reqState->request->getNumberInputBufs() == 0) {
+        if (mCtrlLoop) {
             const CameraMetadata *settings = reqState->request->getSettings();
             rkisp_cl_frame_metadata_s frame_metas;
             frame_metas.metas = settings->getAndLock();
@@ -674,22 +673,18 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
                 return UNKNOWN_ERROR;
             }
         } else {
-            LOGD("@%s %d: reprocess request:%d, no need setFrameParam", __FUNCTION__, __LINE__, reqId);
-            reqState->mClMetaReceived = true;
-            reqState->request->nofityClmetaFilled();
-            /* Result as reprocessing request: The HAL can expect that a reprocessing request is a copy */
-            /* of one of the output results with minor allowed setting changes. */
-            reqState->ctrlUnitResult->append(*reqState->request->getSettings());
-        }
-    } else {
-        if (reqState->request->getNumberInputBufs() == 0) {
             // set SoC sensor's params
             const CameraMetadata *settings = reqState->request->getSettings();
             processSoCSettings(settings);
-        } else {
-            reqState->ctrlUnitResult->append(*reqState->request->getSettings());
         }
+    } else {
+        LOGD("@%s %d: reprocess request:%d, no need setFrameParam", __FUNCTION__, __LINE__, reqId);
+        reqState->mClMetaReceived = true;
+        /* Result as reprocessing request: The HAL can expect that a reprocessing request is a copy */
+        /* of one of the output results with minor allowed setting changes. */
+        reqState->ctrlUnitResult->append(*reqState->request->getSettings());
     }
+
     /*TODO, needn't this anymore ? zyc*/
     status = completeProcessing(reqState);
     if (status != OK)
@@ -787,7 +782,6 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
         uint8_t aeState = ANDROID_CONTROL_AE_STATE_CONVERGED;
         ctrlUnitResult->update(ANDROID_CONTROL_AE_STATE, &aeState, 1);
         reqState->mClMetaReceived = true;
-        reqState->request->nofityClmetaFilled();
     }
     return OK;
 }
@@ -818,7 +812,6 @@ ControlUnit::handleNewRequestDone(Message &msg)
     //if (!reqState->mClMetaReceived)
         //return OK;
 
-    mMetadata->writeRestMetadata(*reqState);
     request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
     /*
      * Remove the request from Q once we have received all pixel data buffers
@@ -907,6 +900,11 @@ ControlUnit::handleNewShutter(Message &msg)
 
     //# ANDROID_METADATA_Dynamic android.sensor.timestamp done
     reqState->ctrlUnitResult->update(ANDROID_SENSOR_TIMESTAMP, &ts, 1);
+    reqState->mShutterMetaReceived = true;
+    if(reqState->mClMetaReceived) {
+        mMetadata->writeRestMetadata(*reqState);
+        reqState->request->notifyFinalmetaFilled();
+    }
     reqState->request->mCallback->shutterDone(reqState->request, ts);
     reqState->shutterDone = true;
     reqState->captureSettings->timestamp = ts;
@@ -1065,14 +1063,20 @@ ControlUnit::handleMetadataReceived(Message &msg) {
         return UNKNOWN_ERROR;
     }
 
+    //Metadata reuslt are mainly divided into three parts
+    //1. some settings from app
+    //2. 3A metas from Control loop
+    //3. some items like sensor timestamp from shutter
     reqState->ctrlUnitResult->append(msg.metas);
     reqState->mClMetaReceived = true;
-    reqState->request->nofityClmetaFilled();
+    if(reqState->mShutterMetaReceived) {
+        mMetadata->writeRestMetadata(*reqState);
+        reqState->request->notifyFinalmetaFilled();
+    }
 
     if (!reqState->mImgProcessDone)
         return OK;
 
-    mMetadata->writeRestMetadata(*reqState);
     Camera3Request* request = reqState->request;
     request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
     mWaitingForCapture.erase(reqId);

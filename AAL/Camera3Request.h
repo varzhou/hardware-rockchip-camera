@@ -120,7 +120,7 @@ public:
              int getpartialResultCount() { return mPartialResultBuffers.size(); }
     int getCameraId() {return mCameraId;}
     CameraMetadata* getPartialResultBuffer(unsigned int index);
-    void nofityClmetaFilled();
+    void notifyFinalmetaFilled();
     CameraMetadata* getAndWaitforFilledResults(unsigned int index);
     const CameraMetadata* getSettings() const;
 
@@ -161,7 +161,7 @@ private:  /* types and members */
     // mMembers, mLock and friendship with the SharedObject template
     Members mMembers;
     mutable std::mutex mLock; /* protects mMembers and SharedObjects */
-    bool mIsCLmetadtaFilled;
+    bool mMetadtaFilled;
     std::mutex mResultLock; /* for PartialResultBuffers*/
     std::condition_variable mCondition;
     friend class SharedObject<Camera3Request, Camera3Request::Members>;

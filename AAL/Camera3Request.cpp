@@ -262,7 +262,7 @@ Camera3Request::init(camera3_capture_request* req,
     mSettings = settings;   // Read only setting metadata buffer
     mInitialized = true;
     mError = false;
-    mIsCLmetadtaFilled = false;
+    mMetadtaFilled = false;
     LOGD("<Request %d> camera id %d successfully initialized", mRequestId, mCameraId);
     return NO_ERROR;
 }
@@ -357,22 +357,24 @@ Camera3Request::getPartialResultBuffer(unsigned int index)
 }
 
 void
-Camera3Request::nofityClmetaFilled()
+Camera3Request::notifyFinalmetaFilled()
 {
     std::unique_lock<std::mutex> l(mResultLock);
-    mIsCLmetadtaFilled = true;
+    mMetadtaFilled = true;
     mCondition.notify_all();
 }
 
 /**
  * getAndWaitforFilledResults
- * get the result meta buffer that must be filled by the CL
+ * the final result metadata, check if you really need the final result or
+ * only wants to get the result meta instance. the func now only used
+ * in JpegEncodeTask::readExifInfoFromAndroidResult.
  */
 CameraMetadata*
 Camera3Request::getAndWaitforFilledResults(unsigned int index)
 {
     std::unique_lock<std::mutex> l(mResultLock);
-    if (mIsCLmetadtaFilled == false)
+    if (mMetadtaFilled == false)
     {
         if(mCondition.wait_for(l, std::chrono::seconds(1)) == std::cv_status::timeout) {
             LOGW("@%s %d: request %d wait for CLmetadataFilled timeout", __FUNCTION__, __LINE__, mRequestId);
