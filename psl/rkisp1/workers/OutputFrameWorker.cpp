@@ -32,7 +32,7 @@ OutputFrameWorker::OutputFrameWorker(std::shared_ptr<V4L2VideoNode> node, int ca
                 camera3_stream_t* stream, NodeTypes nodeName, size_t pipelineDepth) :
                 FrameWorker(node, cameraId, pipelineDepth, "OutputFrameWorker"),
                 mOutputBuffer(nullptr),
-                mStream(stream),
+                mStream(NULL),
                 mNeedPostProcess(false),
                 mNodeName(nodeName),
                 mPostPipeline(new PostProcessPipeLine(this, cameraId)),
@@ -45,9 +45,6 @@ OutputFrameWorker::OutputFrameWorker(std::shared_ptr<V4L2VideoNode> node, int ca
 OutputFrameWorker::~OutputFrameWorker()
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    if (mOutputForListener.get() && mOutputForListener->isLocked()) {
-        mOutputForListener->unlock();
-    }
 }
 
 status_t
@@ -57,7 +54,13 @@ OutputFrameWorker::stopWorker()
     mPostPipeline->flush();
     mPostPipeline->stop();
     mPostWorkingBufs.clear();
+    mOutputBuffers.clear();
     mPostPipeline.reset();
+
+    if (mOutputForListener.get() && mOutputForListener->isLocked()) {
+        mOutputForListener->unlock();
+    }
+    mOutputForListener = nullptr;
 
     return OK;
 }
@@ -80,6 +83,14 @@ void OutputFrameWorker::addListener(camera3_stream_t* stream)
     }
 }
 
+void OutputFrameWorker::attachStream(camera3_stream_t* stream)
+{
+    if (stream != nullptr) {
+        LOGI("attach Stream %p", stream);
+        mStream = stream;
+    }
+}
+
 void OutputFrameWorker::clearListeners()
 {
     mListeners.clear();
@@ -88,6 +99,9 @@ void OutputFrameWorker::clearListeners()
 status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    /* std::unique_ptr<PostProcessPipeLine> pl(new PostProcessPipeLine(this, mCameraId)); */
+    /* mPostPipeline = std::move(pl); */
+
 
     status_t ret = mNode->getFormat(mFormat);
     if (ret != OK)

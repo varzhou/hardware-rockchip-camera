@@ -32,11 +32,21 @@ FrameWorker::FrameWorker(std::shared_ptr<V4L2VideoNode> node,
         mPollMe(false),
         mPipelineDepth(pipelineDepth)
 {
-    LOGI("%s handling node %s", name.c_str(), mNode->name());
+    if(mNode)
+        LOGI("%s handling node %s", name.c_str(), mNode->name());
 }
 
 FrameWorker::~FrameWorker()
 {
+}
+
+status_t FrameWorker::attachNode(std::shared_ptr<V4L2VideoNode> node)
+{
+    if(node.get() != NULL) {
+        LOGD("@%s %d: attch Node :%p", __FUNCTION__, __LINE__, node.get());
+        mNode = node;
+    }
+    return OK;
 }
 
 status_t FrameWorker::configure(std::shared_ptr<GraphConfig> & /*config*/)
@@ -57,6 +67,9 @@ status_t FrameWorker::startWorker()
 
 status_t FrameWorker::stopWorker()
 {
+    mMsg = nullptr;
+    mBuffers.clear();
+    mCameraBuffers.clear();
     return mNode->stop(true);
 }
 

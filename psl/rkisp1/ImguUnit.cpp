@@ -56,6 +56,21 @@ ImguUnit::ImguUnit(int cameraId,
         return;
     }
     mMessageThread->run();
+
+    const camera_metadata_t *meta = PlatformData::getStaticMetadata(mCameraId);
+    camera_metadata_ro_entry entry;
+    CLEAR(entry);
+    if (meta)
+        entry = MetadataHelper::getMetadataEntry(
+            meta, ANDROID_REQUEST_PIPELINE_MAX_DEPTH);
+    size_t pipelineDepth = entry.count == 1 ? entry.data.u8[0] : 1;
+
+    mMainOutWorker =
+        std::make_shared<OutputFrameWorker>(nullptr, mCameraId,
+                                            nullptr, IMGU_NODE_VIDEO, pipelineDepth);
+    mSelfOutWorker =
+        std::make_shared<OutputFrameWorker>(nullptr, mCameraId,
+                                            nullptr, IMGU_NODE_VF_PREVIEW, pipelineDepth);
 }
 
 ImguUnit::~ImguUnit()
@@ -413,27 +428,32 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
             meta, ANDROID_REQUEST_PIPELINE_MAX_DEPTH);
     size_t pipelineDepth = entry.count == 1 ? entry.data.u8[0] : 1;
     for (const auto &it : mConfiguredNodesPerName) {
-        std::shared_ptr<FrameWorker> worker = nullptr;
         if (it.first == IMGU_NODE_STILL || it.first == IMGU_NODE_VIDEO) {
             if(mStreamNodeMapping[it.first] == NULL)
                 continue;
-            std::shared_ptr<OutputFrameWorker> outWorker =
-                std::make_shared<OutputFrameWorker>(it.second, mCameraId,
-                    mStreamNodeMapping[it.first], it.first, pipelineDepth);
-            videoConfig->deviceWorkers.push_back(outWorker);
-            videoConfig->pollableWorkers.push_back(outWorker);
-            videoConfig->nodes.push_back(outWorker->getNode());
-            setStreamListeners(it.first, outWorker);
+
+            mMainOutWorker->attachNode(it.second);
+            mMainOutWorker->attachStream(mStreamNodeMapping[it.first]);
+
+            videoConfig->deviceWorkers.push_back(mMainOutWorker);
+            videoConfig->pollableWorkers.push_back(mMainOutWorker);
+            videoConfig->nodes.push_back(mMainOutWorker->getNode());
+            setStreamListeners(it.first, mMainOutWorker);
             //shutter event for non isys, zyc
-            mListenerDeviceWorkers.push_back(outWorker.get());
+            mListenerDeviceWorkers.push_back(mMainOutWorker.get());
         } else if (it.first == IMGU_NODE_VF_PREVIEW) {
             if(mStreamNodeMapping[it.first] == NULL)
                 continue;
-            vfWorker = std::make_shared<OutputFrameWorker>(it.second, mCameraId,
-                mStreamNodeMapping[it.first], it.first, pipelineDepth);
-            setStreamListeners(it.first, vfWorker);
+
+            mSelfOutWorker->attachNode(it.second);
+            mSelfOutWorker->attachStream(mStreamNodeMapping[it.first]);
+
+            videoConfig->deviceWorkers.push_back(mSelfOutWorker);
+            videoConfig->pollableWorkers.push_back(mSelfOutWorker);
+            videoConfig->nodes.push_back(mSelfOutWorker->getNode());
+            setStreamListeners(it.first, mSelfOutWorker);
             //shutter event for non isys, zyc
-            mListenerDeviceWorkers.push_back(vfWorker.get());
+            mListenerDeviceWorkers.push_back(mSelfOutWorker.get());
         } else if (it.first == IMGU_NODE_PV_PREVIEW) {
             if(mStreamNodeMapping[it.first] == NULL)
                 continue;

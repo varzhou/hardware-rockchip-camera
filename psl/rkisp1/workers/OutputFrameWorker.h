@@ -34,6 +34,7 @@ public:
     virtual ~OutputFrameWorker();
 
     void addListener(camera3_stream_t* stream);
+    void attachStream(camera3_stream_t* stream);
     void clearListeners();
     virtual status_t configure(std::shared_ptr<GraphConfig> &config);
     status_t prepareRun(std::shared_ptr<DeviceMessage> msg);

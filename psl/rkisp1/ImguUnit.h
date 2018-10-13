@@ -99,6 +99,8 @@ private:
     };
 
 private:
+    std::shared_ptr<OutputFrameWorker> mMainOutWorker;
+    std::shared_ptr<OutputFrameWorker> mSelfOutWorker;
     ImguState mState;
 
     int mCameraId;

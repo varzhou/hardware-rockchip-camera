@@ -809,6 +809,17 @@ PostProcessPipeLine::start() {
 }
 
 status_t
+PostProcessPipeLine::clear() {
+    LOGD("@%s", __FUNCTION__);
+    status_t status = OK;
+
+    mPostProcUnits.clear();
+    mStreamToProcUnitMap.clear();
+
+    return status;
+}
+
+status_t
 PostProcessPipeLine::stop() {
     LOGD("@%s", __FUNCTION__);
     status_t status = OK;
@@ -816,6 +827,8 @@ PostProcessPipeLine::stop() {
     for (int i = 0; i < kMaxLevel; i++)
         for (auto iter : mPostProcUnitArray[i])
            status |= iter->stop();
+
+    clear();
 
     return status;
 }
