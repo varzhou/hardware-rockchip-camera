@@ -125,13 +125,10 @@ uint32_t CameraBufferManager::GetV4L2PixelFormat(buffer_handle_t buffer) {
         // Semi-planar formats.
     case HAL_PIXEL_FORMAT_YCrCb_NV12:
     case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
+    case HAL_PIXEL_FORMAT_YCbCr_420_888:
         return V4L2_PIX_FMT_NV12;
     case HAL_PIXEL_FORMAT_YCrCb_420_SP:
         return V4L2_PIX_FMT_NV21;
-
-        // Multi-planar formats.
-    case HAL_PIXEL_FORMAT_YCbCr_420_888:
-        return V4L2_PIX_FMT_YUV420;
 
     default:
       return V4L2_PIX_FMT_NV12;
