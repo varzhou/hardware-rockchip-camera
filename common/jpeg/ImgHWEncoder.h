@@ -64,7 +64,8 @@ private:  /* Methods */
     void fillGpsInfo(RkGPSInfo &gpsInfo, exif_attribute_t* exifAttrs);
 
 private:  /* Members */
-    static char sMaker[];
+    char sMaker[256];
+    char sModel[256];
     int mCameraId;
     RkExifInfo mExifInfo;
     RkGPSInfo mGpsInfo;
