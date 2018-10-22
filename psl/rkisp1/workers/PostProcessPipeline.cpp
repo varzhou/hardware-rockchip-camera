@@ -110,10 +110,11 @@ PostProcessUnit::PostProcessUnit(const char* name, int type, uint32_t buftype) :
     mCurPostProcBufIn(nullptr),
     mCurProcSettings(nullptr),
     mCurPostProcBufOut(nullptr) {
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 }
 
 PostProcessUnit::~PostProcessUnit() {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     if (mProcThread != nullptr) {
         mProcThread.reset();
@@ -129,7 +130,7 @@ PostProcessUnit::~PostProcessUnit() {
 
 status_t
 PostProcessUnit::prepare(const FrameInfo& outfmt, int bufNum) {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
     status_t status = OK;
 
     if (mBufType == kPostProcBufTypeInt) {
@@ -151,7 +152,7 @@ PostProcessUnit::prepare(const FrameInfo& outfmt, int bufNum) {
 
 status_t
 PostProcessUnit::allocCameraBuffer(const FrameInfo& outfmt, int bufNum) {
-    LOGD("@%s: %s", __FUNCTION__, mName);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     for (size_t i = 0; i < bufNum; i++) {
         std::shared_ptr<PostProcBuffer> procbuf = nullptr;
@@ -184,7 +185,7 @@ PostProcessUnit::allocCameraBuffer(const FrameInfo& outfmt, int bufNum) {
 
 status_t
 PostProcessUnit::start() {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     std::lock_guard<std::mutex> l(mApiLock);
 
@@ -199,7 +200,7 @@ PostProcessUnit::start() {
 
 status_t
 PostProcessUnit::stop() {
-    LOGD("@%s: %s", __FUNCTION__, mName);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     std::unique_lock<std::mutex> l(mApiLock, std::defer_lock);
     l.lock();
@@ -229,7 +230,7 @@ PostProcessUnit::stop() {
 
 status_t
 PostProcessUnit::flush() {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     std::lock_guard<std::mutex> l(mApiLock);
 
@@ -246,7 +247,7 @@ PostProcessUnit::flush() {
 
 status_t
 PostProcessUnit::addOutputBuffer(std::shared_ptr<PostProcBuffer> buf) {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     std::lock_guard<std::mutex> l(mApiLock);
     if (mBufType != kPostProcBufTypeExt) {
@@ -261,7 +262,7 @@ PostProcessUnit::addOutputBuffer(std::shared_ptr<PostProcBuffer> buf) {
 
 status_t
 PostProcessUnit::setEnable(bool enable) {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     std::lock_guard<std::mutex> l(mApiLock);
 
@@ -272,7 +273,7 @@ PostProcessUnit::setEnable(bool enable) {
 
 status_t
 PostProcessUnit::setProcessSync(bool sync) {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
     std::lock_guard<std::mutex> l(mApiLock);
 
     mSyncProcess = sync;
@@ -283,7 +284,7 @@ PostProcessUnit::setProcessSync(bool sync) {
 /* called by ThreadLoop */
 void
 PostProcessUnit::prepareProcess() {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
     // get a frame to be processed from input buffer queue
     std::unique_lock<std::mutex> l(mApiLock);
     if (mThreadRunning && mInBufferPool.empty())
@@ -326,7 +327,7 @@ PostProcessUnit::prepareProcess() {
 /* called by ThreadLoop */
 status_t
 PostProcessUnit::relayToNextProcUnit(int err) {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
     status_t status = OK;
 
     if (err == STATUS_NEED_NEXT_INPUT_FRAME) {
@@ -353,7 +354,7 @@ PostProcessUnit::relayToNextProcUnit(int err) {
 
 status_t
 PostProcessUnit::doProcess() {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     status_t status = OK;
 
@@ -377,7 +378,7 @@ PostProcessUnit::doProcess() {
 
 void
 PostProcessUnit::messageThreadLoop(void) {
-    LOGD("@%s", __FUNCTION__);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     std::unique_lock<std::mutex> l(mApiLock, std::defer_lock);
     l.lock();
@@ -392,7 +393,7 @@ PostProcessUnit::messageThreadLoop(void) {
 status_t PostProcessUnit::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                                          const std::shared_ptr<ProcUnitSettings>& settings,
                                          int err) {
-    LOGD("@%s: %s", __FUNCTION__, mName);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     std::unique_lock<std::mutex> l(mApiLock, std::defer_lock);
 
@@ -425,7 +426,7 @@ status_t
 PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
                               const std::shared_ptr<PostProcBuffer>& out,
                               const std::shared_ptr<ProcUnitSettings>& settings) {
-    LOGD("@%s: %s", __FUNCTION__, mName);
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
     status_t status = OK;
 
     /*
@@ -454,7 +455,7 @@ PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
         cropleft = (in->cambuf->width() - cropw) / 2;
         croptop = (in->cambuf->height() - croph) / 2;
 
-        LOGD("%s: crop region(%d,%d@%d,%d) from (%d,%d) to %dx%d, infmt %d,%d, outfmt %d,%d",
+        LOGD("%s: crop region(%d,%d,%d,%d) from (%d,%d) to %dx%d, infmt %d,%d, outfmt %d,%d",
              __FUNCTION__, cropw, croph, cropleft, croptop,
              in->cambuf->width(), in->cambuf->height(),
              out->cambuf->width(), out->cambuf->height(),
@@ -687,7 +688,7 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                     procunit_to = procunit_main_last;
                     procunit_main_last = procunit_from;
                 }
-                LOGI("%s: link unit from %s to %s, is the last proc unit %d",
+                LOGI("%s: add unit %s to %s, is the last proc unit %d",
                      __FUNCTION__, process_unit_name,
                      procunit_to.get() ? procunit_to.get()->mName : "first level",
                      last_proc_unit);
@@ -759,7 +760,7 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
             if (process_unit_name) {
                 procunit_to = procunit_stream_last;
                 procunit_stream_last = procunit_from;
-                LOGI("%s: link unit from %s to %s, is the last proc unit %d",
+                LOGI("%s: add unit %s to %s, is the last proc unit %d",
                      __FUNCTION__, process_unit_name,
                      procunit_to.get() ? procunit_to.get()->mName : "first level",
                      last_proc_unit);
@@ -815,6 +816,9 @@ PostProcessPipeLine::clear() {
 
     mPostProcUnits.clear();
     mStreamToProcUnitMap.clear();
+    for (int i = 0; i < PostProcessPipeLine::kMaxLevel; i++) {
+        mPostProcUnitArray[i].clear();
+    }
 
     return status;
 }

@@ -43,7 +43,7 @@ public:
             std::shared_ptr<MediaController> mediaCtl);
     virtual ~ImguUnit();
     status_t flush(void);
-    status_t configStreams(std::vector<camera3_stream_t*> &activeStreams);
+    status_t configStreams(std::vector<camera3_stream_t*> &activeStreams, bool configChanged);
     status_t configStreamsDone();
     void cleanListener();
     status_t completeRequest(std::shared_ptr<ProcUnitSettings> &processingSettings,
@@ -54,6 +54,8 @@ public:
     // IPollEvenListener
     virtual status_t notifyPollEvent(PollEventMessage *msg);
     virtual void registerErrorCallback(IErrorCallback* errCb) { mErrCb = errCb; }
+    void getConfigedHwPathSize(const char* pathName, uint32_t &size);
+    void getConfigedSensorOutputSize(uint32_t &size);
 
 private:
     status_t configureVideoNodes(std::shared_ptr<GraphConfig> graphConfig);
@@ -102,6 +104,7 @@ private:
     std::shared_ptr<OutputFrameWorker> mMainOutWorker;
     std::shared_ptr<OutputFrameWorker> mSelfOutWorker;
     ImguState mState;
+    bool mConfigChanged;
 
     int mCameraId;
     GraphConfigManager &mGCM;

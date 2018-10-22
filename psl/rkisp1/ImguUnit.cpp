@@ -34,6 +34,7 @@ ImguUnit::ImguUnit(int cameraId,
                    GraphConfigManager &gcm,
                    std::shared_ptr<MediaController> mediaCtl) :
         mState(IMGU_IDLE),
+        mConfigChanged(true),
         mCameraId(cameraId),
         mGCM(gcm),
         mThreadRunning(false),
@@ -66,11 +67,11 @@ ImguUnit::ImguUnit(int cameraId,
     size_t pipelineDepth = entry.count == 1 ? entry.data.u8[0] : 1;
 
     mMainOutWorker =
-        std::make_shared<OutputFrameWorker>(nullptr, mCameraId,
-                                            nullptr, IMGU_NODE_VIDEO, pipelineDepth);
+        std::make_shared<OutputFrameWorker>(mCameraId, "MainWork",
+                                            IMGU_NODE_VIDEO, pipelineDepth);
     mSelfOutWorker =
-        std::make_shared<OutputFrameWorker>(nullptr, mCameraId,
-                                            nullptr, IMGU_NODE_VF_PREVIEW, pipelineDepth);
+        std::make_shared<OutputFrameWorker>(mCameraId, "SelfWork",
+                                            IMGU_NODE_VF_PREVIEW, pipelineDepth);
 }
 
 ImguUnit::~ImguUnit()
@@ -115,12 +116,14 @@ void ImguUnit::clearWorkers()
 }
 
 status_t
-ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams)
+ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams, bool configChanged)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    LOGI("@%s %d: configChanged :%d", __FUNCTION__, __LINE__, configChanged);
 
     std::shared_ptr<GraphConfig> graphConfig = mGCM.getBaseGraphConfig();
 
+    mConfigChanged = configChanged;
     mActiveStreams.blobStreams.clear();
     mActiveStreams.rawStreams.clear();
     mActiveStreams.yuvStreams.clear();
@@ -180,6 +183,8 @@ ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams)
 status_t
 ImguUnit::configStreamsDone()
 {
+    if(!mConfigChanged)
+        return OK;
     /*
      * Moved from processNextRequest because this call will cost more than 300ms,
      * and cause CTS android.hardware.camera2.cts.RecordingTest#testBasicRecording
@@ -377,34 +382,47 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
         return UNKNOWN_ERROR;
     }
 
-    clearWorkers();
-    // Open and configure imgu video nodes
-
     // rk only has video config, set it as default,zyc
     mCurPipeConfig = &mPipeConfigs[PIPE_VIDEO_INDEX];
 
-    status = mMediaCtlHelper.configure(mGCM, IStreamConfigProvider::CIO2);
-    if (status != OK) {
-        LOGE("Failed to configure input system.");
-        return status;
+    if(mConfigChanged) {
+        for (const auto &it : mCurPipeConfig->deviceWorkers) {
+            // if the worker is started, stop it first
+            status = (*it).stopWorker();
+            if (status != OK) {
+                LOGE("Failed to stop workers.");
+                return status;
+            }
+        }
+        clearWorkers();
+
+        // Open and configure imgu video nodes
+        status = mMediaCtlHelper.configure(mGCM, IStreamConfigProvider::CIO2);
+        if (status != OK) {
+            LOGE("Failed to configure input system.");
+            return status;
+        }
+
+        status = mMediaCtlHelper.configure(mGCM, IStreamConfigProvider::IMGU_COMMON);
+        if (status != OK)
+            return UNKNOWN_ERROR;
+        if (mGCM.getMediaCtlConfig(IStreamConfigProvider::IMGU_STILL)) {
+            status = mMediaCtlHelper.configurePipe(mGCM, IStreamConfigProvider::IMGU_STILL, true);
+            if (status != OK)
+                return UNKNOWN_ERROR;
+            mCurPipeConfig = &mPipeConfigs[PIPE_STILL_INDEX];
+        }
+        // Set video pipe by default
+        if (mGCM.getMediaCtlConfig(IStreamConfigProvider::IMGU_VIDEO)) {
+            status = mMediaCtlHelper.configurePipe(mGCM, IStreamConfigProvider::IMGU_VIDEO, true);
+            if (status != OK)
+                return UNKNOWN_ERROR;
+            mCurPipeConfig = &mPipeConfigs[PIPE_VIDEO_INDEX];
+        }
+    } else {
+        clearWorkers();
     }
 
-    status = mMediaCtlHelper.configure(mGCM, IStreamConfigProvider::IMGU_COMMON);
-    if (status != OK)
-        return UNKNOWN_ERROR;
-    if (mGCM.getMediaCtlConfig(IStreamConfigProvider::IMGU_STILL)) {
-        status = mMediaCtlHelper.configurePipe(mGCM, IStreamConfigProvider::IMGU_STILL, true);
-        if (status != OK)
-            return UNKNOWN_ERROR;
-        mCurPipeConfig = &mPipeConfigs[PIPE_STILL_INDEX];
-    }
-    // Set video pipe by default
-    if (mGCM.getMediaCtlConfig(IStreamConfigProvider::IMGU_VIDEO)) {
-        status = mMediaCtlHelper.configurePipe(mGCM, IStreamConfigProvider::IMGU_VIDEO, true);
-        if (status != OK)
-            return UNKNOWN_ERROR;
-        mCurPipeConfig = &mPipeConfigs[PIPE_VIDEO_INDEX];
-    }
 
     mConfiguredNodesPerName = mMediaCtlHelper.getConfiguredNodesPerName();
     if (mConfiguredNodesPerName.size() == 0) {
@@ -457,8 +475,12 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
         } else if (it.first == IMGU_NODE_PV_PREVIEW) {
             if(mStreamNodeMapping[it.first] == NULL)
                 continue;
-            pvWorker = std::make_shared<OutputFrameWorker>(it.second, mCameraId,
-                mStreamNodeMapping[it.first], it.first, pipelineDepth);
+            pvWorker = std::make_shared<OutputFrameWorker>(mCameraId, "PVWork",
+                it.first, pipelineDepth);
+
+            pvWorker->attachNode(it.second);
+            pvWorker->attachStream(mStreamNodeMapping[it.first]);
+
             setStreamListeners(it.first, pvWorker);
             //shutter event for non isys, zyc
             mListenerDeviceWorkers.push_back(pvWorker.get());
@@ -480,7 +502,7 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
 
         if (mCurPipeConfig == videoConfig) {
             LOGI("%s: configure postview in advance", __FUNCTION__);
-            pvWorker->configure(graphConfig);
+            pvWorker->configure(graphConfig, mConfigChanged);
         }
     }
 
@@ -497,7 +519,7 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
 
         if (mCurPipeConfig == stillConfig) {
             LOGI("%s: configure preview in advance", __FUNCTION__);
-            vfWorker->configure(graphConfig);
+            vfWorker->configure(graphConfig, mConfigChanged);
         }
     }
 
@@ -519,7 +541,7 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
 
     status_t ret = OK;
     for (const auto &it : mCurPipeConfig->deviceWorkers) {
-        ret = (*it).configure(graphConfig);
+        ret = (*it).configure(graphConfig, mConfigChanged);
 
         if (ret != OK) {
             LOGE("Failed to configure workers.");
@@ -661,7 +683,7 @@ status_t ImguUnit::processNextRequest()
         // Ignore this request
         return NO_ERROR;
     }
-    LOGI("@%s:handleExecuteReq for Req id %d, ", __FUNCTION__, request->getId());
+    LOGD("@%s:handleExecuteReq for Req id %d, ", __FUNCTION__, request->getId());
 
     mMessagesUnderwork.push_back(msg);
 
@@ -926,6 +948,16 @@ status_t ImguUnit::handleMessagePoll(DeviceMessage msg)
     return status;
 }
 
+void ImguUnit::getConfigedHwPathSize(const char* pathName, uint32_t &size)
+{
+    mMediaCtlHelper.getConfigedHwPathSize(pathName, size);
+}
+
+void ImguUnit::getConfigedSensorOutputSize(uint32_t &size)
+{
+    mMediaCtlHelper.getConfigedSensorOutputSize(size);
+}
+
 void
 ImguUnit::messageThreadLoop(void)
 {
@@ -984,6 +1016,20 @@ ImguUnit::requestExitAndWait(void)
     msg.id = MESSAGE_ID_EXIT;
     status_t status = mMessageQueue.send(&msg, MESSAGE_ID_EXIT);
     status |= mMessageThread->requestExitAndWait();
+
+    // Stop all video nodes
+    status = mMainOutWorker->stopWorker();
+    if (status != OK) {
+        LOGE("Fail to stop main woker");
+        return status;
+    }
+    status = mSelfOutWorker->stopWorker();
+    if (status != OK) {
+        LOGE("Fail to stop self woker");
+        return status;
+    }
+
+    clearWorkers();
     return status;
 }
 
@@ -1010,20 +1056,18 @@ ImguUnit::handleMessageFlush(void)
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
 
     mPollerThread->flush(true);
-
-    // Stop all video nodes
+    // flush all video nodes
     if (mCurPipeConfig) {
         status_t status;
         for (const auto &it : mCurPipeConfig->deviceWorkers) {
-            status = (*it).stopWorker();
+            status = (*it).flushWorker();
             if (status != OK) {
-                LOGE("Fail to stop wokers");
+                LOGE("Fail to flush wokers");
                 return status;
             }
         }
     }
 
-    clearWorkers();
     return NO_ERROR;
 }
 } /* namespace camera2 */

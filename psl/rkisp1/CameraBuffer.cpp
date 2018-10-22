@@ -216,8 +216,8 @@ status_t CameraBuffer::init(const camera3_stream_buffer *aBuffer, int cameraId)
     mUserBuffer = *aBuffer;
     mUserBuffer.release_fence = -1;
     mCameraId = cameraId;
-    LOGI("@%s, mHandle:%p, mFormat:%d, mWidth:%d, mHeight:%d, mStride:%d, mSize:%d",
-        __FUNCTION__, mHandle, mFormat, mWidth, mHeight, mStride, mSize);
+    LOGI("@%s, mHandle:%p, mFormat:%d, mWidth:%d, mHeight:%d, mStride:%d, mSize:%d, V4l2Fmt:%s",
+        __FUNCTION__, mHandle, mFormat, mWidth, mHeight, mStride, mSize, v4l2Fmt2Str(mV4L2Fmt));
 
     if (mHandle == nullptr) {
         LOGE("@%s: invalid buffer handle", __FUNCTION__);

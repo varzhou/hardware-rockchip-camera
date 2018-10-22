@@ -29,17 +29,18 @@ namespace camera2 {
 class OutputFrameWorker: public FrameWorker, public ICaptureEventSource, public IPostProcessListener
 {
 public:
-    OutputFrameWorker(std::shared_ptr<V4L2VideoNode> node, int cameraId, camera3_stream_t* stream,
+    OutputFrameWorker(int cameraId, std::string name,
                       NodeTypes nodeName, size_t pipelineDepth);
     virtual ~OutputFrameWorker();
 
     void addListener(camera3_stream_t* stream);
     void attachStream(camera3_stream_t* stream);
     void clearListeners();
-    virtual status_t configure(std::shared_ptr<GraphConfig> &config);
+    virtual status_t configure(std::shared_ptr<GraphConfig> &config, bool configChanged);
     status_t prepareRun(std::shared_ptr<DeviceMessage> msg);
     status_t run();
     status_t postRun();
+    virtual status_t flushWorker();
     status_t stopWorker();
     status_t notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                             const std::shared_ptr<ProcUnitSettings>& settings,
@@ -52,6 +53,7 @@ private:
     bool checkListenerBuffer(Camera3Request* request);
     std::shared_ptr<CameraBuffer> getOutputBufferForListener();
     void returnBuffers(bool returnListenerBuffers);
+    status_t configPostPipeLine();
 
 private:
     std::vector<std::shared_ptr<CameraBuffer>> mOutputBuffers;

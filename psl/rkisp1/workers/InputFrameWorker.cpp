@@ -44,16 +44,24 @@ InputFrameWorker::InputFrameWorker(int cameraId,
 InputFrameWorker::~InputFrameWorker()
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    stopWorker();
+    mPostPipeline.reset();
+}
+
+status_t
+InputFrameWorker::flushWorker()
+{
+    mMsg = nullptr;
+    mPostPipeline->flush();
+    mPostPipeline->stop();
+    mProcessingInputBufs.clear();
+
+    return OK;
 }
 
 status_t
 InputFrameWorker::stopWorker()
 {
-    mPostPipeline->flush();
-    mPostPipeline->stop();
-    mPostPipeline.reset();
-    mProcessingInputBufs.clear();
-
     return OK;
 }
 
@@ -101,7 +109,7 @@ InputFrameWorker::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
     return status;
 }
 
-status_t InputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/)
+status_t InputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/, bool configChanged)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
 

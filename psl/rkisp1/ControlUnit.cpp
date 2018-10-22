@@ -384,9 +384,11 @@ ControlUnit::~ControlUnit()
 status_t
 ControlUnit::configStreams(bool configChanged)
 {
-    LOGI("@%s: config changed: %d", __FUNCTION__, configChanged);
+    LOGI("@%s %d: configChanged :%d", __FUNCTION__, __LINE__, configChanged);
     status_t status = OK;
-    if (configChanged) {
+    if(configChanged) {
+        // this will be necessary when configStream called twice without calling
+        // destruct function which called in the close camera stack
         mLatestRequestId = -1;
         mWaitingForCapture.clear();
         mSettingsHistory.clear();
@@ -914,11 +916,12 @@ ControlUnit::handleNewShutter(Message &msg)
 }
 
 status_t
-ControlUnit::flush(void)
+ControlUnit::flush(bool configChanged)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     Message msg;
     msg.id = MESSAGE_ID_FLUSH;
+    msg.configChanged = configChanged;
     mMessageQueue.remove(MESSAGE_ID_NEW_REQUEST);
     mMessageQueue.remove(MESSAGE_ID_NEW_SHUTTER);
     mMessageQueue.remove(MESSAGE_ID_NEW_REQUEST_DONE);
@@ -926,15 +929,16 @@ ControlUnit::flush(void)
 }
 
 status_t
-ControlUnit::handleMessageFlush(void)
+ControlUnit::handleMessageFlush(Message &msg)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     status_t status = NO_ERROR;
-    if (mCtrlLoop)
-        status = mCtrlLoop->stop();
     if (CC_UNLIKELY(status != OK)) {
         LOGE("Failed to stop 3a control loop!");
     }
+    if(msg.configChanged && mCtrlLoop)
+        mCtrlLoop->stop();
+
     mImguUnit->flush();
 
     mWaitingForCapture.clear();
@@ -974,7 +978,7 @@ ControlUnit::messageThreadLoop()
             status = handleMetadataReceived(msg);
             break;
         case MESSAGE_ID_FLUSH:
-            status = handleMessageFlush();
+            status = handleMessageFlush(msg);
             break;
         default:
             LOGE("ERROR Unknown message %d", msg.id);

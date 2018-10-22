@@ -31,8 +31,9 @@ public:
                 size_t pipelineDepth, std::string name = "FrameWorker");
     virtual ~FrameWorker();
 
-    virtual status_t configure(std::shared_ptr<GraphConfig> &config);
+    virtual status_t configure(std::shared_ptr<GraphConfig> &config, bool configChanged);
     virtual status_t startWorker();
+    virtual status_t flushWorker();
     virtual status_t stopWorker();
     virtual status_t prepareRun(std::shared_ptr<DeviceMessage> msg) = 0;
 
@@ -60,10 +61,12 @@ protected:
 protected:
     std::vector<V4L2Buffer> mBuffers;
     unsigned int mIndex;
+    std::string mName;
     std::vector<std::shared_ptr<CameraBuffer>> mCameraBuffers;
 
     V4L2Format mFormat;
     std::shared_ptr<V4L2VideoNode> mNode;
+    bool mIsStarted;
     bool mPollMe;
     size_t mPipelineDepth;
 };

@@ -56,6 +56,9 @@ public:
         return mConfiguredNodesPerName;
     }
 
+    void getConfigedHwPathSize(const char* pathName, uint32_t &size);
+    void getConfigedSensorOutputSize(uint32_t &size);
+
 public:
     /**
      * \struct ConfigurationResults
@@ -90,6 +93,7 @@ private:
     IOpenCallBack* mOpenVideoNodeCallBack;
     std::shared_ptr<MediaController> mMediaCtl;
 
+    MediaCtlConfig mConfigedMediaCtlConfigs[IStreamConfigProvider::MEDIA_TYPE_MAX_COUNT];
     const MediaCtlConfig *mMediaCtlConfig;
     const MediaCtlConfig *mPipeConfig;
     IStreamConfigProvider::MediaType mConfigedPipeType;

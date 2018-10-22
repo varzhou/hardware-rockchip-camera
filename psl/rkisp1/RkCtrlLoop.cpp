@@ -81,11 +81,15 @@ void RkCtrlLoop::deinit()
 
 status_t RkCtrlLoop::start(const struct rkisp_cl_prepare_params_s& params)
 {
+    if (mIsStarted == true)
+        return OK;
+
     HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
     int ret = 0;
 
     LOGI("@%s %d: isp:%s, param:%s, stat:%s, sensor:%s", __FUNCTION__, __LINE__,
          params.isp_sd_node_path, params.isp_vd_params_path, params.isp_vd_stats_path, params.sensor_sd_node_path);
+
     ret = rkisp_cl_prepare(mControlLoopCtx, &params);
     if (ret < 0) {
         LOGE("%s: rkisp control loop prepare failed !", __FUNCTION__);
@@ -116,16 +120,18 @@ status_t RkCtrlLoop::setFrameParams(rkisp_cl_frame_metadata_s* frame_params)
 
 status_t RkCtrlLoop::stop()
 {
+    if (mIsStarted == false)
+        return OK;
+
     int ret = 0;
     HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
 
-    if (mIsStarted == true) {
-        ret = rkisp_cl_stop(mControlLoopCtx);
-        if (ret < 0) {
-            LOGE("%s: rkisp control loop stop failed !", __FUNCTION__);
-            return UNKNOWN_ERROR;
-        }
+    ret = rkisp_cl_stop(mControlLoopCtx);
+    if (ret < 0) {
+        LOGE("%s: rkisp control loop stop failed !", __FUNCTION__);
+        return UNKNOWN_ERROR;
     }
+
     mIsStarted = false;
     return NO_ERROR;
  }
