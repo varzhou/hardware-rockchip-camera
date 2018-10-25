@@ -387,9 +387,13 @@ RKISP1CameraHw::processRequest(Camera3Request* request, int inFlightCount)
     status_t status = NO_ERROR;
     // Check reconfiguration
     UseCase newUseCase = checkUseCase(request);
+    camera_metadata_ro_entry entry;
     int32_t testPatternMode = ANDROID_SENSOR_TEST_PATTERN_MODE_OFF;
-    status = getTestPatternMode(request, &testPatternMode);
-    CheckError(status != NO_ERROR, status, "@%s: failed to get test pattern mode", __FUNCTION__);
+    entry = request->getSettings()->find(ANDROID_SENSOR_TEST_PATTERN_MODE);
+    if(entry.count == 1) {
+        status = getTestPatternMode(request, &testPatternMode);
+        CheckError(status != NO_ERROR, status, "@%s: failed to get test pattern mode", __FUNCTION__);
+    }
 
     if (newUseCase != mUseCase || testPatternMode != mTestPatternMode) {
         LOGI("%s: request %d need reconfigure, infilght %d, usecase %d -> %d", __FUNCTION__,
