@@ -17,6 +17,7 @@
 
 #define LOG_TAG "ControlUnit"
 
+#include <sys/stat.h>
 #include "LogHelper.h"
 #include "PerformanceTraces.h"
 #include "ControlUnit.h"
