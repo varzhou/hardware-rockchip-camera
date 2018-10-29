@@ -148,46 +148,55 @@
                 BLOB,800x600,OUTPUT,
                 BLOB,640x480,OUTPUT,
                 BLOB,320x240,OUTPUT,
+                BLOB,176x144,OUTPUT,
                 YCbCr_420_888,1600x1200,OUTPUT,
                 YCbCr_420_888,1280x720,OUTPUT,
                 YCbCr_420_888,800x600,OUTPUT,
                 YCbCr_420_888,640x480,OUTPUT,
                 YCbCr_420_888,320x240,OUTPUT,
+                YCbCr_420_888,176x144,OUTPUT,
                 IMPLEMENTATION_DEFINED,1600x1200,OUTPUT,
                 IMPLEMENTATION_DEFINED,1280x720,OUTPUT,
                 IMPLEMENTATION_DEFINED,800x600,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
                 IMPLEMENTATION_DEFINED,320x240,OUTPUT,
+                IMPLEMENTATION_DEFINED,176x144,OUTPUT,
                 IMPLEMENTATION_DEFINED,1600x1200,INPUT,
                 IMPLEMENTATION_DEFINED,1280x720,INPUT,
                 IMPLEMENTATION_DEFINED,800x600,INPUT,
                 IMPLEMENTATION_DEFINED,640x480,INPUT,
                 IMPLEMENTATION_DEFINED,320x240,INPUT,
+                IMPLEMENTATION_DEFINED,176x144,INPUT,
                 YCbCr_420_888,1600x1200,INPUT,
                 YCbCr_420_888,1280x720,INPUT,
                 YCbCr_420_888,800x600,INPUT,
                 YCbCr_420_888,640x480,INPUT,
-                YCbCr_420_888,320x240,INPUT" />
+                YCbCr_420_888,320x240,INPUT,
+                YCbCr_420_888,176x144,INPUT" />
             <scaler.availableMinFrameDurations value="BLOB,1600x1200,50125313,
                 BLOB,1280x720,50125313,
                 BLOB,800x600,33333333,
                 BLOB,640x480,33333333,
                 BLOB,320x240,33333333,
+                BLOB,176x144,33333333,
                 YCbCr_420_888,1600x1200,50125313,
                 YCbCr_420_888,1280x720,50125313,
                 YCbCr_420_888,800x600,33333333,
                 YCbCr_420_888,640x480,33333333,
                 YCbCr_420_888,320x240,33333333,
+                YCbCr_420_888,176x144,33333333,
                 IMPLEMENTATION_DEFINED,1600x1200,50125313,
                 IMPLEMENTATION_DEFINED,1280x720,50125313,
                 IMPLEMENTATION_DEFINED,800x600,33333333,
                 IMPLEMENTATION_DEFINED,640x480,33333333,
-                IMPLEMENTATION_DEFINED,320x240,33333333" />
+                IMPLEMENTATION_DEFINED,320x240,33333333,
+                IMPLEMENTATION_DEFINED,176x144,33333333" />
             <scaler.availableStallDurations value="BLOB,1600x1200,50125313,
                                                    BLOB,1280x720,50125313,
                                                    BLOB,800x600,33333333,
                                                    BLOB,640x480,33333333,
-                                                   BLOB,320x240,33333333" />
+                                                   BLOB,320x240,33333333,
+                                                   BLOB,176x144,33333333" />
             <scaler.croppingType value="CENTER_ONLY"/>
             <!-- Sensor Info -->
             <sensor.info.activeArraySize value="0,0,1600,1200"/>
@@ -398,24 +407,33 @@
             <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB,YCbCr_420_888,2,YCbCr_420_888,BLOB"/>
             <scaler.availableStreamConfigurations value="BLOB,640x480,OUTPUT,
                 BLOB,320x240,OUTPUT,
+                BLOB,176x144,OUTPUT,
                 YCbCr_420_888,640x480,OUTPUT,
                 YCbCr_420_888,320x240,OUTPUT,
+                YCbCr_420_888,176x144,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
                 IMPLEMENTATION_DEFINED,320x240,OUTPUT,
+                IMPLEMENTATION_DEFINED,176x144,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,INPUT,
                 IMPLEMENTATION_DEFINED,320x240,INPUT,
+                IMPLEMENTATION_DEFINED,176x144,INPUT,
                 YCbCr_420_888,640x480,INPUT,
-                YCbCr_420_888,320x240,INPUT" />
+                YCbCr_420_888,320x240,INPUT,
+                YCbCr_420_888,176x144,INPUT" />
             <scaler.availableMinFrameDurations value="BLOB,640x480,33333333,
                 BLOB,640x480,33333333,
                 BLOB,320x240,33333333,
+                BLOB,176x144,33333333,
                 YCbCr_420_888,640x480,33333333,
                 YCbCr_420_888,320x240,33333333,
+                YCbCr_420_888,176x144,33333333,
                 IMPLEMENTATION_DEFINED,640x480,33333333,
-                IMPLEMENTATION_DEFINED,320x240,33333333" />
+                IMPLEMENTATION_DEFINED,320x240,33333333,
+                IMPLEMENTATION_DEFINED,176x144,33333333" />
             <scaler.availableStallDurations value="BLOB,640x480,33333333,
-                BLOB,320x240,33333333" />
-            <scaler.croppingType value="CENTER_ONLY"/>
+                BLOB,320x240,33333333,
+                BLOB,176x144,33333333" />
+				<scaler.croppingType value="CENTER_ONLY"/>
             <!-- Sensor Info -->
             <sensor.info.activeArraySize value="0,0,640,480"/>
             <sensor.info.sensitivityRange value="32,2400"/>
