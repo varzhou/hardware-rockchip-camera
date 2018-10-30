@@ -78,6 +78,7 @@ private:
     void setStreamListeners(NodeTypes nodeName,
                             std::shared_ptr<OutputFrameWorker>& source);
     status_t kickstart();
+    status_t stopAllWorkers();
     void clearWorkers();
 
     status_t allocatePublicStatBuffers(int numBufs);
