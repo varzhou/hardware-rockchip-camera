@@ -28,18 +28,28 @@ FrameWorker::FrameWorker(std::shared_ptr<V4L2VideoNode> node,
                          int cameraId, size_t pipelineDepth, std::string name) :
         IDeviceWorker(cameraId),
         mIndex(0),
+        mName(name),
         mNode(node),
+        mIsStarted(false),
         mPollMe(false),
         mPipelineDepth(pipelineDepth)
 {
-    LOGI("%s handling node %s", name.c_str(), mNode->name());
 }
 
 FrameWorker::~FrameWorker()
 {
 }
 
-status_t FrameWorker::configure(std::shared_ptr<GraphConfig> & /*config*/)
+status_t FrameWorker::attachNode(std::shared_ptr<V4L2VideoNode> node)
+{
+    if(node.get() != NULL) {
+        LOGI("@%s :%s attach to node(%p) %s", __FUNCTION__, mName.c_str(), node.get(), node->name());
+        mNode = node;
+    }
+    return OK;
+}
+
+status_t FrameWorker::configure(std::shared_ptr<GraphConfig> & /*config*/, bool configChanged)
 {
     return OK;
 }
@@ -47,22 +57,47 @@ status_t FrameWorker::configure(std::shared_ptr<GraphConfig> & /*config*/)
 status_t FrameWorker::startWorker()
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    LOGI("@%s enter, %s, mIsStarted:%d", __FUNCTION__, mName.c_str(), mIsStarted);
+    if (mIsStarted == true)
+        return OK;
+
     status_t ret = mNode->start(0);
     if (ret != OK) {
         LOGE("Unable to start device: %s ret: %d", mNode->name(), ret);
     }
+    mIsStarted = true;
 
     return ret;
 }
 
+status_t FrameWorker::flushWorker()
+{
+    LOGI("@%s enter, %s", __FUNCTION__, mName.c_str());
+    mMsg = nullptr;
+    return OK;
+}
+
 status_t FrameWorker::stopWorker()
 {
-    return mNode->stop(true);
+    LOGI("@%s enter, %s, mIsStarted:%d", __FUNCTION__, mName.c_str(), mIsStarted);
+    if (mIsStarted == false)
+        return OK;
+
+    mMsg = nullptr;
+    mBuffers.clear();
+    mCameraBuffers.clear();
+    status_t ret = mNode->stop(true);
+    if (ret != OK) {
+        LOGE("stop device failed: %s ret: %d", mNode->name(), ret);
+    }
+    mIsStarted = false;
+    return ret;
 }
 
 status_t FrameWorker::setWorkerDeviceFormat(FrameInfo &frame)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    LOGI("@%s enter, %s", __FUNCTION__, mName.c_str());
 
     status_t ret = mNode->setFormat(frame);
     CheckError(ret != NO_ERROR, ret, "@%s set worker format failed", __FUNCTION__);
@@ -74,6 +109,7 @@ status_t FrameWorker::setWorkerDeviceFormat(FrameInfo &frame)
 
 status_t FrameWorker::setWorkerDeviceBuffers(int memType)
 {
+    LOGI("@%s enter, %s", __FUNCTION__, mName.c_str());
     for (unsigned int i = 0; i < mPipelineDepth; i++) {
         V4L2Buffer buffer;
         mBuffers.push_back(buffer);
@@ -93,12 +129,9 @@ status_t FrameWorker::allocateWorkerBuffers()
     int dmaBufFd;
     unsigned long userptr;
     std::shared_ptr<CameraBuffer> buf = nullptr;
+    LOGI("@%s allocate format: %s size: %d %dx%d bytesperline: %d", __func__, v4l2Fmt2Str(mFormat.pixelformat()),
+            mFormat.sizeimage(), mFormat.width(), mFormat.height(), mFormat.bytesperline());
     for (unsigned int i = 0; i < mPipelineDepth; i++) {
-        LOGI("@%s allocate format: %s size: %d %dx%d bytesperline: %d", __func__, v4l2Fmt2Str(mFormat.pixelformat()),
-                mFormat.sizeimage(),
-                mFormat.width(),
-                mFormat.height(),
-                mFormat.bytesperline());
         switch (memType) {
         case V4L2_MEMORY_USERPTR:
             buf = MemoryUtils::allocateHeapBuffer(mFormat.width(),
@@ -112,7 +145,7 @@ status_t FrameWorker::allocateWorkerBuffers()
             userptr = reinterpret_cast<unsigned long>(buf->data());
             mBuffers[i].setUserptr(userptr);
             memset(buf->data(), 0, buf->size());
-            LOGI("mBuffers[%d].userptr: 0x%lx", i , mBuffers[i].userptr());
+            LOGD("mBuffers[%d].userptr: 0x%lx", i , mBuffers[i].userptr());
             break;
         case V4L2_MEMORY_MMAP:
             {

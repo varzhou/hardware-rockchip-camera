@@ -23,10 +23,11 @@
 #include <memory>
 #include <map>
 #include <mutex>
+#include <chrono>             // std::chrono::second
 
 #include "CameraStreamNode.h"
 #include "CameraBuffer.h"
-using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
+USING_METADATA_NAMESPACE;
 NAMESPACE_DECLARATION {
 
 /**
@@ -119,6 +120,8 @@ public:
              int getpartialResultCount() { return mPartialResultBuffers.size(); }
     int getCameraId() {return mCameraId;}
     CameraMetadata* getPartialResultBuffer(unsigned int index);
+    void notifyFinalmetaFilled();
+    CameraMetadata* getAndWaitforFilledResults(unsigned int index);
     const CameraMetadata* getSettings() const;
 
     const std::vector<camera3_stream_buffer>* getInputBuffers();
@@ -158,6 +161,9 @@ private:  /* types and members */
     // mMembers, mLock and friendship with the SharedObject template
     Members mMembers;
     mutable std::mutex mLock; /* protects mMembers and SharedObjects */
+    bool mMetadtaFilled;
+    std::mutex mResultLock; /* for PartialResultBuffers*/
+    std::condition_variable mCondition;
     friend class SharedObject<Camera3Request, Camera3Request::Members>;
     friend class SharedObject<const Camera3Request, const Camera3Request::Members>;
 

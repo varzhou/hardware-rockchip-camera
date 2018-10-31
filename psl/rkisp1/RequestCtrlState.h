@@ -44,8 +44,15 @@ struct RequestCtrlState {
 
     bool shutterDone;
     uint8_t intent;          /**< Capture intent, needed for precapture */
-    //3a metadata received frome Control loop
+
+    //Metadata reuslt are mainly divided into three parts
+    //1. some settings from app
+    //2. 3A metas from Control loop
+    //3. some items like sensor timestamp from shutter
+    //3a metadata received from Control loop
     bool mClMetaReceived;
+    //metadata received from ImgUnit, now only sensor timestamp
+    bool mShutterMetaReceived;
     //imgunit process done
     bool mImgProcessDone;
 };

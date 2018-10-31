@@ -63,7 +63,7 @@ public:
     virtual ~ControlUnit();
 
     status_t init();
-    status_t configStreamsDone(bool configChanged);
+    status_t configStreams(bool configChanged);
 
     status_t processRequest(Camera3Request* request,
                             std::shared_ptr<GraphConfig> graphConfig);
@@ -71,7 +71,7 @@ public:
     /* ICaptureEventListener interface*/
     bool notifyCaptureEvent(CaptureMessage *captureMsg);
 
-    status_t flush(void);
+    status_t flush(bool configChanged = true);
 
 public:  /* private types */
     // thread message id's
@@ -109,6 +109,7 @@ public:  /* private types */
     // message id and message data
     struct Message {
         MessageId id;
+        bool configChanged;
         unsigned int requestId; /**< For raw buffers from CaptureUnit as
                                      they don't have request */
         MessageData data;
@@ -146,7 +147,7 @@ private:  /* Methods */
     status_t handleNewRequestDone(Message &msg);
     status_t handleMetadataReceived(Message &msg);
     status_t handleNewShutter(Message &msg);
-    status_t handleMessageFlush(void);
+    status_t handleMessageFlush(Message &msg);
 
     status_t processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqState);
 

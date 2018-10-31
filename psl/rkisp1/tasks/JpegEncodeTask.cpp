@@ -126,7 +126,7 @@ status_t JpegEncodeTask::handleMessageSettings(ProcUnitSettings &procSettings)
 
     // TODO: Search metadata from correct partial!
     // Currently only one, CONTROL_UNIT_PARTIAL_RESULT
-    CameraMetadata *partRes = req->getPartialResultBuffer(CONTROL_UNIT_PARTIAL_RESULT);
+    CameraMetadata *partRes = req->getAndWaitforFilledResults(CONTROL_UNIT_PARTIAL_RESULT);
     if (partRes == nullptr) {
         LOGE("No partial result for EXIF in request.");
         return BAD_VALUE;

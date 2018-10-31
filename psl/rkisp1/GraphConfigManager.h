@@ -155,6 +155,9 @@ public:
     const MediaCtlConfig *getMediaCtlConfigPrev(IStreamConfigProvider::MediaType type) const;
     std::shared_ptr<GraphConfig> getBaseGraphConfig();
 
+    void getHwPathSize(const char* pathName, uint32_t &size);
+    void getSensorOutputSize(uint32_t &size);
+
     /*
      * Second query
      */

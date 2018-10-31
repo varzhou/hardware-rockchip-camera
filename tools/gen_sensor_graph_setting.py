@@ -310,8 +310,14 @@ def main(argv):
         for s in settings:
             if opts.width > s["W"] and opts.height > s["H"]:
                 target.append(s)
+
         target.insert(0, {'W': opts.width, 'H': opts.height})
 
+        if opts.binner_width and opts.binner_height:
+            binners = {'W': opts.binner_width, 'H': opts.binner_height}
+            if binners not in target:
+                target.insert(0, binners)
+        target.sort(reverse=True)
         print reso
         print mode
         print target

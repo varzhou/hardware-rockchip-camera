@@ -28,36 +28,65 @@
 namespace android {
 namespace camera2 {
 
-OutputFrameWorker::OutputFrameWorker(std::shared_ptr<V4L2VideoNode> node, int cameraId,
-                camera3_stream_t* stream, NodeTypes nodeName, size_t pipelineDepth) :
-                FrameWorker(node, cameraId, pipelineDepth, "OutputFrameWorker"),
+OutputFrameWorker::OutputFrameWorker(int cameraId, std::string name,
+                NodeTypes nodeName, size_t pipelineDepth) :
+                FrameWorker(nullptr, cameraId, pipelineDepth, name),
                 mOutputBuffer(nullptr),
-                mStream(stream),
+                mStream(NULL),
                 mNeedPostProcess(false),
                 mNodeName(nodeName),
                 mPostPipeline(new PostProcessPipeLine(this, cameraId)),
                 mPostProcItemsPool("PostBufPool")
 {
-    if (mNode)
-        LOGI("@%s, instance(%p), mStream(%p), device name:%s", __FUNCTION__, this, mStream, mNode->name());
+    LOGI("@%s, name:%s instance:%p, cameraId:%d", __FUNCTION__, name.data(), this, cameraId);
+    mPostProcItemsPool.init(mPipelineDepth, PostProcBuffer::reset);
+    for (size_t i = 0; i < mPipelineDepth; i++)
+    {
+        std::shared_ptr<PostProcBuffer> buffer= nullptr;
+        mPostProcItemsPool.acquireItem(buffer);
+        if (buffer.get() == nullptr) {
+            LOGE("No memory, fix me!");
+        }
+        buffer->index = i;
+    }
 }
 
 OutputFrameWorker::~OutputFrameWorker()
 {
-    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    if (mOutputForListener.get() && mOutputForListener->isLocked()) {
-        mOutputForListener->unlock();
-    }
+    LOGI("@%s, name:%s instance:%p, cameraId:%d", __FUNCTION__, mName.data(), this, mCameraId);
+    mPostPipeline.reset();
+}
+
+status_t
+OutputFrameWorker::flushWorker()
+{
+    // this func will be called in every config stream time
+    // 1.stream related variable should be destruct here.
+    // 2.PostPipeline processing is base on streams, so it must
+    // flush and stop here
+    LOGI("@%s enter, %s ", __FUNCTION__, mName.c_str());
+    FrameWorker::flushWorker();
+    mPostPipeline->flush();
+    mPostPipeline->stop();
+    mPostWorkingBufs.clear();
+    clearListeners();
+
+    return OK;
 }
 
 status_t
 OutputFrameWorker::stopWorker()
 {
+    LOGI("@%s enter, %s, mIsStarted:%d", __FUNCTION__, mName.c_str(), mIsStarted);
+    if (mIsStarted == false)
+        return OK;
     FrameWorker::stopWorker();
-    mPostPipeline->flush();
-    mPostPipeline->stop();
-    mPostWorkingBufs.clear();
-    mPostPipeline.reset();
+    mOutputBuffers.clear();
+
+    if (mOutputForListener.get() && mOutputForListener->isLocked()) {
+        mOutputForListener->unlock();
+    }
+    mOutputForListener = nullptr;
 
     return OK;
 }
@@ -75,8 +104,18 @@ OutputFrameWorker::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
 void OutputFrameWorker::addListener(camera3_stream_t* stream)
 {
     if (stream != nullptr) {
-        LOGI("stream %p has listener %p", mStream, stream);
+        LOGI("%s, stream %p has listener %p", mName.c_str(), mStream, stream);
         mListeners.push_back(stream);
+    }
+}
+
+void OutputFrameWorker::attachStream(camera3_stream_t* stream)
+{
+    if (stream != nullptr) {
+        LOGI("@%s, %s attach to stream(%p): %dx%d, type %d, fmt %s,", __FUNCTION__,
+             mName.c_str(), stream, stream->width, stream->height, stream->stream_type,
+             METAID2STR(android_scaler_availableFormats_values, stream->format));
+        mStream = stream;
     }
 }
 
@@ -85,19 +124,8 @@ void OutputFrameWorker::clearListeners()
     mListeners.clear();
 }
 
-status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/)
+status_t OutputFrameWorker::configPostPipeLine()
 {
-    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-
-    status_t ret = mNode->getFormat(mFormat);
-    if (ret != OK)
-        return ret;
-
-    LOGI("@%s allocate format: %s size: %d %dx%d", __func__, v4l2Fmt2Str(mFormat.pixelformat()),
-            mFormat.sizeimage(),
-            mFormat.width(),
-            mFormat.height());
-
     FrameInfo sourceFmt;
     sourceFmt.width = mFormat.width();
     sourceFmt.height = mFormat.height();
@@ -110,32 +138,47 @@ status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/)
     mPostWorkingBufs.resize(mPipelineDepth);
     mPostPipeline->prepare(sourceFmt, streams, mNeedPostProcess, mPipelineDepth);
     mPostPipeline->start();
-    mPostProcItemsPool.init(mPipelineDepth, PostProcBuffer::reset);
-    for (size_t i = 0; i < mPipelineDepth; i++)
-    {
-        std::shared_ptr<PostProcBuffer> buffer= nullptr;
-        mPostProcItemsPool.acquireItem(buffer);
-        if (buffer.get() == nullptr) {
-            LOGE("postproc task busy, no idle postproc frame!");
-            return UNKNOWN_ERROR;
-        }
-        buffer->index = i;
-    }
+    return OK;
+}
 
-    mIndex = 0;
-    mOutputBuffers.clear();
-    mOutputBuffers.resize(mPipelineDepth);
+status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/, bool configChanged)
+{
+    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    status_t ret = OK;
 
-    ret = setWorkerDeviceBuffers(
-        mNeedPostProcess ? V4L2_MEMORY_MMAP : getDefaultMemoryType(mNodeName));
-    CheckError((ret != OK), ret, "@%s set worker device buffers failed.",
-               __FUNCTION__);
+    LOGI("@%s %s: configChanged:%d", __FUNCTION__, mName.c_str(), configChanged);
+    if(configChanged) {
+        ret = mNode->getFormat(mFormat);
+        if (ret != OK)
+            return ret;
 
-    // Allocate internal buffer.
-    if (mNeedPostProcess) {
-        ret = allocateWorkerBuffers();
-        CheckError((ret != OK), ret, "@%s failed to allocate internal buffer.",
+        LOGI("@%s %s format %s, size %d, %dx%d", __FUNCTION__, mName.c_str(),
+             v4l2Fmt2Str(mFormat.pixelformat()), mFormat.sizeimage(), mFormat.width(), mFormat.height());
+
+        ret = configPostPipeLine();
+        if (ret != OK)
+            return ret;
+
+        mIndex = 0;
+        mOutputBuffers.clear();
+        mOutputBuffers.resize(mPipelineDepth);
+
+        ret = setWorkerDeviceBuffers(
+                                     mNeedPostProcess ? V4L2_MEMORY_MMAP : getDefaultMemoryType(mNodeName));
+        CheckError((ret != OK), ret, "@%s set worker device buffers failed.",
                    __FUNCTION__);
+
+        // Allocate internal buffer.
+        if (mNeedPostProcess) {
+            ret = allocateWorkerBuffers();
+            CheckError((ret != OK), ret, "@%s failed to allocate internal buffer.",
+                       __FUNCTION__);
+        }
+
+    } else {
+        ret = configPostPipeLine();
+        if (!ret)
+            return ret;
     }
 
     return OK;
@@ -233,7 +276,7 @@ status_t OutputFrameWorker::prepareRun(std::shared_ptr<DeviceMessage> msg)
     } else {
         postbuffer->cambuf = mCameraBuffers[mIndex];
     }
-    LOGI("%s:%d:instance(%p), requestId(%d), index(%d)", __FUNCTION__, __LINE__, this, request->getId(), mIndex);
+    LOGD("%s: %s, requestId(%d), index(%d)", __FUNCTION__, mName.c_str(), request->getId(), mIndex);
     status |= mNode->putFrame(mBuffers[mIndex]);
     mPostWorkingBufs[mIndex]= postbuffer;
 
@@ -290,7 +333,7 @@ status_t OutputFrameWorker::run()
     outMsg.data.event.sequence = outBuf.vbuffer.sequence();
     notifyListeners(&outMsg);
 
-    LOGI("%s:%d:instance(%p), frame_id(%d), requestId(%d), index(%d)", __FUNCTION__, __LINE__, this, outBuf.vbuffer.sequence(), request->getId(), index);
+    LOGD("%s: %s, frame_id(%d), requestId(%d), index(%d)", __FUNCTION__, mName.c_str(), outBuf.vbuffer.sequence(), request->getId(), index);
 
     if (status < 0)
         returnBuffers(true);
@@ -476,7 +519,6 @@ bool OutputFrameWorker::checkListenerBuffer(Camera3Request* request)
         }
     }
 
-    LOGI("%s, required is %s", __FUNCTION__, (required ? "true" : "false"));
     return required;
 }
 
@@ -523,7 +565,7 @@ OutputFrameWorker::getOutputBufferForListener()
         mOutputForListener->lock();
     }
 
-    LOGI("%s, get output buffer for Listeners", __FUNCTION__);
+    LOGD("%s, get output buffer for Listeners", __FUNCTION__);
     return mOutputForListener;
 }
 

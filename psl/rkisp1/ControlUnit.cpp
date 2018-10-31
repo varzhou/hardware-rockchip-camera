@@ -17,6 +17,7 @@
 
 #define LOG_TAG "ControlUnit"
 
+#include <sys/stat.h>
 #include "LogHelper.h"
 #include "PerformanceTraces.h"
 #include "ControlUnit.h"
@@ -30,7 +31,7 @@
 #include "SettingsProcessor.h"
 #include "Metadata.h"
 #include "MediaEntity.h"
-using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
+USING_METADATA_NAMESPACE;
 static const int SETTINGS_POOL_SIZE = MAX_REQUEST_IN_PROCESS_NUM * 2;
 
 namespace android {
@@ -142,6 +143,19 @@ ControlUnit::getDevicesPath()
     if (entityName == "none") {
         LOGW("%s: No lens found", __FUNCTION__);
     } else {
+        /*
+         * use subdev path directly, now lens subdev has not been registered
+         * to media system in driver.
+         */
+#if 1
+        struct stat sb;
+        int PathExists = stat(entityName.c_str(), &sb);
+        if (PathExists != 0) {
+            LOGE("Error, could not find lens subdev %s !", entityName.c_str());
+        } else {
+            mDevPathsMap[KDevPathTypeLensNode] = entityName;
+        }
+#else
         status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
         if (mediaEntity == nullptr || status != NO_ERROR) {
             LOGE("%s, Could not retrieve Media Entity %s", __FUNCTION__, entityName.c_str());
@@ -150,6 +164,7 @@ ControlUnit::getDevicesPath()
             if (subdev.get())
                 mDevPathsMap[KDevPathTypeLensNode] = subdev->name();
         }
+#endif
     }
 
     return OK;
@@ -305,6 +320,7 @@ void RequestCtrlState::init(Camera3Request *req,
     }
 
     mClMetaReceived = false;
+    mShutterMetaReceived = false;
     mImgProcessDone = false;
 
     /**
@@ -366,11 +382,13 @@ ControlUnit::~ControlUnit()
 }
 
 status_t
-ControlUnit::configStreamsDone(bool configChanged)
+ControlUnit::configStreams(bool configChanged)
 {
-    LOGI("@%s: config changed: %d", __FUNCTION__, configChanged);
+    LOGI("@%s %d: configChanged :%d", __FUNCTION__, __LINE__, configChanged);
     status_t status = OK;
-    if (configChanged) {
+    if(configChanged) {
+        // this will be necessary when configStream called twice without calling
+        // destruct function which called in the close camera stack
         mLatestRequestId = -1;
         mWaitingForCapture.clear();
         mSettingsHistory.clear();
@@ -640,25 +658,35 @@ ControlUnit::processRequestForCapture(std::shared_ptr<RequestCtrlState> &reqStat
         reqState->captureSettings->makernote.size = 0;
     }
 
-    if (mCtrlLoop) {
-        const CameraMetadata *settings = reqState->request->getSettings();
-        rkisp_cl_frame_metadata_s frame_metas;
-        frame_metas.metas = settings->getAndLock();
-        frame_metas.id = reqId;
-        status = mCtrlLoop->setFrameParams(&frame_metas);
-        if (status != OK)
-            LOGE("CtrlLoop setFrameParams error");
+    // if this request is a reprocess request, no need to setFrameParam to CL.
+    if (reqState->request->getNumberInputBufs() == 0) {
+        if (mCtrlLoop) {
+            const CameraMetadata *settings = reqState->request->getSettings();
+            rkisp_cl_frame_metadata_s frame_metas;
+            frame_metas.metas = settings->getAndLock();
+            frame_metas.id = reqId;
+            status = mCtrlLoop->setFrameParams(&frame_metas);
+            if (status != OK)
+                LOGE("CtrlLoop setFrameParams error");
 
-        status = settings->unlock(frame_metas.metas);
-        if (status != OK) {
-            LOGE("unlock frame frame_metas failed");
-            return UNKNOWN_ERROR;
+            status = settings->unlock(frame_metas.metas);
+            if (status != OK) {
+                LOGE("unlock frame frame_metas failed");
+                return UNKNOWN_ERROR;
+            }
+        } else {
+            // set SoC sensor's params
+            const CameraMetadata *settings = reqState->request->getSettings();
+            processSoCSettings(settings);
         }
     } else {
-        // set SoC sensor's params
-        const CameraMetadata *settings = reqState->request->getSettings();
-        processSoCSettings(settings);
+        LOGD("@%s %d: reprocess request:%d, no need setFrameParam", __FUNCTION__, __LINE__, reqId);
+        reqState->mClMetaReceived = true;
+        /* Result as reprocessing request: The HAL can expect that a reprocessing request is a copy */
+        /* of one of the output results with minor allowed setting changes. */
+        reqState->ctrlUnitResult->append(*reqState->request->getSettings());
     }
+
     /*TODO, needn't this anymore ? zyc*/
     status = completeProcessing(reqState);
     if (status != OK)
@@ -757,7 +785,6 @@ status_t ControlUnit::fillMetadata(std::shared_ptr<RequestCtrlState> &reqState)
         ctrlUnitResult->update(ANDROID_CONTROL_AE_STATE, &aeState, 1);
         reqState->mClMetaReceived = true;
     }
-    mMetadata->writeRestMetadata(*reqState);
     return OK;
 }
 
@@ -784,8 +811,8 @@ ControlUnit::handleNewRequestDone(Message &msg)
 
     reqState->mImgProcessDone = true;
     Camera3Request* request = reqState->request;
-    //if (!reqState->mClMetaReceived)
-        //return OK;
+    if (!reqState->mClMetaReceived)
+        return OK;
 
     request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
     /*
@@ -875,6 +902,11 @@ ControlUnit::handleNewShutter(Message &msg)
 
     //# ANDROID_METADATA_Dynamic android.sensor.timestamp done
     reqState->ctrlUnitResult->update(ANDROID_SENSOR_TIMESTAMP, &ts, 1);
+    reqState->mShutterMetaReceived = true;
+    if(reqState->mClMetaReceived) {
+        mMetadata->writeRestMetadata(*reqState);
+        reqState->request->notifyFinalmetaFilled();
+    }
     reqState->request->mCallback->shutterDone(reqState->request, ts);
     reqState->shutterDone = true;
     reqState->captureSettings->timestamp = ts;
@@ -884,11 +916,12 @@ ControlUnit::handleNewShutter(Message &msg)
 }
 
 status_t
-ControlUnit::flush(void)
+ControlUnit::flush(bool configChanged)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     Message msg;
     msg.id = MESSAGE_ID_FLUSH;
+    msg.configChanged = configChanged;
     mMessageQueue.remove(MESSAGE_ID_NEW_REQUEST);
     mMessageQueue.remove(MESSAGE_ID_NEW_SHUTTER);
     mMessageQueue.remove(MESSAGE_ID_NEW_REQUEST_DONE);
@@ -896,15 +929,16 @@ ControlUnit::flush(void)
 }
 
 status_t
-ControlUnit::handleMessageFlush(void)
+ControlUnit::handleMessageFlush(Message &msg)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     status_t status = NO_ERROR;
-    if (mCtrlLoop)
-        status = mCtrlLoop->stop();
     if (CC_UNLIKELY(status != OK)) {
         LOGE("Failed to stop 3a control loop!");
     }
+    if(msg.configChanged && mCtrlLoop)
+        mCtrlLoop->stop();
+
     mImguUnit->flush();
 
     mWaitingForCapture.clear();
@@ -944,7 +978,7 @@ ControlUnit::messageThreadLoop()
             status = handleMetadataReceived(msg);
             break;
         case MESSAGE_ID_FLUSH:
-            status = handleMessageFlush();
+            status = handleMessageFlush(msg);
             break;
         default:
             LOGE("ERROR Unknown message %d", msg.id);
@@ -1033,8 +1067,16 @@ ControlUnit::handleMetadataReceived(Message &msg) {
         return UNKNOWN_ERROR;
     }
 
+    //Metadata reuslt are mainly divided into three parts
+    //1. some settings from app
+    //2. 3A metas from Control loop
+    //3. some items like sensor timestamp from shutter
     reqState->ctrlUnitResult->append(msg.metas);
     reqState->mClMetaReceived = true;
+    if(reqState->mShutterMetaReceived) {
+        mMetadata->writeRestMetadata(*reqState);
+        reqState->request->notifyFinalmetaFilled();
+    }
 
     if (!reqState->mImgProcessDone)
         return OK;

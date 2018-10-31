@@ -442,6 +442,7 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     HAL_KPI_TRACE_CALL(CAM_GLBL_DBG_HIGH, 1000000); /* 1 ms*/
     UNUSED(operationMode);
+
     ResolutionItem res;
     int needEnableStill = false;
     status_t ret = OK;
@@ -768,6 +769,29 @@ std::shared_ptr<GraphConfig> GraphConfigManager::getBaseGraphConfig()
     }
     gc->init(0);
     return gc;
+}
+
+void GraphConfigManager::getHwPathSize(const char* pathName, uint32_t &size)
+{
+    std::vector<MediaCtlFormatParams> &params = mMediaCtlConfigs[IMGU_COMMON].mFormatParams;
+
+    for (size_t i = 0; i < params.size(); i++) {
+        if(strcmp(pathName, params[i].entityName.data()) == 0) {
+            size = params[i].width * params[i].height;
+            LOGI("@%s Curconfig : pathName:%s, size:%dx%d", __FUNCTION__, pathName, params[i].width, params[i].height);
+        }
+    }
+}
+
+void GraphConfigManager::getSensorOutputSize(uint32_t &size) {
+    std::vector<MediaCtlFormatParams> &params = mMediaCtlConfigs[CIO2].mFormatParams;
+    if(params.size() == 1)
+        size = params[0].width * params[0].height;
+    else
+        size = 0;
+    LOGI("@%s Curconfig: senor output size:%dx%d", __FUNCTION__,
+         size == 0 ? 0 : params[0].width,
+         size == 0 ? 0 : params[0].height);
 }
 
 /**

@@ -73,11 +73,14 @@ class RKISP1CameraHw: public ICameraHw {
     status_t checkStreamRotation(const std::vector<camera3_stream_t*> activeStreams);
     camera3_stream_t* findStreamForStillCapture(const std::vector<camera3_stream_t*>& streams);
 
+    void checkNeedReconfig(std::vector<camera3_stream_t*> &activeStreams);
     UseCase checkUseCase(Camera3Request* request) const;
-    status_t reconfigureStreams(UseCase newUseCase, uint32_t operation_mode, int32_t testPatternMode);
+    status_t doConfigureStreams(UseCase newUseCase, uint32_t operation_mode, int32_t testPatternMode);
 
  private:  //members
     int mCameraId;
+    bool mConfigChanged;
+
     CameraMetadata* mStaticMeta;
     /**
      * locally cached static metadata tag values

@@ -40,6 +40,7 @@ ICameraHw *CreatePSLCamera(int cameraId) {
 
 RKISP1CameraHw::RKISP1CameraHw(int cameraId):
         mCameraId(cameraId),
+        mConfigChanged(true),
         mStaticMeta(nullptr),
         mPipelineDepth(-1),
         mImguUnit(nullptr),
@@ -267,6 +268,31 @@ RKISP1CameraHw::findStreamForStillCapture(const std::vector<camera3_stream_t*>& 
     return jpegStream;
 }
 
+void
+RKISP1CameraHw::checkNeedReconfig(std::vector<camera3_stream_t*> &activeStreams)
+{
+    uint32_t lastPathSize = 0, pathSize = 0;
+    uint32_t lastSensorSize = 0, sensorSize = 0;
+    //pipeline should reconfig when Sensor out put size changed
+    mGCM.getSensorOutputSize(sensorSize);
+    mImguUnit->getConfigedSensorOutputSize(lastSensorSize);
+    mConfigChanged = (sensorSize != lastSensorSize);
+    if (mConfigChanged)
+        return ;
+
+    const char * device = PSLConfParser::getImguEntityMediaDevice(mCameraId);
+    if(strcmp(device, "rkcif") == 0) {
+        LOGI("@%s : rkcif device, no need reconifg when sensor output size does not change", __FUNCTION__);
+        mConfigChanged = false;
+        return ;
+    }
+
+    //pipeline should reconfig when mainpath size expand
+    mGCM.getHwPathSize("rkisp1_mainpath", pathSize);
+    mImguUnit->getConfigedHwPathSize("rkisp1_mainpath", lastPathSize);
+    mConfigChanged = pathSize > lastPathSize ? true : false;
+}
+
 status_t
 RKISP1CameraHw::configStreams(std::vector<camera3_stream_t*> &activeStreams,
                             uint32_t operation_mode)
@@ -320,11 +346,6 @@ RKISP1CameraHw::configStreams(std::vector<camera3_stream_t*> &activeStreams,
         }
     }
 
-    /* Flush to make sure we return all graph config objects to the pool before
-       next stream config. */
-    /* mImguUnit->flush(); */
-    mControlUnit->flush();
-
     mUseCase = USECASE_VIDEO; // Configure video pipe by default
     if (mStreamsVideo.empty()) {
         mUseCase = USECASE_STILL;
@@ -336,22 +357,7 @@ RKISP1CameraHw::configStreams(std::vector<camera3_stream_t*> &activeStreams,
     LOGI("%s: select usecase %d, video/still stream num: %zu/%zu", __FUNCTION__,
             mUseCase, mStreamsVideo.size(), mStreamsStill.size());
 
-    std::vector<camera3_stream_t*> &configuredStreams =
-            (mUseCase == USECASE_STILL) ? mStreamsStill : mStreamsVideo;
-
-    status = mGCM.configStreams(configuredStreams, operation_mode, mTestPatternMode);
-    if (status != NO_ERROR) {
-        LOGE("Unable to configure stream: No matching graph config found! BUG");
-        return status;
-    }
-
-    status = mImguUnit->configStreams(configuredStreams);
-    if (status != NO_ERROR) {
-        LOGE("Unable to configure stream for ImguUnit");
-        return status;
-    }
-
-    status = mControlUnit->configStreamsDone(configChanged);
+    status = doConfigureStreams(mUseCase, operation_mode, ANDROID_SENSOR_TEST_PATTERN_MODE_OFF);
 
     return status;
 }
@@ -402,7 +408,7 @@ RKISP1CameraHw::processRequest(Camera3Request* request, int inFlightCount)
             return RequestThread::REQBLK_WAIT_ALL_PREVIOUS_COMPLETED;
         }
 
-        status = reconfigureStreams(newUseCase, mOperationMode, testPatternMode);
+        status = doConfigureStreams(newUseCase, mOperationMode, testPatternMode);
     }
 
     if (status == NO_ERROR) {
@@ -446,7 +452,7 @@ status_t RKISP1CameraHw::getTestPatternMode(Camera3Request* request, int32_t* te
     return NO_ERROR;
 }
 
-status_t RKISP1CameraHw::reconfigureStreams(UseCase newUseCase,
+status_t RKISP1CameraHw::doConfigureStreams(UseCase newUseCase,
                                   uint32_t operation_mode, int32_t testPatternMode)
 {
     mUseCase = newUseCase;
@@ -454,25 +460,33 @@ status_t RKISP1CameraHw::reconfigureStreams(UseCase newUseCase,
     std::vector<camera3_stream_t*>& streams = (mUseCase == USECASE_STILL) ?
                                               mStreamsStill : mStreamsVideo;
 
-    /* Flush to make sure we return all graph config objects to the pool before
-       next stream config. */
-    // mImguUnit->flush() moves to the controlunit for sync
-    /* mImguUnit->flush(); */
-    mControlUnit->flush();
-
     status_t status = mGCM.configStreams(streams, operation_mode, testPatternMode);
     if (status != NO_ERROR) {
         LOGE("Unable to configure stream: No matching graph config found! BUG");
         return status;
     }
+    checkNeedReconfig(streams);
 
-    status = mImguUnit->configStreams(streams);
+    /* Flush to make sure we return all graph config objects to the pool before
+       next stream config. */
+    // mImguUnit->flush() moves to the controlunit for sync
+    /* mImguUnit->flush(); */
+    mControlUnit->flush(mConfigChanged);
+
+
+    status = mImguUnit->configStreams(streams, mConfigChanged);
     if (status != NO_ERROR) {
-        LOGE("Unable to configure stream for ImguUnit");
+        LOGE("Unable to configure stream for imgunit");
         return status;
     }
 
-    return mControlUnit->configStreamsDone(true);
+    status = mControlUnit->configStreams(mConfigChanged);
+    if (status != NO_ERROR) {
+        LOGE("Unable to configure stream for controlunit");
+        return status;
+    }
+
+    return mImguUnit->configStreamsDone();
 }
 
 status_t

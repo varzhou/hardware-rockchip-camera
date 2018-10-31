@@ -47,6 +47,27 @@ MediaCtlHelper::~MediaCtlHelper()
     resetLinks(mPipeConfig);
 }
 
+void MediaCtlHelper::getConfigedHwPathSize(const char* pathName, uint32_t &size) {
+    std::vector<MediaCtlFormatParams> &params = mConfigedMediaCtlConfigs[IStreamConfigProvider::IMGU_COMMON].mFormatParams;
+    for (size_t i = 0; i < params.size(); i++) {
+        if(strcmp(pathName, params[i].entityName.data()) == 0) {
+            size = params[i].width * params[i].height;
+            LOGI("@%s Last config : pathName:%s, size:%dx%d", __FUNCTION__, pathName, params[i].width, params[i].height);
+        }
+    }
+}
+
+void MediaCtlHelper::getConfigedSensorOutputSize(uint32_t &size) {
+    std::vector<MediaCtlFormatParams> &params = mConfigedMediaCtlConfigs[IStreamConfigProvider::CIO2].mFormatParams;
+    if(params.size() == 1)
+        size = params[0].width * params[0].height;
+    else
+        size = 0;
+    LOGI("@%s Last config: senor output size:%dx%d", __FUNCTION__,
+         size == 0 ? 0 : params[0].width,
+         size == 0 ? 0 : params[0].height);
+}
+
 status_t MediaCtlHelper::configure(IStreamConfigProvider &graphConfigMgr, IStreamConfigProvider::MediaType type)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
@@ -91,6 +112,8 @@ status_t MediaCtlHelper::configure(IStreamConfigProvider &graphConfigMgr, IStrea
         status = BAD_VALUE;
         return status;
     }
+
+    mConfigedMediaCtlConfigs[type] = *mMediaCtlConfig;
 
     status = mMediaCtl->getMediaDevInfo(deviceInfo);
     if (status != NO_ERROR) {

@@ -45,6 +45,7 @@ RkCtrlLoop::RkCtrlLoop(int camId):
 status_t RkCtrlLoop::init(const char* sensorName,
                           const cl_result_callback_ops_t *cb)
 {
+    HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
     status_t status = OK;
     /* get AIQ xml path */
     const CameraCapInfo* cap = PlatformData::getCameraCapInfo(mCameraId);
@@ -65,32 +66,37 @@ status_t RkCtrlLoop::init(const char* sensorName,
         }
     }
 
-    bool ret = true;//(rkisp_cl_init(&mControlLoopCtx , iq_file_full_path.c_str(), cb) == 0 ? true : false);
+    bool ret = (rkisp_cl_init(&mControlLoopCtx , iq_file_full_path.c_str(), cb) == 0 ? true : false);
     CheckError(ret == false, UNKNOWN_ERROR, "@%s, Error in isp control loop init", __FUNCTION__);
     return status;
 }
 
 void RkCtrlLoop::deinit()
 {
-    LOGI("@%s", __FUNCTION__);
+    HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
 
-   // rkisp_cl_deinit(mControlLoopCtx);
+    rkisp_cl_deinit(mControlLoopCtx);
     mControlLoopCtx = NULL;
 }
 
 status_t RkCtrlLoop::start(const struct rkisp_cl_prepare_params_s& params)
 {
+    if (mIsStarted == true)
+        return OK;
+
+    HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
     int ret = 0;
 
     LOGI("@%s %d: isp:%s, param:%s, stat:%s, sensor:%s", __FUNCTION__, __LINE__,
          params.isp_sd_node_path, params.isp_vd_params_path, params.isp_vd_stats_path, params.sensor_sd_node_path);
-    //ret = rkisp_cl_prepare(mControlLoopCtx, &params);
+
+    ret = rkisp_cl_prepare(mControlLoopCtx, &params);
     if (ret < 0) {
         LOGE("%s: rkisp control loop prepare failed !", __FUNCTION__);
         return UNKNOWN_ERROR;
     }
 
-    //ret = rkisp_cl_start(mControlLoopCtx);
+    ret = rkisp_cl_start(mControlLoopCtx);
     if (ret < 0) {
         LOGE("%s: rkisp control loop start failed !", __FUNCTION__);
         return UNKNOWN_ERROR;
@@ -103,7 +109,7 @@ status_t RkCtrlLoop::setFrameParams(rkisp_cl_frame_metadata_s* frame_params)
 {
     int ret = 0;
 
-    //ret = rkisp_cl_set_frame_params(mControlLoopCtx, frame_params);
+    ret = rkisp_cl_set_frame_params(mControlLoopCtx, frame_params);
     if (ret < 0) {
         LOGE("%s: rkisp control loop set frame params failed !", __FUNCTION__);
         return UNKNOWN_ERROR;
@@ -114,16 +120,18 @@ status_t RkCtrlLoop::setFrameParams(rkisp_cl_frame_metadata_s* frame_params)
 
 status_t RkCtrlLoop::stop()
 {
-    int ret = 0;
-    LOGI("@%s %d: enter", __FUNCTION__, __LINE__);
+    if (mIsStarted == false)
+        return OK;
 
-    if (mIsStarted == true) {
-       // ret = rkisp_cl_stop(mControlLoopCtx);
-        if (ret < 0) {
-            LOGE("%s: rkisp control loop stop failed !", __FUNCTION__);
-            return UNKNOWN_ERROR;
-        }
+    int ret = 0;
+    HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
+
+    ret = rkisp_cl_stop(mControlLoopCtx);
+    if (ret < 0) {
+        LOGE("%s: rkisp control loop stop failed !", __FUNCTION__);
+        return UNKNOWN_ERROR;
     }
+
     mIsStarted = false;
     return NO_ERROR;
  }

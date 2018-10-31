@@ -24,7 +24,7 @@
 /* ********************************************************************
  * Camera metadata auxiliary API
  */
-using ::android::hardware::camera::common::V1_0::helper::CameraMetadata;
+USING_METADATA_NAMESPACE;
 using namespace android;
 
 NAMESPACE_DECLARATION {

@@ -33,10 +33,11 @@ public:
                      size_t pipelineDepth);
     virtual ~InputFrameWorker();
 
-    virtual status_t configure(std::shared_ptr<GraphConfig> &config);
+    virtual status_t configure(std::shared_ptr<GraphConfig> &config, bool configChanged);
     status_t prepareRun(std::shared_ptr<DeviceMessage> msg);
     status_t run();
     status_t postRun();
+    virtual status_t flushWorker();
     status_t stopWorker();
     status_t startWorker();
     std::shared_ptr<V4L2VideoNode> getNode() const { return nullptr; }

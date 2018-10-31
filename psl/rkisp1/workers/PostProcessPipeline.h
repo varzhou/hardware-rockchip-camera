@@ -322,6 +322,7 @@ class PostProcessPipeLine {
                      int   pipelineDepth = kDefaultAllocBufferNums);
     status_t start();
     status_t stop();
+    status_t clear();
     void flush();
     /*
      * |in| buffer usually comes from driver,
