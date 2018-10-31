@@ -103,6 +103,23 @@ ImguUnit::~ImguUnit()
     clearWorkers();
 }
 
+status_t ImguUnit::stopAllWorkers()
+{
+    status_t status= NO_ERROR;
+    // Stop all video nodes
+    status = mMainOutWorker->stopWorker();
+    if (status != OK) {
+        LOGE("Fail to stop main woker");
+        return status;
+    }
+    status = mSelfOutWorker->stopWorker();
+    if (status != OK) {
+        LOGE("Fail to stop self woker");
+        return status;
+    }
+    return status;
+}
+
 void ImguUnit::clearWorkers()
 {
     for (size_t i = 0; i < PIPE_NUM; i++) {
@@ -386,14 +403,8 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
     mCurPipeConfig = &mPipeConfigs[PIPE_VIDEO_INDEX];
 
     if(mConfigChanged) {
-        for (const auto &it : mCurPipeConfig->deviceWorkers) {
-            // if the worker is started, stop it first
-            status = (*it).stopWorker();
-            if (status != OK) {
-                LOGE("Failed to stop workers.");
-                return status;
-            }
-        }
+        //when need reconfig hw pipeline, all works should stop
+        stopAllWorkers();
         clearWorkers();
 
         // Open and configure imgu video nodes
@@ -1017,18 +1028,7 @@ ImguUnit::requestExitAndWait(void)
     status_t status = mMessageQueue.send(&msg, MESSAGE_ID_EXIT);
     status |= mMessageThread->requestExitAndWait();
 
-    // Stop all video nodes
-    status = mMainOutWorker->stopWorker();
-    if (status != OK) {
-        LOGE("Fail to stop main woker");
-        return status;
-    }
-    status = mSelfOutWorker->stopWorker();
-    if (status != OK) {
-        LOGE("Fail to stop self woker");
-        return status;
-    }
-
+    status |= stopAllWorkers();
     clearWorkers();
     return status;
 }

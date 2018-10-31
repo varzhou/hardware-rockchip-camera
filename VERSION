@@ -10,8 +10,21 @@ V0.0.1
 		- AF
 		- manual 3A controls
 V1.0.1
-	- move all 3A control logics to camera engine(also called control loop)
+    - move all 3A control logics to camera engine(also called control loop)
 	  project, the project path is :
-		- ssh://<user name>@10.10.10.58:29418/camera_engine_rkisp
+	  ssh://<user name>@10.10.10.58:29418/camera_engine_rkisp
 	- support AF
 	- have been roughly tested by quality department
+V1.1.0
+	- support YUV/IMP reprocess streams
+	- support RAW sensor, verified raw sensor list is as follow:
+	- support Android 7.x/8.x/9.x
+	  - ov13850
+	  - ov5695
+	- speed up still picture taken for API 1.0 and video start/stop
+	- new camera engine project git repsitory:
+	  ssh://<user name>@10.10.10.29:29418/linux/external/camera_engine_rkisp
+	- fix a lot of CTS issues for RAW and SoC sensor
+	  - TODOS:
+	    - HW jpeg encoder has CTS issue for now, so using SW jpeg encoder
+		  currently
