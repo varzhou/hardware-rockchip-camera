@@ -987,7 +987,8 @@ CameraHWInfo::initDriverListHelper(unsigned major, unsigned minor,
              * space and take the rest of the string.
              */
             pos = drvInfo.mSensorName.rfind(" ");
-            drvInfo.mI2CAddress = drvInfo.mSensorName.substr(pos + 1);
+            if (pos != string::npos)
+                drvInfo.mI2CAddress = drvInfo.mSensorName.substr(pos + 1);
 
             /*
              *  Now that we are done using the sensor name cut the name to

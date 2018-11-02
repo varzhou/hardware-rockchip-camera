@@ -1796,8 +1796,8 @@ status_t GraphConfig::parseSensorNodeInfo(Node* sensorNode,
             info.i2cAddress = camHWInfo->mSensorInfo[i].mI2CAddress;
     }
     if (info.i2cAddress == "") {
-        LOGE("Couldn't get i2c address from Platformdata");
-        return UNKNOWN_ERROR;
+        LOGW("Couldn't get i2c address from Platformdata");
+        //return UNKNOWN_ERROR;
     }
 
     ret = sensorNode->getValue(GCSS_KEY_METADATA, metadata);
@@ -1875,7 +1875,10 @@ status_t GraphConfig::parseSensorNodeInfo(Node* sensorNode,
         return UNKNOWN_ERROR;
     }
 
-    info.pa.name = info.name+ " " + info.i2cAddress;
+    if (info.i2cAddress == "")
+        info.pa.name = info.name;
+    else
+        info.pa.name = info.name+ " " + info.i2cAddress;
     /* Populate the formats for each subdevice
      * The format for the Pixel Array is determined by the native bayer order
      * and the bpp selected by the settings.
@@ -1930,7 +1933,11 @@ status_t GraphConfig::getMediaCtlData(MediaCtlConfig *mediaCtlConfig)
         // it could "rkisp1-csi2 0" or "rkisp1-csi2 1", then it will get 0 or 1.
         int port = 0;
         std::shared_ptr<MediaEntity> entity = nullptr;
-        string entityName = sourceInfo.name + " " + sourceInfo.i2cAddress;
+        string entityName;
+        if (sourceInfo.i2cAddress == "")
+            entityName = sourceInfo.name;
+        else
+            entityName = sourceInfo.name + " " + sourceInfo.i2cAddress;
 
         LOGI("entityName:%s\n", entityName.c_str());
         status_t ret = mMediaCtl->getMediaEntity(entity, entityName.c_str());
