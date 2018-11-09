@@ -45,7 +45,7 @@ endif
 include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE_RELATIVE_PATH := rkisp
+LOCAL_MODULE_RELATIVE_PATH := rkisp/ae
 LOCAL_MODULE := librkisp_ae
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
      LOCAL_PROPRIETARY_MODULE := true
@@ -64,7 +64,7 @@ endif
 include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE_RELATIVE_PATH := rkisp
+LOCAL_MODULE_RELATIVE_PATH := rkisp/awb
 LOCAL_MODULE := librkisp_awb
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
     LOCAL_PROPRIETARY_MODULE := true
@@ -83,7 +83,7 @@ endif
 include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE_RELATIVE_PATH := rkisp
+LOCAL_MODULE_RELATIVE_PATH := rkisp/af
 LOCAL_MODULE := librkisp_af
 ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
     LOCAL_PROPRIETARY_MODULE := true
