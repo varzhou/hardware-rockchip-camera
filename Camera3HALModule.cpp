@@ -24,6 +24,7 @@
 #include "LogHelper.h"
 #include "PlatformData.h"
 #include "PerformanceTraces.h"
+#include <cutils/properties.h>
 
 #include "Camera3HAL.h"
 
@@ -43,7 +44,8 @@ USING_DECLARED_NAMESPACE;
 // Refer to file VERSION for version details.
 // vA.B.C:
 // A and B is updated by platform, and C is updated by product
-static char rkHal3Version[10] = "v1.1.0";
+#define CAM_HAL3_PROPERTY_KEY  "vendor.cam.hal3.ver"
+static char rkHal3Version[PROPERTY_VALUE_MAX] = "v1.1.0";
 
 static int hal_dev_close(hw_device_t* device);
 
@@ -237,6 +239,7 @@ static void initCameraHAL(void) __attribute__((constructor));
 static void initCameraHAL(void) {
     rk_camera_debug_open();
     ALOGI("@%s: RockChip Camera Hal3 Release version %s ", __FUNCTION__, rkHal3Version);
+    property_set(CAM_HAL3_PROPERTY_KEY,rkHal3Version);
     PerformanceTraces::reset();
     PlatformData::init();
     int ret = PlatformData::numberOfCameras();
