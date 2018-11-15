@@ -15,4 +15,9 @@
 # (c) modify the Software in whole or part;(d) decompile, reverse-engineer, dissemble,
 # or attempt to derive any source code from the Software;(e) remove or obscure any copyright,
 # patent, or trademark statement or notices contained in the Software.
+ifeq (1,$(strip $(shell expr $(BOARD_DEFAULT_CAMERA_HAL_VERSION) \>= 3.0)))
+$(info BOARD_DEFAULT_CAMERA_HAL_VERSION=$(BOARD_DEFAULT_CAMERA_HAL_VERSION))
+else
 include $(call all-subdir-makefiles)
+$(info BOARD_DEFAULT_CAMERA_HAL_VERSION=$(BOARD_DEFAULT_CAMERA_HAL_VERSION))
+endif

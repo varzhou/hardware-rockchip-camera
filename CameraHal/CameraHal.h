@@ -811,10 +811,13 @@ v1.0x51.0xb
    1) fix 3368 8.1 cts fail.
 v1.0x51.0xc
    1) support rk3399pro.
+v1.0x51.0xd
+   1) add Macro "BOARD_DEFAULT_CAMERA_HAL_VERSION" to control build CameraHal1 or CameraHal3
 */
 
 
-#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0xc)
+
+#define CONFIG_CAMERAHAL_VERSION KERNEL_VERSION(1, 0x51, 0xd)
 
 
 /*  */
