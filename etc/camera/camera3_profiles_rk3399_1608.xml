@@ -262,7 +262,7 @@
 
         <MediaCtl_elements_RKISP1>
             <element name="RK1608-dphy0" type="pixel_array"/>
-            <element name="rockchip-sy-mipi-dphy" type="csi_receiver"/>
+            <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/>
             <element name="rkisp1-isp-subdev" type="isys_backend"/>
         </MediaCtl_elements_RKISP1>
 
@@ -516,7 +516,7 @@
 
         <MediaCtl_elements_RKISP1>
             <element name="ov2718 2-0036" type="pixel_array"/>
-            <element name="rockchip-sy-mipi-dphy" type="csi_receiver"/>
+            <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/>
             <element name="rkisp1-isp-subdev" type="isys_backend"/>
         </MediaCtl_elements_RKISP1>
 

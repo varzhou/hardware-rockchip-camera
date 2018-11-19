@@ -55,7 +55,7 @@ namespace gcu = graphconfig::utils;
 #define MEDIACTL_PAD_PV_NUM 4
 #define SCALING_FACTOR 1
 
-const string csi2_without_port = "rockchip-sy-mipi-dphy";
+const string csi2_without_port = "rockchip-mipi-dphy-rx";
 
 /* isp port name*/
 const string MEDIACTL_INPUTNAME = "input";

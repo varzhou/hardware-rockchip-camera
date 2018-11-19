@@ -754,7 +754,7 @@ status_t CameraHWInfo::getCSIPortID(const std::string &deviceName, const std::st
     const char *CSI_RX_PORT_NAME_TEMPLATE1 = "CSI-2";
     const char *CSI_RX_PORT_NAME_TEMPLATE2 = "CSI2-port";
     const char *CSI_RX_PORT_NAME_TEMPLATE3 = "TPG";
-    const char *CSI_RX_PORT_NAME_TEMPLATE4 = "mipi-dphy";
+    const char *CSI_RX_PORT_NAME_TEMPLATE4 = "mipi-dphy-rx";
     nameTemplateVec.push_back(CSI_RX_PORT_NAME_TEMPLATE1);
     nameTemplateVec.push_back(CSI_RX_PORT_NAME_TEMPLATE2);
     nameTemplateVec.push_back(CSI_RX_PORT_NAME_TEMPLATE3);

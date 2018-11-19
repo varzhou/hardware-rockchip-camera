@@ -271,7 +271,7 @@
 
         <MediaCtl_elements_RKISP1>
             <element name="ov13850 1-0010" type="pixel_array"/>
-            <element name="rockchip-sy-mipi-dphy" type="csi_receiver"/>
+            <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/>
             <element name="rkisp1-isp-subdev" type="isys_backend"/>
             <element name="vm149c 1-000c" type="lens"/>
         </MediaCtl_elements_RKISP1>
@@ -535,7 +535,7 @@
 
         <MediaCtl_elements_RKISP1>
             <element name="ov4689 1-0036" type="pixel_array"/>
-            <element name="rockchip-sy-mipi-dphy" type="csi_receiver"/>
+            <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/>
             <element name="rkisp1-isp-subdev" type="isys_backend"/>
 			<!-- <element name="vm149c 1-000c" type="lens"/> -->
         </MediaCtl_elements_RKISP1>

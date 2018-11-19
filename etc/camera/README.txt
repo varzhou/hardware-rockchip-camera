@@ -33,7 +33,7 @@ camera3_profiles.xml
      describe media system entities, name infos in each element could be retrieved by
      media-ctl tool. The sample items are as follow:
      <element name="gc2145 0-003c" type="pixel_array"/> /* sensor entity */
-     <element name="rockchip-sy-mipi-dphy" type="csi_receiver"/> /* mipi phy, may be absent */
+     <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/> /* mipi phy, may be absent */
      <element name="stream_cif" type="isys_backend"/> /* CIF controller if sensor connected to CIF */
      <element name="rkisp1-isp-subdev" type="isys_backend"/> /* ISP controller if sensor connected to ISP */
 graph_settings_<sensorname>.xml

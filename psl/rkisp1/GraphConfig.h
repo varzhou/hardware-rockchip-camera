@@ -49,7 +49,7 @@ const uint32_t MAX_KERNEL_COUNT = 30; // max number of kernels in the kernel lis
 const std::string SENSOR_PORT_NAME("sensor:port_0");
 const std::string TPG_PORT_NAME("tpg:port_0");
 // Declare string consts
-const std::string CSI_BE = "rockchip-sy-mipi-dphy";
+const std::string CSI_BE = "rockchip-mipi-dphy-rx";
 
 const std::string GC_INPUT = "input";
 const std::string GC_OUTPUT = "output";
