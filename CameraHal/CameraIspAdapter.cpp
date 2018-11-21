@@ -1003,6 +1003,13 @@ void CameraIspAdapter::initDefaultParameters(int camFd)
         if (strstr("com.campmobile.snowcamera", cameraCallProcess))
             parameterString.removeAll(",1280x720");
 
+		/*remove unsupported preview size for 30W(640x480) MIPI YUV camera */
+		LOGD("%s(%d) remove unsupported size for 640x480 Camera\n", __FUNCTION__, __LINE__);
+		if(max_w < 800 && max_h < 600)
+			parameterString.removeAll(",800x600");
+		if(max_w < 720 && max_h <= 480)
+			parameterString.removeAll(",720x480");
+
         params.set(CameraParameters::KEY_PREVIEW_SIZE,string);
         params.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, parameterString.string());        
         
