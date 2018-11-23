@@ -811,7 +811,8 @@ ControlUnit::handleNewRequestDone(Message &msg)
 
     reqState->mImgProcessDone = true;
     Camera3Request* request = reqState->request;
-    if (!reqState->mClMetaReceived)
+    // when deviceError, should not wait for meta and metadataDone an error index
+    if ((!reqState->mClMetaReceived) && !request->getError())
         return OK;
 
     request->mCallback->metadataDone(request, request->getError() ? -1 : CONTROL_UNIT_PARTIAL_RESULT);
