@@ -1,5 +1,5 @@
 # prebuilt for config xml files in /vendor/etc/camera or /system/etc/camera
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 9.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 9)))
 CUR_PATH := $(TOP)/hardware/rockchip/camera/etc
 else
 CUR_PATH := $(TOP)/hardware/rockchip/camera_v3/etc
