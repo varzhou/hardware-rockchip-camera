@@ -27,7 +27,7 @@
             <control.aeAvailableAntibandingModes value="OFF,50HZ,60Hz,AUTO"/>
             <control.aeAvailableModes value="ON"/>
             <control.aeLockAvailable value="FALSE"/>
-            <control.aeAvailableTargetFpsRanges value="15,30,30,30,60,60"/>
+            <control.aeAvailableTargetFpsRanges value="15,15,15,30,30,30"/>
             <control.aeCompensationRange value="0,0"/>
             <control.aeCompensationStep value="0,0"/>
             <control.afAvailableModes value="OFF"/>
@@ -38,7 +38,7 @@
             <control.availableVideoStabilizationModes value="OFF"/>
             <control.maxRegions value="0,0,0"/>
             <!-- JPEG -->
-            <jpeg.maxSize value="4967424"/>  <!-- 2112*1568*1.5 -->
+            <jpeg.maxSize value="19869696"/>  <!-- 4224*3136*1.5 -->
             <jpeg.availableThumbnailSizes value="0,0,160,120,320,180,320,240"/> <!-- INCREASING ORDER -->
             <!-- Lens Info-->
             <lens.info.availableApertures value="0.0"/> <!-- HAL may override this value from CMC for RAW sensors -->
@@ -153,43 +153,50 @@
             <!-- Scaler -->
             <scaler.availableMaxDigitalZoom value="4.0"/>
             <scaler.availableInputOutputFormatsMap value="IMPLEMENTATION_DEFINED,2,YCbCr_420_888,BLOB"/>
-            <scaler.availableStreamConfigurations value="BLOB,2112x1568,OUTPUT,
+            <scaler.availableStreamConfigurations value="BLOB,4224x3136,OUTPUT,
+                BLOB,2112x1568,OUTPUT,
                 BLOB,1920x1080,OUTPUT,
                 BLOB,1280x960,OUTPUT,
                 BLOB,1280x720,OUTPUT,
                 BLOB,640x480,OUTPUT,
                 BLOB,320x240,OUTPUT,
+                YCbCr_420_888,4224x3136,OUTPUT,
                 YCbCr_420_888,2112x1568,OUTPUT,
                 YCbCr_420_888,1920x1080,OUTPUT,
                 YCbCr_420_888,1280x960,OUTPUT,
                 YCbCr_420_888,1280x720,OUTPUT,
                 YCbCr_420_888,640x480,OUTPUT,
                 YCbCr_420_888,320x240,OUTPUT,
+                IMPLEMENTATION_DEFINED,4224x3136,OUTPUT,
                 IMPLEMENTATION_DEFINED,2112x1568,OUTPUT,
                 IMPLEMENTATION_DEFINED,1920x1080,OUTPUT,
                 IMPLEMENTATION_DEFINED,1280x960,OUTPUT,
                 IMPLEMENTATION_DEFINED,1280x720,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
                 IMPLEMENTATION_DEFINED,320x240,OUTPUT" />
-            <scaler.availableMinFrameDurations value="BLOB,2112x1568,33333333,
+            <scaler.availableMinFrameDurations value="BLOB,4224x3136,66666666,
+                BLOB,2112x1568,33333333,
                 BLOB,1920x1080,33333333,
                 BLOB,1280x960,33333333,
                 BLOB,1280x720,33333333,
                 BLOB,640x480,33333333,
                 BLOB,320x240,33333333,
+                YCbCr_420_888,4224x3136,66666666,
                 YCbCr_420_888,2112x1568,33333333,
                 YCbCr_420_888,1920x1080,33333333,
                 YCbCr_420_888,1280x960,33333333,
                 YCbCr_420_888,1280x720,33333333,
                 YCbCr_420_888,640x480,33333333,
                 YCbCr_420_888,320x240,33333333,
+                IMPLEMENTATION_DEFINED,4224x3136,66666666,
                 IMPLEMENTATION_DEFINED,2112x1568,33333333,
                 IMPLEMENTATION_DEFINED,1920x1080,33333333,
                 IMPLEMENTATION_DEFINED,1280x960,33333333,
                 IMPLEMENTATION_DEFINED,1280x720,33333333,
                 IMPLEMENTATION_DEFINED,640x480,33333333,
                 IMPLEMENTATION_DEFINED,320x240,33333333" />
-            <scaler.availableStallDurations value="BLOB,2112x1568,33333333,
+            <scaler.availableStallDurations value="BLOB,4224x3136,66666666,
+                                                   BLOB,2112x1568,33333333,
                                                    BLOB,1920x1080,33333333,
                                                    BLOB,1280x960,33333333,
                                                    BLOB,1280x720,33333333,
@@ -200,7 +207,7 @@
             <sensor.info.activeArraySize value="0,0,2112,1568"/>
             <sensor.info.sensitivityRange value="32,2400"/>
             <sensor.info.colorFilterArrangement value="BGGR"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <sensor.info.exposureTimeRange value="4,2020"/>
+            <sensor.info.exposureTimeRange value="100000,133333333"/>
             <sensor.info.maxFrameDuration value="66666666"/>
             <sensor.info.physicalSize value="5.5,4.5"/> <!-- 4224x1.12um 3136x1.12um -->
             <sensor.info.pixelArraySize value="2112x1568"/>
@@ -464,7 +471,7 @@
             <sensor.info.activeArraySize value="0,0,2688,1520"/>
             <sensor.info.sensitivityRange value="32,2400"/>
             <sensor.info.colorFilterArrangement value="BGGR"/> <!-- HAL may override this value from CMC for RAW sensors -->
-            <sensor.info.exposureTimeRange value="4,2020"/>
+            <sensor.info.exposureTimeRange value="100000,133333333"/>
             <sensor.info.maxFrameDuration value="66666666"/>
             <sensor.info.physicalSize value="5.5,4.5"/> <!-- 4224x1.12um 3136x1.12um -->
             <sensor.info.pixelArraySize value="2688x1520"/>
