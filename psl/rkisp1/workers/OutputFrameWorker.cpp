@@ -397,6 +397,7 @@ status_t OutputFrameWorker::postRun()
         inPostBuf->cambuf = mPostWorkingBuf->cambuf;
         inPostBuf->request = mPostWorkingBuf->request;
         mPostPipeline->processFrame(inPostBuf, outBufs, mMsg->pMsg.processingSettings);
+        LOGI("@%s %d: Only listener include a buffer", __FUNCTION__, __LINE__);
         goto exit;
     }
     postOutBuf = std::make_shared<PostProcBuffer> ();

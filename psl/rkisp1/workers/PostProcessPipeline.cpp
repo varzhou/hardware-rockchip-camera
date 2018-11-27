@@ -1008,6 +1008,28 @@ PostProcessUnitJpegEnc::~PostProcessUnitJpegEnc() {
 }
 
 status_t
+PostProcessUnitJpegEnc::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
+                                         const std::shared_ptr<ProcUnitSettings>& settings,
+                                         int err) {
+    std::unique_lock<std::mutex> l(mApiLock, std::defer_lock);
+    l.lock();
+    // fix VideoSnapshot exception:
+    // Compared with normal capture, in videoSnapshot case, app would
+    // not wait for the jpeg result and keep senting requests to hal.
+    // Additionally, encoding jpeg may take a long time and block the
+    // jpeg unit thread, therefor casue the growing of mInBufferPool
+    // size and then cause the failure of acquiring ProcUnitSettings.
+    // finally lead to a fault error.
+    if (mOutBufferPool.empty()) {
+        l.unlock();
+        return OK;
+    }
+    l.unlock();
+
+    return PostProcessUnit::notifyNewFrame(buf, settings, err);
+}
+
+status_t
 PostProcessUnitJpegEnc::processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                      const std::shared_ptr<PostProcBuffer>& out,
                                      const std::shared_ptr<ProcUnitSettings>& settings) {

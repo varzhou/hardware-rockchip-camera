@@ -161,7 +161,7 @@ class PostProcessUnit : public IPostProcessListener,
     /* overload IMessageHandler */
     void messageThreadLoop(void);
     /* overload IpostProcessListener */
-    status_t notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
+    virtual status_t notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                             const std::shared_ptr<ProcUnitSettings>& settings, int err);
 
     /*
@@ -218,6 +218,9 @@ class PostProcessUnitJpegEnc : public PostProcessUnit
  public: 
     explicit PostProcessUnitJpegEnc(const char* name, int type, uint32_t buftype = kPostProcBufTypeExt);
     virtual ~PostProcessUnitJpegEnc();
+    status_t notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
+                            const std::shared_ptr<ProcUnitSettings>& settings,
+                            int err);
     virtual status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                   const std::shared_ptr<PostProcBuffer>& out,
                                   const std::shared_ptr<ProcUnitSettings>& settings);
