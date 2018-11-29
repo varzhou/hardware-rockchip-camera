@@ -66,6 +66,10 @@ private:
     int mBufferReturned;
     std::mutex mBufDoneLock;
     std::condition_variable mCondition;
+    // for bufferdone in order, store the buffers arrived ahead of time
+    std::vector<std::shared_ptr<PostProcBuffer>> mProcessingPostProcBufs;
+    // for bufferdone in order, store the processing requests
+    std::vector<Camera3Request *> mProcessingRequests;
 
     std::unique_ptr<PostProcessPipeLine> mPostPipeline;
 };

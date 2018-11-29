@@ -72,28 +72,68 @@ InputFrameWorker::startWorker()
     return OK;
 }
 
+/******************************************************************************
+ * In some burst reprocess case(CTS:testMandatoryReprocessConfigurations),
+ * the bufferDone could disorder.
+ * For example:  A request Loop: 'yuv->yuv' + 'yuv->jpeg' + 'yuv->yuv' + ...
+ * in this case, the yuv->yuv request could be processed faster than yuv->jpeg
+ * request, therefore cause the disorder of buffer done.
+ * so, just store the buffer arrived ahead of time and rehandle it in a right
+ * place
+ *****************************************************************************/
 status_t
 InputFrameWorker::bufferDone(std::shared_ptr<PostProcBuffer> buf) {
-    Camera3Request* request = buf->request;
-    CameraStream *stream = buf->cambuf->getOwner();
-    stream->captureDone(buf->cambuf, request);
-    mBufferReturned++;
+    Camera3Request* comingReq = buf->request;
+    Camera3Request* processingReq = *mProcessingRequests.begin();
 
-    LOGI("@%s %d: request %d out buffer done %d/%d", __FUNCTION__, __LINE__, request->getId(), mBufferReturned, request->getNumberOutputBufs());
-    if(mBufferReturned == request->getNumberOutputBufs()) {
-        mBufferReturned = 0;
-        std::shared_ptr<CameraBuffer> camBuf = *mProcessingInputBufs.begin();
-        if (camBuf.get()) {
-            stream = camBuf->getOwner();
-            stream->captureDone(camBuf, request);
-            mProcessingInputBufs.erase(mProcessingInputBufs.begin());
-            std::unique_lock<std::mutex> l(mBufDoneLock, std::defer_lock);
-            l.lock();
-            mCondition.notify_all();
-            l.unlock();
-        } else {
-            LOGE("@%s %d: camBuf should not be NULL", __FUNCTION__, __LINE__);
+    if(!comingReq && !processingReq) {
+        LOGE("@%s: Null request, comingReq:%p, processingReq:%p", __FUNCTION__, comingReq, processingReq);
+        return UNKNOWN_ERROR;
+    }
+
+    LOGL("@%s: coming request %d ,processing request %d", __FUNCTION__,
+            comingReq->getId(), processingReq->getId());
+
+    if(processingReq->getId() == comingReq->getId()) {
+        CameraStream *stream = buf->cambuf->getOwner();
+        stream->captureDone(buf->cambuf, comingReq);
+        mBufferReturned++;
+        LOGL("%s: mBufferReturned: %d/%d", __FUNCTION__, mBufferReturned, comingReq->getNumberOutputBufs());
+        // when all output buffer returned, captureDone the input buffer
+        if(mBufferReturned == comingReq->getNumberOutputBufs()) {
+            mBufferReturned = 0;
+            mProcessingRequests.erase(mProcessingRequests.begin());
+            std::shared_ptr<CameraBuffer> camBuf = *mProcessingInputBufs.begin();
+            if (camBuf.get()) {
+                stream = camBuf->getOwner();
+                stream->captureDone(camBuf, comingReq);
+                mProcessingInputBufs.erase(mProcessingInputBufs.begin());
+                LOGD("%s: reprocess request %d done, remaining %d requests", __FUNCTION__,
+                    comingReq->getId(), mProcessingPostProcBufs.size());
+            } else {
+                LOGE("@%s: reprocess inputBuffer should not be NULL", __FUNCTION__);
+            }
+            //check if there are some disorder requests need to handle
+            //this will happen in CTS:testMandatoryReprocessConfigurations
+            //and will not occur in normal zsl capture case
+            for (int i = 0; i < mProcessingPostProcBufs.size(); ++i) {
+                processingReq = *mProcessingRequests.begin();
+                std::shared_ptr<PostProcBuffer> buffer = mProcessingPostProcBufs.at(i);
+                if(processingReq->getId() == buffer->request->getId()) {
+                    LOGD("@%s %d: stored request %d bufferdone", __FUNCTION__, __LINE__, processingReq->getId());
+                    mProcessingPostProcBufs.erase(mProcessingPostProcBufs.begin()+i);
+                    bufferDone(buffer);
+                }
+            }
         }
+    } else if(processingReq->getId() < comingReq->getId()) {
+        LOGD("%s, request %d are processing, store the coming request %d", __FUNCTION__, processingReq->getId(), comingReq->getId());
+        // store the buffer arrived ahead of time
+        mProcessingPostProcBufs.push_back(buf);
+    } else {
+        LOGE("@%s: request %d are processing, coming request %d should be already done, is a BUG!!", __FUNCTION__,
+            processingReq->getId(), comingReq->getId());
+        return UNKNOWN_ERROR;
     }
 
     return OK;
@@ -104,7 +144,7 @@ InputFrameWorker::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                                   const std::shared_ptr<ProcUnitSettings>& settings,
                                   int err)
 {
-    Camera3Request* request = buf->request;
+    std::unique_lock<std::mutex> l(mBufDoneLock);
     status_t status = bufferDone(buf);
 
     return status;
@@ -265,6 +305,7 @@ status_t InputFrameWorker::postRun()
         status = UNKNOWN_ERROR;
         goto exit;
     }
+    mProcessingRequests.push_back(request);
 
     camBufs = findOutputBuffers(request);
 
@@ -281,7 +322,6 @@ status_t InputFrameWorker::postRun()
     inBuf->request = request;
 
     mPostPipeline->processFrame(inBuf, outBufs, mMsg->pMsg.processingSettings);
-    mCondition.wait(l);
 
 exit:
     /* Prevent from using old data */
