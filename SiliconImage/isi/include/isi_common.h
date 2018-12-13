@@ -924,7 +924,16 @@ typedef struct
     uint32_t   ulMipiFreq;
     uint32_t    sensorHalDevID;
 } IsiSensorMipiInfo;
-
+//for toybrick
+#define ISI_RES_2100_1560P7                    0x0e834618 
+#define ISI_RES_2100_1560P10                   0x14834618
+#define ISI_RES_2100_1560P15                   0x1e834618
+#define ISI_RES_2100_1560P20                   0x28834618
+#define ISI_RES_2100_1560P25                   0x32834618
+#define ISI_RES_2100_1560P30                   0x3c834618
+#define ISI_RES_2100_1560P40                   0x50834618
+#define ISI_RES_2100_1560P50                   0x64834618
+#define ISI_RES_2100_1560P60                   0x78834618
 /*****************************************************************************/
 /**
  *          IsiIlluProfile_t
@@ -932,7 +941,7 @@ typedef struct
  * @brief   Illumination specific structure.
  *
  */
-/*****************************************************************************/
+
 typedef struct IsiIlluProfile_s
 {
     void                            *p_next;                /*!< void pointer for setting up a illumination list */

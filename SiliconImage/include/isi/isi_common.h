@@ -45,7 +45,16 @@ extern "C"
 #define ISI_SENSOR_OUTPUT_MODE_RAW	0x00000001U
 #define ISI_SENSOR_OUTPUT_MODE_YUV  0x00000002U
 #define ISI_SENSOR_OUTPUT_MODE_RGB  0x00000004U
-
+//for toybrick
+#define ISI_RES_2100_1560P7                    0x0e834618 
+#define ISI_RES_2100_1560P10                   0x14834618
+#define ISI_RES_2100_1560P15                   0x1e834618
+#define ISI_RES_2100_1560P20                   0x28834618
+#define ISI_RES_2100_1560P25                   0x32834618
+#define ISI_RES_2100_1560P30                   0x3c834618
+#define ISI_RES_2100_1560P40                   0x50834618
+#define ISI_RES_2100_1560P50                   0x64834618
+#define ISI_RES_2100_1560P60                   0x78834618
 /*****************************************************************************/
 /*!
  * interface version
