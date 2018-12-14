@@ -31,7 +31,7 @@ public:
                 size_t pipelineDepth, std::string name = "FrameWorker");
     virtual ~FrameWorker();
 
-    virtual status_t configure(std::shared_ptr<GraphConfig> &config, bool configChanged);
+    virtual status_t configure(bool configChanged);
     virtual status_t startWorker();
     virtual status_t flushWorker();
     virtual status_t stopWorker();

@@ -2552,21 +2552,21 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
         if(spStream->width > SP_MAX_WIDTH && spStream->height > SP_MAX_HEIGHT) {
             LOGW("@%s Stream %p size(%dx%d) beyond SP cap(%dx%d), should attach to MP", __FUNCTION__,
                  spStream, spStream->width, spStream->height, SP_MAX_WIDTH, SP_MAX_HEIGHT);
-            return OK;
-        }
-        cal_crop(spWidth, spHeight, spStream->width, spStream->height);
+        } else {
+            cal_crop(spWidth, spHeight, spStream->width, spStream->height);
 
-        select.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        select.target = V4L2_SEL_TGT_CROP;
-        select.flags = 0;
-        select.r.left = (ispOutWidth - spWidth) / 2;
-        select.r.top = (ispOutHeight - spHeight) / 2;
-        select.r.width = spWidth;
-        select.r.height = spHeight;
-        addFormatParams(spName, spStream->width, spStream->height, spSinkPad, ispOutFormat, 0, 0, mediaCtlConfig);
-        addSelectionVideoParams(spName, select, mediaCtlConfig);
-        addImguVideoNode(IMGU_NODE_VF_PREVIEW, spName, mediaCtlConfig);
-        addLinkParams(IspName, ispSrcPad, spName,  spSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+            select.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            select.target = V4L2_SEL_TGT_CROP;
+            select.flags = 0;
+            select.r.left = (ispOutWidth - spWidth) / 2;
+            select.r.top = (ispOutHeight - spHeight) / 2;
+            select.r.width = spWidth;
+            select.r.height = spHeight;
+            addFormatParams(spName, spStream->width, spStream->height, spSinkPad, ispOutFormat, 0, 0, mediaCtlConfig);
+            addSelectionVideoParams(spName, select, mediaCtlConfig);
+            addImguVideoNode(IMGU_NODE_VF_PREVIEW, spName, mediaCtlConfig);
+            addLinkParams(IspName, ispSrcPad, spName,  spSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+        }
     } else {
         //disable isp --> selfPath link
         /* addLinkParams(IspName, ispSrcPad, spName,  spSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig); */
@@ -3111,7 +3111,7 @@ void GraphConfig::addFormatParams(const string &entityName,
         mediaCtlFormatParams.quantization= quantization;
         config->mFormatParams.push_back(mediaCtlFormatParams);
         LOGI("@%s, entityName:%s, width:%d, height:%d, pad:%d, format:0x%x:%s, field:%d",
-            __FUNCTION__, entityName.c_str(), width, height, pad, format, graphconfig::utils::pixelCode2String(format).c_str(), field);
+            __FUNCTION__, entityName.c_str(), width, height, pad, format, gcu::pixelCode2String(format).c_str(), field);
     }
 }
 

@@ -53,6 +53,8 @@ enum PostProcessType {
     kPostProcessTypeScaleAndRotation  = 1 << 17,
     kPostProcessTypeJpegEncoder       = 1 << 18,
     kPostProcessTypeCopy              = 1 << 19,
+    kPostProcessTypeRaw               = 1 << 21,
+    kPostProcessTypeDummy             = 1 << 22,
     kPostProcessTypeStreamMax         = 1 << MAX_STREAM_PROC_UNIT_SHIFT,
 };
 
@@ -190,7 +192,7 @@ class PostProcessUnit : public IPostProcessListener,
     std::unique_ptr<PostProcBufferPools> mInternalBufPool;
     status_t allocCameraBuffer(const FrameInfo& outfmt, int bufNum);
     void prepareProcess();
-    status_t doProcess();
+    virtual status_t doProcess();
     status_t relayToNextProcUnit(int err);
     const char* mName;
     uint32_t mBufType;
@@ -239,6 +241,20 @@ class PostProcessUnitJpegEnc : public PostProcessUnit
     /*disable copy constructor and assignment*/
     PostProcessUnitJpegEnc(const PostProcessUnitJpegEnc&);
     PostProcessUnitJpegEnc& operator=(const PostProcessUnitJpegEnc&);
+};
+
+class PostProcessUnitRaw : public PostProcessUnit
+{
+ public:
+    explicit PostProcessUnitRaw(const char* name, int type, uint32_t buftype = kPostProcBufTypeExt);
+    virtual ~PostProcessUnitRaw();
+    virtual status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
+                                  const std::shared_ptr<PostProcBuffer>& out,
+                                  const std::shared_ptr<ProcUnitSettings>& settings);
+ private:
+    /*disable copy constructor and assignment*/
+    PostProcessUnitRaw(const PostProcessUnitRaw&);
+    PostProcessUnitRaw& operator=(const PostProcessUnitRaw&);
 };
 
 class PostProcessUnitSwLsc : public PostProcessUnit
@@ -358,6 +374,8 @@ class PostProcessPipeLine {
     status_t enablePostProcUnit(PostProcessUnit* procunit, bool enable);
     status_t setPostProcUnitAsync(PostProcessUnit* procunit, bool async);
     status_t addOutputBuffer(const std::vector<std::shared_ptr<PostProcBuffer>>& out);
+
+    bool IsRawStream(camera3_stream_t* stream);
 
     std::vector<std::shared_ptr<PostProcessUnit>> mPostProcUnits;
     std::map<camera3_stream_t*, PostProcessUnit*> mStreamToProcUnitMap;

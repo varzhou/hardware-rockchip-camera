@@ -562,6 +562,8 @@ status_t CameraHWInfo::init(const std::vector<std::string> &mediaDevicePath)
 {
     mMediaControllerPathName = mediaDevicePath;
     readProperty();
+    mMediaCtlElementNames.clear();
+    getMediaCtlElementNames(mMediaCtlElementNames, true);
 
     return initDriverList();
 }
@@ -1192,14 +1194,19 @@ status_t CameraHWInfo::getAvailableSensorModes(const std::string &sensorName,
     return NO_ERROR;
 }
 
-void CameraHWInfo::getMediaCtlElementNames(std::vector<std::string> &elementNames) const
+void CameraHWInfo::getMediaCtlElementNames(std::vector<std::string> &elementNames, bool isFirst) const
 {
+    if(!isFirst) {
+        elementNames = mMediaCtlElementNames;
+        return ;
+    }
+
     // TODO: return all media devices's elements now, maybe just return
     // specific media device's elements
     for (auto mcPath : mMediaControllerPathName) {
         int fd = open(mcPath.c_str(), O_RDONLY);
         CheckError(fd == -1, VOID_VALUE, "@%s, Could not open media controller device: %s",
-               __FUNCTION__, strerror(errno));
+                   __FUNCTION__, strerror(errno));
 
         struct media_entity_desc entity;
         CLEAR(entity);
@@ -1212,8 +1219,17 @@ void CameraHWInfo::getMediaCtlElementNames(std::vector<std::string> &elementName
         }
 
         CheckError(close(fd) > 0, VOID_VALUE, "@%s, Error in closing media controller: %s",
-               __FUNCTION__, strerror(errno));
+                   __FUNCTION__, strerror(errno));
     }
+}
+
+bool CameraHWInfo::isIspSupportRawPath() const
+{
+    for (auto &it: mMediaCtlElementNames) {
+        if (it.find("rawpath") != std::string::npos)
+            return true;
+    }
+    return false;
 }
 
 std::string CameraHWInfo::getFullMediaCtlElementName(const std::vector<std::string> elementNames,

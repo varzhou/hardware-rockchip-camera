@@ -49,7 +49,7 @@ status_t FrameWorker::attachNode(std::shared_ptr<V4L2VideoNode> node)
     return OK;
 }
 
-status_t FrameWorker::configure(std::shared_ptr<GraphConfig> & /*config*/, bool configChanged)
+status_t FrameWorker::configure(bool configChanged)
 {
     return OK;
 }

@@ -72,6 +72,9 @@ ImguUnit::ImguUnit(int cameraId,
     mSelfOutWorker =
         std::make_shared<OutputFrameWorker>(mCameraId, "SelfWork",
                                             IMGU_NODE_VF_PREVIEW, pipelineDepth);
+    mRawOutWorker =
+        std::make_shared<OutputFrameWorker>(mCameraId, "RawWork",
+                                            IMGU_NODE_RAW, pipelineDepth);
     // Pre allocate hal internal buffer in order to speed up some case need
     // allocate buffer temporary.
     // process unit in postpipeline which is not last unit will allocate
@@ -145,6 +148,11 @@ status_t ImguUnit::stopAllWorkers()
     status = mSelfOutWorker->stopWorker();
     if (status != OK) {
         LOGE("Fail to stop self woker");
+        return status;
+    }
+    status = mRawOutWorker->stopWorker();
+    if (status != OK) {
+        LOGE("Fail to stop raw woker");
         return status;
     }
     return status;
@@ -408,6 +416,13 @@ status_t ImguUnit::mapStreamWithDeviceNode(int phyStreamsNum)
              availableStreams[iter.first]->format, availableStreams[iter.first], iter.second);
     }
 
+    if(PlatformData::getCameraHWInfo()->isIspSupportRawPath()) {
+        mRawStream.width = 0;
+        mRawStream.height = 0;
+        mRawStream.format = HAL_PIXEL_FORMAT_RAW_OPAQUE;
+        mStreamNodeMapping[IMGU_NODE_RAW] = &mRawStream;
+    }
+
     return OK;
 }
 
@@ -474,7 +489,16 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
         return UNKNOWN_ERROR;
     }
 
-    if (mapStreamWithDeviceNode(mConfiguredNodesPerName.size()) != OK)
+    /* TODO */
+    // Raw Path can not be considered as a normal phyStream now
+    int phyStreamsNum = mConfiguredNodesPerName.size();
+    for (auto it = mConfiguredNodesPerName.begin(); it != mConfiguredNodesPerName.end(); ++it) {
+        if((*it).first == IMGU_NODE_RAW) {
+            phyStreamsNum--;
+            break;
+        }
+    }
+    if (mapStreamWithDeviceNode(phyStreamsNum) != OK)
         return UNKNOWN_ERROR;
 
     PipeConfiguration* videoConfig = &(mPipeConfigs[PIPE_VIDEO_INDEX]);
@@ -529,8 +553,18 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
             //shutter event for non isys, zyc
             mListenerDeviceWorkers.push_back(pvWorker.get());
         } else if (it.first == IMGU_NODE_RAW) {
-            LOGW("Not implemented"); // raw
-            continue;
+            if(mStreamNodeMapping[it.first] == NULL)
+                continue;
+
+            mRawOutWorker->attachNode(it.second);
+            mRawOutWorker->attachStream(mStreamNodeMapping[it.first]);
+
+            videoConfig->deviceWorkers.push_back(mRawOutWorker);
+            videoConfig->pollableWorkers.push_back(mRawOutWorker);
+            videoConfig->nodes.push_back(mRawOutWorker->getNode());
+            setStreamListeners(it.first, mRawOutWorker);
+            //shutter event for non isys, zyc
+            mListenerDeviceWorkers.push_back(mRawOutWorker.get());
         } else {
             LOGE("Unknown NodeName: %d", it.first);
             return UNKNOWN_ERROR;
@@ -546,7 +580,7 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
 
         if (mCurPipeConfig == videoConfig) {
             LOGI("%s: configure postview in advance", __FUNCTION__);
-            pvWorker->configure(graphConfig, mConfigChanged);
+            pvWorker->configure(mConfigChanged);
         }
     }
 
@@ -563,7 +597,7 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
 
         if (mCurPipeConfig == stillConfig) {
             LOGI("%s: configure preview in advance", __FUNCTION__);
-            vfWorker->configure(graphConfig, mConfigChanged);
+            vfWorker->configure(mConfigChanged);
         }
     }
 
@@ -585,8 +619,11 @@ ImguUnit::createProcessingTasks(std::shared_ptr<GraphConfig> graphConfig)
 
     status_t ret = OK;
     for (const auto &it : mCurPipeConfig->deviceWorkers) {
-        ret = (*it).configure(graphConfig, mConfigChanged);
+        if(OutputFrameWorker *work = static_cast<OutputFrameWorker *>(it.get()))
+            if(work == mRawOutWorker.get())
+                continue;
 
+        ret = (*it).configure(mConfigChanged);
         if (ret != OK) {
             LOGE("Failed to configure workers.");
             return ret;
@@ -712,7 +749,6 @@ status_t ImguUnit::processNextRequest()
     std::shared_ptr<DeviceMessage> msg = nullptr;
     Camera3Request *request = nullptr;
 
-
     LOGD("%s: pending size %zu,underwork.size(%d), state %d", __FUNCTION__, mMessagesPending.size(), mMessagesUnderwork.size(), mState);
     if (mMessagesPending.empty())
         return NO_ERROR;
@@ -783,6 +819,31 @@ status_t ImguUnit::processNextRequest()
     return status;
 }
 
+// this function is an async interface that can be called
+// at the time after kickstart.
+// tuning tool will asnyc call this function to streamon rawPath
+status_t
+ImguUnit::startRawWork()
+{
+    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    status_t status = OK;
+
+    if(!PlatformData::getCameraHWInfo()->isIspSupportRawPath()) {
+        LOGE("@%s : Isp hardware dont't support raw path", __FUNCTION__);
+        return OK;
+    }
+
+    status = mRawOutWorker->configure(true);
+    CheckError(status != OK, status, "@%s, Failed to configure RawWork",
+                   __FUNCTION__);
+
+    status = mRawOutWorker->startWorker();
+    CheckError(status != OK, status, "@%s, Failed to start RawWork",
+                   __FUNCTION__);
+
+    return status;
+}
+
 status_t
 ImguUnit::kickstart()
 {
@@ -790,11 +851,21 @@ ImguUnit::kickstart()
     status_t status = OK;
 
     for (const auto &it : mCurPipeConfig->deviceWorkers) {
+        // RawWork should start in the cases:
+        // 1. enable dump Raw by cmd: $ setprop persist.vendor.camera.dump 16
+        // 2. tuning tool call the function startRawWork directorly
+        if(OutputFrameWorker *work = static_cast<OutputFrameWorker *>(it.get()))
+            if(work == mRawOutWorker.get())
+                continue;
         status = (*it).startWorker();
         if (status != OK) {
             LOGE("Failed to start workers.");
             return status;
         }
+    }
+    if(LogHelper::isDumpTypeEnable(CAMERA_DUMP_RAW)) {
+        LOGD("@%s : Dump raw enabled, start RawWork", __FUNCTION__);
+        status = startRawWork();
     }
 
     mFirstRequest = false;

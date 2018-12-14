@@ -88,7 +88,7 @@ public:
     explicit IDeviceWorker(int cameraId) : mCameraId(cameraId), mDevError(false) {}
     virtual ~IDeviceWorker() {}
 
-    virtual status_t configure(std::shared_ptr<GraphConfig> &config, bool configChanged) = 0;
+    virtual status_t configure(bool configChanged) = 0;
     virtual status_t startWorker() = 0;
     virtual status_t flushWorker() = 0;
     virtual status_t stopWorker() = 0;

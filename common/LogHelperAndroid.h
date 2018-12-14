@@ -27,8 +27,8 @@
 #define ENV_CAMERA_HAL_DUMP   "persist.vendor.camera.dump"
 // Properties for debugging.
 #define ENV_CAMERA_HAL_DUMP_SKIP_NUM  "persist.vendor.camera.dump.skip"
-#define ENV_CAMERA_HAL_DUMP_INTERVAL  "persist.vendor.camera.dump.interval"
-#define ENV_CAMERA_HAL_DUMP_COUNT     "persist.vendor.camera.dump.count"
+#define ENV_CAMERA_HAL_DUMP_INTERVAL  "persist.vendor.camera.dump.gap"
+#define ENV_CAMERA_HAL_DUMP_COUNT     "persist.vendor.camera.dump.cnt"
 #define ENV_CAMERA_HAL_DUMP_PATH      "persist.vendor.camera.dump.path"
 
 #ifdef RKCAMERA_REDEFINE_LOG

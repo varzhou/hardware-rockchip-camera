@@ -200,7 +200,8 @@ public:
                                  std::string &sensorEntityName) const;
     status_t getAvailableSensorOutputFormats(int32_t cameraId,
                                      SensorFormat &OutputFormats) const;
-    void getMediaCtlElementNames(std::vector<std::string> &elementNames) const;
+    void getMediaCtlElementNames(std::vector<std::string> &elementNames, bool isFirst = false) const;
+    bool isIspSupportRawPath() const;
     std::string getFullMediaCtlElementName(const std::vector<std::string> elementNames,
                                            const char *value) const;
 
@@ -208,6 +209,7 @@ public:
     std::string mManufacturerName;
     std::string mBoardName;
     std::vector<std::string> mMediaControllerPathName;
+    std::vector<std::string> mMediaCtlElementNames;
     std::string mMainDevicePathName;
     int mPreviewHALFormat;  // specify the preview format for multi configured streams
     int mCameraDeviceAPIVersion;

@@ -24,6 +24,7 @@
 #include "NodeTypes.h"
 #include <libyuv.h>
 #include <sys/mman.h>
+#include "FormatUtils.h"
 
 namespace android {
 namespace camera2 {
@@ -64,7 +65,9 @@ OutputFrameWorker::flushWorker()
     // 1.stream related variable should be destruct here.
     // 2.PostPipeline processing is base on streams, so it must
     // flush and stop here
-    LOGI("@%s enter, %s ", __FUNCTION__, mName.c_str());
+    LOGI("@%s enter, %s, mIsStarted:%d", __FUNCTION__, mName.c_str(), mIsStarted);
+    if (mIsStarted == false)
+        return OK;
     FrameWorker::flushWorker();
     mPostPipeline->flush();
     mPostPipeline->stop();
@@ -97,7 +100,16 @@ OutputFrameWorker::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                                   int err)
 {
     CameraStream *stream = buf->cambuf->getOwner();
-    stream->captureDone(buf->cambuf, buf->request);
+    // stream is NULL in the case: rawPath + CAMERA_DUMP_RAW
+    // because the buf is the input mmap buffer for we set the
+    // RawUnit buffer type as kPostProcBufTypePre in postpipeline
+    if (stream) {
+        stream->captureDone(buf->cambuf, buf->request);
+    } else {
+        LOGI("@%s %s: Dump raw enabled, fake raw stream do nothing",
+             __FUNCTION__, mName.c_str());
+    }
+
     return OK;
 }
 
@@ -142,7 +154,7 @@ status_t OutputFrameWorker::configPostPipeLine()
     return OK;
 }
 
-status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/, bool configChanged)
+status_t OutputFrameWorker::configure(bool configChanged)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     status_t ret = OK;
@@ -153,8 +165,10 @@ status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/, 
         if (ret != OK)
             return ret;
 
-        LOGI("@%s %s format %s, size %d, %dx%d", __FUNCTION__, mName.c_str(),
-             v4l2Fmt2Str(mFormat.pixelformat()), mFormat.sizeimage(), mFormat.width(), mFormat.height());
+        LOGI("@%s %s format %s, isRawFormat(%s), size %d, %dx%d", __FUNCTION__, mName.c_str(),
+             v4l2Fmt2Str(mFormat.pixelformat()),
+             graphconfig::utils::isRawFormat(mFormat.pixelformat()) ? "Yes" : "No",
+             mFormat.sizeimage(), mFormat.width(), mFormat.height());
 
         ret = configPostPipeLine();
         if (ret != OK)
@@ -188,7 +202,6 @@ status_t OutputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/, 
 status_t OutputFrameWorker::prepareRun(std::shared_ptr<DeviceMessage> msg)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    mMsg = msg;
     status_t status = NO_ERROR;
     std::shared_ptr<CameraBuffer> buffer;
 
@@ -196,6 +209,11 @@ status_t OutputFrameWorker::prepareRun(std::shared_ptr<DeviceMessage> msg)
 
     if (!mStream)
         return NO_ERROR;
+
+    if (mIsStarted == false)
+        return OK;
+
+    mMsg = msg;
 
     Camera3Request* request = mMsg->cbMetadataMsg.request;
     request->setSequenceId(-1);
@@ -234,6 +252,11 @@ status_t OutputFrameWorker::prepareRun(std::shared_ptr<DeviceMessage> msg)
         // Work for listeners
         LOGD("%s: stream %p works for listener only in req %d",
              __FUNCTION__, mStream, request->getId());
+        mPollMe = true;
+    // if dump raw, need to poll raw video node
+    } else if ((mName == "RawWork") &&
+               (LogHelper::isDumpTypeEnable(CAMERA_DUMP_RAW))){
+        LOGI("@%s : Dump raw enabled", __FUNCTION__);
         mPollMe = true;
     } else {
         LOGD("No work for this worker mStream: %p", mStream);
@@ -310,9 +333,13 @@ status_t OutputFrameWorker::run()
         std::string s(mNode->name());
         // node name is "/dev/videox", substr is videox
         std::string substr = s.substr(5,10);
-        // CAMERA_DUMP_RAW only means that the buffers are not
-        // processed after dequed from driver, but not the raw format
-        mPostWorkingBuf->cambuf->dumpImage(CAMERA_DUMP_RAW, substr.c_str());
+        // CAMERA_DUMP_RAW : raw format buffers
+        // CAMERA_DUMP_ISP_PURE : the buffers not processed
+        // after dequing from driver
+        if (graphconfig::utils::isRawFormat(mFormat.pixelformat()))
+            mPostWorkingBuf->cambuf->dumpImage(CAMERA_DUMP_RAW, "RAW");
+        else
+            mPostWorkingBuf->cambuf->dumpImage(CAMERA_DUMP_ISP_PURE, substr.c_str());
     } else {
         LOGE("%s:%d device error!", __FUNCTION__, __LINE__);
         /* get the prepared but undequed buffers */

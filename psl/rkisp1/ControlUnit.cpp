@@ -202,18 +202,27 @@ ControlUnit::init()
     const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(mCameraId);
     if (!cap) {
         LOGE("Not enough information for getting NVM data");
+        return UNKNOWN_ERROR;
     } else {
         sensorName = cap->getSensorName();
     }
 
-    if (!cap || cap->sensorType() == SENSOR_TYPE_RAW) {
+    // In the case: CAMERA_DUMP_RAW + no rawPath, disable 3a.
+    // because isp is bypassed in this case
+    // Note: only isp support rawPath, hal report the raw capability,
+    // so the case "raw stream + no rawPath" shouln't exists
+    if (cap->sensorType() == SENSOR_TYPE_RAW &&
+        !(LogHelper::isDumpTypeEnable(CAMERA_DUMP_RAW) &&
+          !PlatformData::getCameraHWInfo()->isIspSupportRawPath())) {
         mCtrlLoop = new RkCtrlLoop(mCameraId);
         if (mCtrlLoop->init(sensorName, this) != NO_ERROR) {
             LOGE("Error initializing 3A control");
             return UNKNOWN_ERROR;
         }
     } else {
-        LOGW("SoC camera 3A control missing");
+        LOGW("No need 3A control, isSocSensor: %s, rawDump:%d",
+             cap->sensorType() == SENSOR_TYPE_SOC ? "Yes" : "No",
+             LogHelper::isDumpTypeEnable(CAMERA_DUMP_RAW));
         //return UNKNOWN_ERROR;
     }
 

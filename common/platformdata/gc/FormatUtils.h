@@ -37,6 +37,7 @@ int32_t getBppFromCommon(int32_t format);
 const std::string pixelCode2String(int32_t code);
 int32_t pixelCode2fourcc(int32_t code);
 
+bool isRawFormat(int32_t format);
 }  // namespace utils
 }  // namespace graphconfig
 

@@ -24,6 +24,7 @@
 #include "ImageScalerCore.h"
 #include "RgaCropScale.h"
 #include "LogHelper.h"
+#include "FormatUtils.h"
 
 #define ALIGN(value, x)	 ((value + (x-1)) & (~(x-1)))
 namespace android {
@@ -409,6 +410,10 @@ PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
          mName, __FUNCTION__, this, settings->request->getId());
     status_t status = OK;
 
+    if (mProcessUnitType == kPostProcessTypeDummy) {
+        LOGD("@%s %d: dummy unit , do nothing", __FUNCTION__, __LINE__);
+        return OK;
+    }
     /*
      * use RGA to do memcpy.
      * TODO: using arm to do memcpy has cache issue, the buffer from framework
@@ -525,6 +530,21 @@ PostProcessPipeLine::addOutputBuffer(const std::vector<std::shared_ptr<PostProcB
     return status;
 }
 
+bool PostProcessPipeLine::IsRawStream(camera3_stream_t* stream) {
+    if (stream == NULL) {
+        LOGE("@%s : stream is NULL", __FUNCTION__);
+        return false;
+    }
+    if(stream->format == HAL_PIXEL_FORMAT_RAW16 ||
+       stream->format == HAL_PIXEL_FORMAT_RAW10 ||
+       stream->format == HAL_PIXEL_FORMAT_RAW12 ||
+       stream->format == HAL_PIXEL_FORMAT_RAW_OPAQUE)
+        return true;
+    return false;
+
+}
+
+
 /*
  * TODO:
  * notice that the total process time of each other branch pipeline
@@ -551,6 +571,19 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
 
     for (auto stream : streams) {
         int stream_process_type = 0;
+        if(IsRawStream(stream)) {
+            streams_post_proc.push_back(std::map<camera3_stream_t*, int> {{stream, kPostProcessTypeRaw}});
+            continue;
+        }
+
+        // do nothing to app streams data by using dummy unit if
+        // in fomat is raw. this may happen in the case:
+        // CAMERA_DUMP_RAW + no rawPath
+        if (graphconfig::utils::isRawFormat(in.format)) {
+            LOGD("@%s %d: add dummpy unit for appStreams when raw input", __FUNCTION__, __LINE__);
+            streams_post_proc.push_back(std::map<camera3_stream_t*, int> {{stream, kPostProcessTypeDummy}});
+            continue;
+        }
 
         if (stream->format == HAL_PIXEL_FORMAT_BLOB)
            stream_process_type |= kPostProcessTypeJpegEncoder;
@@ -731,6 +764,18 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                     process_unit_name = "MemCopy";
                     procunit_from = std::make_shared<PostProcessUnit>
                                     (process_unit_name, test_type, buf_type, this);
+                    break;
+                case kPostProcessTypeRaw :
+                    process_unit_name = "Raw";
+                    // if need process the raw buffer in the future, the
+                    // buffer type should be changed
+                    procunit_from = std::make_shared<PostProcessUnitRaw>
+                                    (process_unit_name, test_type, PostProcessUnit::kPostProcBufTypePre);
+                    break;
+                case kPostProcessTypeDummy :
+                    process_unit_name = "Dummy";
+                    procunit_from = std::make_shared<PostProcessUnit>
+                                    (process_unit_name, test_type, buf_type);
                     break;
                 default:
                     LOGE("%s: unknown stream process unit type 0x%x",
@@ -1072,6 +1117,27 @@ PostProcessUnitJpegEnc::convertJpeg(std::shared_ptr<CameraBuffer> buffer,
 
     return status;
 
+}
+
+PostProcessUnitRaw::PostProcessUnitRaw(const char* name, int type,
+                                               uint32_t buftype)
+    : PostProcessUnit(name, type, buftype) {
+}
+
+PostProcessUnitRaw::~PostProcessUnitRaw() {
+}
+
+status_t
+PostProcessUnitRaw::processFrame(const std::shared_ptr<PostProcBuffer>& in,
+                                     const std::shared_ptr<PostProcBuffer>& out,
+                                     const std::shared_ptr<ProcUnitSettings>& settings) {
+    PERFORMANCE_ATRACE_CALL();
+    status_t status = OK;
+
+    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    /* in->cambuf->dumpImage(CAMERA_DUMP_RAW, "RawUnit"); */
+
+    return status;
 }
 
 PostProcessUnitSwLsc::PostProcessUnitSwLsc(const char* name, int type,

@@ -33,7 +33,7 @@ public:
                      size_t pipelineDepth);
     virtual ~InputFrameWorker();
 
-    virtual status_t configure(std::shared_ptr<GraphConfig> &config, bool configChanged);
+    virtual status_t configure(bool configChanged);
     status_t prepareRun(std::shared_ptr<DeviceMessage> msg);
     status_t run();
     status_t postRun();

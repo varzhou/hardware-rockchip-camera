@@ -66,6 +66,8 @@ enum {
 
 // Dump parameter related flags
     CAMERA_DUMP_MEDIA_CTL =       1 << 6, // 64
+// Dump data that pulled from videoNode and not processed by hal
+    CAMERA_DUMP_ISP_PURE =        1 << 7, // 128
 };
 
 // camera.hal.perf

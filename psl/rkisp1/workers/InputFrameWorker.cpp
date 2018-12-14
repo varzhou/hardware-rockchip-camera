@@ -150,7 +150,7 @@ InputFrameWorker::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
     return status;
 }
 
-status_t InputFrameWorker::configure(std::shared_ptr<GraphConfig> &/*config*/, bool configChanged)
+status_t InputFrameWorker::configure(bool configChanged)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
 
