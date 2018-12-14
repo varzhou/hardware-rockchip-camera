@@ -288,6 +288,34 @@ status_t V4L2Subdevice::setFramerate(int pad, int fps)
     return setFrameInterval(finterval);
 }
 
+status_t V4L2Subdevice::getSensorFormats(int pad, uint32_t code, std::vector<struct v4l2_subdev_frame_size_enum> &fse)
+{
+    int ret = 0;
+    struct v4l2_subdev_frame_size_enum frame_size;
+
+    CLEAR(frame_size);
+    frame_size.pad = pad;
+    frame_size.index = 0;
+    frame_size.code = code;
+
+    if (mState == DEVICE_CLOSED) {
+        LOGE("%s %s in invalid state %d",__FUNCTION__, mName.c_str(), mState);
+        return INVALID_OPERATION;
+    }
+
+    LOGD("%s VIDIOC_SUBDEV_ENUM_FRAME_SIZE: pad: %d, index %d, code:0x%x",
+        mName.c_str(), frame_size.pad, frame_size.index, frame_size.code);
+    while (pbxioctl(VIDIOC_SUBDEV_ENUM_FRAME_SIZE, &frame_size) == 0) {
+        LOGI("@%s: Sensor frame size: Min(%dx%d), Max(%dx%d)", __FUNCTION__,
+             frame_size.min_width, frame_size.min_height, frame_size.max_width, frame_size.max_height);
+        fse.push_back(frame_size);
+        frame_size.index++;
+    };
+    LOGD("@%s device: %s, %zu frame size retrieved", __FUNCTION__, mName.c_str(), fse.size());
+
+    return OK;
+}
+
 } NAMESPACE_DECLARATION_END
 ////////////////////////////////////////////////////////////////////
 //                          PRIVATE METHODS

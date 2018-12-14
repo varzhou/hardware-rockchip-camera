@@ -27,6 +27,10 @@ namespace android {
 namespace camera2 {
 
 class GraphConfigNodes;
+struct FrameSize_t {
+    uint32_t width;
+    uint32_t height;
+};
 
 class RKISP1CameraCapInfo : public CameraCapInfo {
 public:
@@ -49,6 +53,7 @@ public:
     const std::string& getGraphSettingsFile(void) const { return mGraphSettingsFile; };
     const std::string getTestPatternBayerFormat(void) const { return mTestPatternBayerFormat; };
     const std::string& getIqTuningFile(void) const { return mIqTuningFile; };
+    const std::vector<struct FrameSize_t> getSupportTuningSizes() const { return mSupportTuningSize; }
 
     const std::string getMediaCtlEntityName(std::string type) const;
     const std::vector<std::string> getMediaCtlEntityNames(std::string type) const;
@@ -66,6 +71,9 @@ public:
     int mStatisticsInitialSkip;
     int mCITMaxMargin;
     bool mSupportIsoMap;
+
+    std::vector<struct FrameSize_t> mSupportTuningSize;
+
     std::string mNvmDirectory;
     std::string mSensorName;
     ia_binary_data mNvmData;

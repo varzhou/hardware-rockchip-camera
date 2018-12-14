@@ -103,7 +103,6 @@ private:
     void handleMediaCtlElements(const char *name, const char **atts);
     void getPSLDataFromXmlFile(void);
     int convertXmlData(void * dest, int destMaxNum, const char * src, int type);
-    void getGraphConfigFromXmlFile();
     void checkRequestMetadata(const camera_metadata *request, int cameraId);
     uint8_t selectAfMode(const camera_metadata_t *staticMeta, int reqTemplate);
     uint8_t selectEdgeMode(const camera_metadata_t *staticMeta, int reqTemplate);

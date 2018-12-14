@@ -68,7 +68,6 @@ PSLConfParser::PSLConfParser(std::string& xmlName, const std::vector<SensorDrive
     mCurrentDataField = FIELD_INVALID;
     mSensorIndex  = -1;
     getPSLDataFromXmlFile();
-    getGraphConfigFromXmlFile();
     // Uncomment to display all the parsed values
     //dump();
 }
@@ -600,6 +599,29 @@ void PSLConfParser::handleHALTuning(const char *name, const char **atts)
             info->mSensorFlipping |= SENSOR_FLIP_V;
     } else if (strcmp(name, "supportIsoMap") == 0) {
         info->mSupportIsoMap = ((strcmp(atts[1], "true") == 0) ? true : false);
+    } else if (strcmp(name, "supportTuningSize") == 0) {
+        struct FrameSize_t frame;
+        char * endPtr = nullptr;
+        const char * src = atts[1];
+        do {
+            frame.width = strtol(src, &endPtr, 0);
+            if (endPtr != nullptr) {
+                if (*endPtr == 'x') {
+                    src = endPtr + 1;
+                    frame.height = strtol(src, &endPtr, 0);
+                    info->mSupportTuningSize.push_back(frame);
+                } else if (*endPtr == ',') {
+                    src = endPtr + 1;
+                } else
+                    break;
+            } else {
+                LOGE("@%s : supportTuningSize value format error, check camera3_profiles.xml", __FUNCTION__);
+                break;
+            }
+        } while (1);
+        for (auto it = info->mSupportTuningSize.begin(); it != info->mSupportTuningSize.end(); ++it) {
+            LOGD("@%s : supportTuningSize: %dx%d", __FUNCTION__, (*it).width, (*it).height);
+        }
     } else if (strcmp(name, "graphSettingsFile") == 0) {
         info->mGraphSettingsFile = atts[1];
     } else if (strcmp(name, "iqTuningFile") == 0) {
@@ -769,44 +791,6 @@ bool PSLConfParser::isSensorPresent(const std::string &sensorName)
     return false;
 }
 
-/**
- * Read graph descriptor and settings from configuration files.
- *
- * The resulting graphs represend all possible graphs for given sensor, and
- * they are stored in capinfo structure.
- */
-void PSLConfParser::getGraphConfigFromXmlFile()
-{
-    // Assuming that PSL section from profiles is already parsed, and number
-    // of cameras is known.
-    GraphConfigManager::addAndroidMap();
-    for (size_t i = 0; i < mCaps.size(); ++i) {
-        RKISP1CameraCapInfo *info = static_cast<RKISP1CameraCapInfo*>(mCaps[i]);
-        if (info->mGCMNodes) {
-            LOGE("Camera %zu Graph Config already initialized - BUG", i);
-            continue;
-        }
-
-        std::string settingsPath = GRAPH_SETTINGS_FILE_PATH;
-        const std::string &fileName = info->getGraphSettingsFile();
-
-        if (fileName.empty()) {
-            settingsPath += GraphConfigManager::DEFAULT_SETTINGS_FILE;
-        } else {
-            settingsPath += fileName;
-        }
-        LOGW("Using settings file %s for camera %zu", settingsPath.c_str(), i);
-
-        info->mGCMNodes = GraphConfigManager::parse(
-            GraphConfigManager::DEFAULT_DESCRIPTOR_FILE, settingsPath.c_str());
-
-        if (!info->mGCMNodes) {
-            LOGE("Could not read graph descriptor from file for camera %zu", i);
-            continue;
-        }
-    }
-}
-
 void PSLConfParser::checkField(const char *name, const char **atts)
 {
     if (!strcmp(name, "Profiles")) {
@@ -852,7 +836,6 @@ void PSLConfParser::checkField(const char *name, const char **atts)
     LOGI("@%s: name:%s, field %d", __FUNCTION__, name, mCurrentDataField);
     return;
 }
-
 
 /**
  * the callback function of the libexpat for handling of one element start

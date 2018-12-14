@@ -23,17 +23,9 @@
 #include "LogHelper.h"
 #include "PerformanceTraces.h"
 #include "Camera3Request.h"
-#include <GCSSParser.h>
 
-using namespace GCSS;
 using std::vector;
 using std::map;
-
-// Settings to use in fallback cases
-#define DEFAULT_SETTING_1_VIDEO_1_STILL "8302" // 7002, 1 video, 1 still stream
-#define DEFAULT_SETTING_2_VIDEO_2_STILL "7004" // 7004, 2 video, 2 stills streams
-#define DEFAULT_SETTING_2_STILL "7005" // 7005, 2 still streams
-#define DEFAULT_SETTING_1_STILL "7006" // 7006, 1 still stream
 
 namespace android {
 namespace camera2 {
@@ -41,90 +33,24 @@ namespace camera2 {
 /* should support at least 4 streams comparetd to HAL1 */
 #define MAX_NUM_STREAMS    4
 
-#if defined(ANDROID_VERSION_ABOVE_8_X)
-const char *GraphConfigManager::DEFAULT_DESCRIPTOR_FILE = "/vendor/etc/camera/graph_descriptor.xml";
-const char *GraphConfigManager::DEFAULT_SETTINGS_FILE = "/vendor/etc/camera/graph_settings.xml";
-#else
-const char *GraphConfigManager::DEFAULT_DESCRIPTOR_FILE = "/etc/camera/graph_descriptor.xml";
-const char *GraphConfigManager::DEFAULT_SETTINGS_FILE = "/etc/camera/graph_settings.xml";
-#endif
-GraphConfigNodes::GraphConfigNodes() :
-        mDesc(nullptr),
-        mSettings(nullptr)
+GraphConfigNodes::GraphConfigNodes()
 {
 }
 
 GraphConfigNodes::~GraphConfigNodes()
 {
-    delete mDesc;
-    delete mSettings;
 }
 
 GraphConfigManager::GraphConfigManager(int32_t camId,
                                        GraphConfigNodes *testNodes) :
     mCameraId(camId),
-    mGraphQueryManager(new GraphQueryManager()),
-    mGraphConfigPool("GraphConfig"),
-    mFallback(false)
+    mGraphConfigPool("GraphConfig")
 {
-    const CameraCapInfo *info = PlatformData::getCameraCapInfo(mCameraId);
-    if (CC_UNLIKELY(!info || !info->getGraphConfigNodes())) {
-        LOGE("Failed to get camera %d info - BUG", mCameraId);
-        return;
-    }
-    // TODO: need casting because GraphQueryManager interface is clumsy.
-    GraphConfigNodes *nodes = testNodes;
-    if (nodes == nullptr) {
-        nodes = const_cast<GraphConfigNodes*>(info->getGraphConfigNodes());
-    }
-
-    if (mGraphQueryManager.get() != nullptr && nodes != nullptr) {
-        mGraphQueryManager->setGraphDescriptor(nodes->mDesc);
-        mGraphQueryManager->setGraphSettings(nodes->mSettings);
-    } else {
-        LOGE("Failed to allocate Graph Query Manager -- FATAL");
-        return;
-    }
 
     status_t status = mGraphConfigPool.init(MAX_REQ_IN_FLIGHT * 2,
                                             GraphConfig::reset);
     if (CC_UNLIKELY(status != OK)) {
         LOGE("Failed to initialize the pool of GraphConfigs");
-    }
-}
-
-/**
- * Generate the helper vectors mVideoStreamResolutions and
- *  mStillStreamResolutions used during stream configuration.
- *
- * This is a helper member to store the ItemUID's for the width and height of
- * each stream. Each ItemUID points to items like :
- *  video0.width
- *  video0.height
- * This vector needs to be regenerated after each stream configuration.
- */
-void GraphConfigManager::initStreamResolutionIds()
-{
-    mVideoStreamResolutions.clear();
-    mStillStreamResolutions.clear();
-    mVideoStreamKeys.clear();
-    mStillStreamKeys.clear();
-
-    // Will map streams in this order
-    mVideoStreamKeys.push_back(GCSS_KEY_IMGU_VIDEO);
-    mVideoStreamKeys.push_back(GCSS_KEY_IMGU_PREVIEW);
-    mStillStreamKeys.push_back(GCSS_KEY_IMGU_STILL);
-    mStillStreamKeys.push_back(GCSS_KEY_IMGU_PREVIEW);
-
-    for (size_t i = 0; i < mVideoStreamKeys.size(); i++) {
-        ItemUID w = {mVideoStreamKeys[i], GCSS_KEY_WIDTH};
-        ItemUID h = {mVideoStreamKeys[i], GCSS_KEY_HEIGHT};
-        mVideoStreamResolutions.push_back(std::make_pair(w,h));
-    }
-    for (size_t i = 0; i < mStillStreamKeys.size(); i++) {
-        ItemUID w = {mStillStreamKeys[i], GCSS_KEY_WIDTH};
-        ItemUID h = {mStillStreamKeys[i], GCSS_KEY_HEIGHT};
-        mStillStreamResolutions.push_back(std::make_pair(w,h));
     }
 }
 
@@ -136,195 +62,12 @@ GraphConfigManager::~GraphConfigManager()
     }
 }
 
-/**
- * Add predefined keys used in android to the map used by the graph config
- * parser.
- *
- * This method is static and should only be called once.
- *
- * We do this so that the keys we will use in the queries are already defined
- * and we can create the query objects in a more compact way, by using the
- * ItemUID initializers.
- */
-void GraphConfigManager::addAndroidMap()
-{
-    /**
-     * Initialize the map with android specific tags found in the
-     * Graph Config XML's
-     */
-    #define GCSS_KEY(key, str) std::make_pair(#str, GCSS_KEY_##key),
-    map<std::string, uint32_t> ANDROID_GRAPH_KEYS = {
-        #include "platform_gcss_keys.h"
-        #include "RKISP1_android_gcss_keys.h"
-    };
-    #undef GCSS_KEY
-
-    LOGD("Adding %zu android specific keys to graph config parser",
-            ANDROID_GRAPH_KEYS.size());
-
-    /*
-     * add Android specific tags so parser can use them
-     */
-    ItemUID::addCustomKeyMap(ANDROID_GRAPH_KEYS);
-}
-/**
- *
- * Static method to parse the XML graph configurations and settings
- *
- * This method is currently called once per camera.
- *
- * \param[in] descriptorXmlFile: name of the file where the graphs are described
- * \param[in] settingsXmlFile: name of the file where the settings are listed
- *
- * \return nullptr if parsing failed.
- * \return pointer to a valid GraphConfigNode object. Ownership passes to
- *         caller.
- */
-GraphConfigNodes* GraphConfigManager::parse(const char *descriptorXmlFile,
-                                            const char *settingsXmlFile)
-{
-    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    GCSSParser parser;
-
-    GraphConfigNodes *nodes = new GraphConfigNodes;
-
-    parser.parseGCSSXmlFile(descriptorXmlFile, &nodes->mDesc);
-    if (!nodes->mDesc) {
-        LOGE("Failed to parse graph descriptor from %s", descriptorXmlFile);
-        delete nodes;
-        return nullptr;
-    }
-
-    parser.parseGCSSXmlFile(settingsXmlFile, &nodes->mSettings);
-    if (!nodes->mSettings) {
-        LOGE("Failed to parse graph settings from %s", settingsXmlFile);
-        delete nodes;
-        return nullptr;
-    }
-
-    return nodes;
-}
-
-/**
- * Perform a reverse lookup on the map that associates client streams to
- * virtual sinks.
- *
- * This method is used during pipeline configuration to find a stream associated
- * with the id (GCSS key) of the virtual sink
- *
- * \param[in] vPortId GCSS key representing one of the virtual sinks in the
- *                    graph, like GCSS_KEY_VIDEO1
- * \return nullptr if not found
- * \return pointer to the client stream associated with that virtual sink.
- */
-camera3_stream_t* GraphConfigManager::getStreamByVirtualId(uid_t vPortId)
-{
-    std::map<camera3_stream_t*, uid_t>::iterator it;
-    it = mStreamToSinkIdMap.begin();
-
-    for (; it != mStreamToSinkIdMap.end(); ++it) {
-        if (it->second == vPortId) {
-            return it->first;
-        }
-    }
-    return nullptr;
-}
-
-bool GraphConfigManager::needSwapVideoPreview(GCSS::GraphConfigNode* graphCfgNode, int32_t id)
-{
-    bool swapVideoPreview = false;
-    int previewWidth = 0;
-    int previewHeight = 0;
-    int videoWidth = 0;
-    int videoHeight = 0;
-    status_t ret1 = OK;
-    status_t ret2 = OK;
-
-    GraphConfigNode* node = nullptr;
-    std::string nodeName = GC_PREVIEW;
-    graphCfgNode->getDescendantByString(nodeName, &node);
-    if (node) {
-        ret1 = node->getValue(GCSS_KEY_WIDTH, previewWidth);
-        ret2 = node->getValue(GCSS_KEY_HEIGHT, previewHeight);
-        if (ret1 != OK || ret2 != OK) {
-            LOGE("@%s, fail to get width or height for node %s, ret1:%d, ret2:%d",
-                __FUNCTION__, nodeName.c_str(), ret1, ret2);
-            return swapVideoPreview;
-        }
-    }
-    LOGD("@%s, settings id:%d, for %s, width:%d, height:%d",
-        __FUNCTION__, id, nodeName.c_str(), previewWidth, previewHeight);
-
-    node = nullptr;
-    nodeName = GC_VIDEO;
-    graphCfgNode->getDescendantByString(nodeName, &node);
-    if (node) {
-        ret1 = node->getValue(GCSS_KEY_WIDTH, videoWidth);
-        ret2 = node->getValue(GCSS_KEY_HEIGHT, videoHeight);
-        if (ret1 != OK || ret2 != OK) {
-            LOGE("@%s, fail to get width or height for node %s, ret1:%d, ret2:%d",
-                __FUNCTION__, nodeName.c_str(), ret1, ret2);
-            return swapVideoPreview;
-        }
-    }
-    LOGD("@%s, settings id:%d, for %s, width:%d, height:%d",
-        __FUNCTION__, id, nodeName.c_str(), videoWidth, videoHeight);
-
-    if (previewWidth != 0 && previewHeight != 0
-        && videoWidth != 0 && videoHeight != 0) {
-        if (previewWidth > videoWidth
-            && previewHeight > videoHeight)
-            swapVideoPreview = true;
-    }
-    LOGD("@%s, swapVideoPreview:%d", __FUNCTION__, swapVideoPreview);
-
-    return swapVideoPreview;
-}
-
-void GraphConfigManager::handleVideoStream(ResolutionItem& res, PlatformGraphConfigKey& streamKey)
-{
-    res = mVideoStreamResolutions[0];
-    mVideoStreamResolutions.erase(mVideoStreamResolutions.begin());
-    streamKey = mVideoStreamKeys[0];
-    mVideoStreamKeys.erase(mVideoStreamKeys.begin());
-}
-
-void GraphConfigManager::handleStillStream(ResolutionItem& res, PlatformGraphConfigKey& streamKey)
-{
-    res = mStillStreamResolutions[0];
-    mStillStreamResolutions.erase(mStillStreamResolutions.begin());
-    streamKey = mStillStreamKeys[0];
-    mStillStreamKeys.erase(mStillStreamKeys.begin());
-}
-
-void GraphConfigManager::handleMap(camera3_stream_t* stream, ResolutionItem& res, PlatformGraphConfigKey& streamKey)
-{
-    LOGI("Adding stream %p to map %s", stream, ItemUID::key2str(streamKey));
-    mStreamToSinkIdMap[stream] = streamKey;
-    bool rotate = false;
-
-    ItemUID w = res.first;
-    ItemUID h = res.second;
-#ifdef CHROME_BOARD
-    rotate = stream->stream_type == CAMERA3_STREAM_OUTPUT &&
-                  (stream->crop_rotate_scale_degrees == CAMERA3_STREAM_ROTATION_90
-                   || stream->crop_rotate_scale_degrees == CAMERA3_STREAM_ROTATION_270);
-#endif
-
-    //HACK: by zyc
-    rotate = false;
-
-    mQuery[w] = std::to_string(rotate ? stream->height : stream->width);
-    mQuery[h] = std::to_string(rotate ? stream->width : stream->height);
-}
-
 #define streamSizeGT(s1, s2) (((s1)->width * (s1)->height) > ((s2)->width * (s2)->height))
 #define streamSizeEQ(s1, s2) (((s1)->width * (s1)->height) == ((s2)->width * (s2)->height))
 #define streamSizeGE(s1, s2) (((s1)->width * (s1)->height) >= ((s2)->width * (s2)->height))
 
 status_t GraphConfigManager::mapStreamToKey(const std::vector<camera3_stream_t*> &streams,
-                                                    int& videoStreamCnt, int& stillStreamCnt,
-                                                    int& needEnableStill)
+                                                    int& videoStreamCnt, int& stillStreamCnt)
 {
     // deal with CAMERA3_STREAM_OUTPUT streams and
     // CAMERA3_STREAM_BIDIRECTIONAL streams, input streams
@@ -404,23 +147,10 @@ status_t GraphConfigManager::mapStreamToKey(const std::vector<camera3_stream_t*>
             secondaryOutputIndex = 1;
     }
 
-    //TODO: Fix xml(add missing entries for still)
-    needEnableStill = false;
-
-
     LOGD("@%s, mainOutputIndex %d, secondaryOutputIndex %d ", __FUNCTION__, mainOutputIndex, secondaryOutputIndex);
-
-    PlatformGraphConfigKey streamKey;
-    ResolutionItem res;
-
-    videoStreamCnt++;
-    handleVideoStream(res, streamKey);
-    handleMap(availableStreams[mainOutputIndex], res, streamKey);
-    if (secondaryOutputIndex >= 0) {
-        videoStreamCnt++;
-        handleVideoStream(res, streamKey);
-        handleMap(availableStreams[secondaryOutputIndex], res, streamKey);
-    }
+    mStreamToSinkIdMap[availableStreams[mainOutputIndex]] = GCSS_KEY_IMGU_VIDEO;
+    if (secondaryOutputIndex >= 0)
+        mStreamToSinkIdMap[availableStreams[secondaryOutputIndex]] = GCSS_KEY_IMGU_PREVIEW;
 
     return OK;
 }
@@ -443,13 +173,7 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
     HAL_KPI_TRACE_CALL(CAM_GLBL_DBG_HIGH, 1000000); /* 1 ms*/
     UNUSED(operationMode);
 
-    ResolutionItem res;
-    int needEnableStill = false;
     status_t ret = OK;
-
-    mFirstQueryResults.clear();
-    mQuery.clear();
-    mFallback = false;
 
     //thera may be 4 output streams and 1 input stream in
     //CTS:testMandatoryReprocessConfigurations
@@ -460,76 +184,21 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
             outputStream.push_back(stream);
     }
 
-    /*
-     * Add to the query the number of active outputs
-     */
-    ItemUID streamCount = {GCSS_KEY_ACTIVE_OUTPUTS};
-    if (outputStream.size() > MAX_NUM_STREAMS) {
-        LOGE("Maximum number of outputStream %u exceeded: %zu",
-            MAX_NUM_STREAMS, outputStream.size());
-        return BAD_VALUE;
-    }
+    CheckError(outputStream.size() > MAX_NUM_STREAMS, BAD_VALUE, "@%s,  Maximum number of outputStream %u exceeded: %zu",
+                   __FUNCTION__, MAX_NUM_STREAMS, outputStream.size());
+
     /*
      * regenerate the stream resolutions vector if needed
      * We do this because we consume this vector for each stream configuration.
      * This allows us to have sequential stream numbers even when an input
      * stream is present.
      */
-    initStreamResolutionIds();
     mStreamToSinkIdMap.clear();
 
     int videoStreamCount = 0, stillStreamCount = 0;
-    ret = mapStreamToKey(outputStream, videoStreamCount, stillStreamCount, needEnableStill);
-    if (ret != OK) {
-        LOGE("@%s, call mapStreamToKey fail, ret:%d", __FUNCTION__, ret);
-        return ret;
-    }
-
-
-    // W/A: Only support 2 streams in GC due to ISP pipe outputs.
-    int streamNum = (outputStream.size() > 2) ? 2 : outputStream.size();
-
-    mQuery[streamCount] = std::to_string(streamNum);
-    // W/A: only pv node is used due to FOV issue,
-    // so here consider one stream only for still case
-    if(needEnableStill) {
-        mQuery[streamCount] = std::to_string(1);
-    }
-
-    /**
-     * Look for settings. If query results are empty, get default settings
-     */
-    int32_t id = 0;
-    string settingsId = "0";
-    mGraphQueryManager->queryGraphs(mQuery, mFirstQueryResults);
-    if (mFirstQueryResults.empty()) {
-
-        dumpQuery(mQuery);
-        mFallback = true;
-        mQuery.clear();
-        status_t status = OK;
-        status = selectDefaultSetting(videoStreamCount, stillStreamCount, settingsId);
-        if (status != OK) {
-            return UNKNOWN_ERROR;
-        }
-
-        ItemUID content1({GCSS_KEY_KEY});
-        mQuery.insert(std::make_pair(content1, settingsId));
-        mGraphQueryManager->queryGraphs(mQuery, mFirstQueryResults);
-
-        if (!mFirstQueryResults.empty()) {
-            mFirstQueryResults[0]->getValue(GCSS_KEY_KEY, id);
-            LOGI("CAM[%d]Default settings in use for this stream configuration. Settings id %d", mCameraId, id);
-        } else {
-            LOGE("Failed to retrieve default settings(%s)", settingsId.c_str());
-            return UNKNOWN_ERROR;
-        }
-
-    } else {
-        mFirstQueryResults[0]->getValue(GCSS_KEY_KEY, id);
-        LOGI("CAM[%d]Graph config in use for this stream configuration - SUCCESS, settings id %d", mCameraId, id);
-    }
-    dumpStreamConfig(outputStream); // TODO: remove this when GC integration is done
+    ret = mapStreamToKey(outputStream, videoStreamCount, stillStreamCount);
+    CheckError(ret != OK, ret, "@%s, call mapStreamToKey fail, ret:%d",
+                   __FUNCTION__, ret);
 
     /*
      * Currently it is enough to refresh information in graph config objects
@@ -537,28 +206,23 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
      */
     std::shared_ptr<GraphConfig> gc = nullptr;
     int poolSize = mGraphConfigPool.availableItems();
+    LOGD("@%s : poolSize:%d", __FUNCTION__, poolSize);
     for (int i = 0; i < poolSize; i++) {
         mGraphConfigPool.acquireItem(gc);
         ret = prepareGraphConfig(gc);
-        if (ret != OK) {
-            LOGE("Failed to prepare graph config");
-            dumpQuery(mQuery);
-            return UNKNOWN_ERROR;
-        }
+        CheckError(ret != OK, UNKNOWN_ERROR, "@%s, Failed to prepare graph config",
+                       __FUNCTION__);
     }
 
-    if (gc.get() == nullptr) {
-        LOGE("Graph config is NULL, BUG!");
-        return UNKNOWN_ERROR;
-    }
+    CheckError(gc.get() == nullptr, UNKNOWN_ERROR, "@%s, Graph config is NULL, BUG!",
+                   __FUNCTION__);
 
     /**
      * since we map the max res stream to video, and the little one to preview, so
      * swapVideoPreview here is always false,  by the way, please make sure
      * the video or still stream size >= preview stream size in graph_settings_<sensor name>.xml, zyc.
      */
-    bool swapVideoPreview = needSwapVideoPreview(mFirstQueryResults[0], id);
-    gc->setMediaCtlConfig(mMediaCtl, swapVideoPreview, needEnableStill);
+    gc->setMediaCtlConfig(mMediaCtl, false, false);
 
     // Get media control config
     for (size_t i = 0; i < MEDIA_TYPE_MAX_COUNT; i++) {
@@ -572,18 +236,16 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
         mMediaCtlConfigs[i].mControlParams.clear();
         mMediaCtlConfigs[i].mVideoNodes.clear();
     }
-    ret = gc->getMediaCtlData(&mMediaCtlConfigs[CIO2]);
-    if (ret != OK) {
-        LOGE("Couldn't get mediaCtl data");
-    }
-    ret = gc->getImguMediaCtlData(mCameraId,
-                                  testPatternMode,
-                                  &mMediaCtlConfigs[IMGU_COMMON],
-                                  &mMediaCtlConfigs[IMGU_VIDEO],
-                                  &mMediaCtlConfigs[IMGU_STILL]);
-    if (ret != OK) {
-        LOGE("Couldn't get Imgu mediaCtl data");
-    }
+
+    ret = gc->getSensorMediaCtlConfig(mCameraId, testPatternMode,
+                                  &mMediaCtlConfigs[CIO2]);
+    if (ret != OK)
+        LOGE("Couldn't get mediaCtl config");
+
+    ret |= gc->getImguMediaCtlConfig(mCameraId, testPatternMode,
+                                     &mMediaCtlConfigs[IMGU_COMMON]);
+    if (ret != OK)
+        LOGE("Couldn't get Imgu mediaCtl config");
 
     return OK;
 }
@@ -598,69 +260,11 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
  */
 status_t GraphConfigManager::prepareGraphConfig(std::shared_ptr<GraphConfig> gc)
 {
-    css_err_t ret;
     status_t status = OK;
-    GraphConfigNode *result = new GraphConfigNode;
-    ret  = mGraphQueryManager->getGraph(mFirstQueryResults[0], result);
-    if (CC_UNLIKELY(ret != css_err_none)) {
-        gc.reset();
-        delete result;
-        return UNKNOWN_ERROR;
-    }
 
-    status = gc->prepare(this, result, mStreamToSinkIdMap, mFallback);
-    LOGD("Graph config object prepared");
+    status = gc->prepare(this, mStreamToSinkIdMap);
 
     return status;
-}
-
-/**
- * Find suitable default setting based on stream config.
- *
- * \param[in] videoStreamCount
- * \param[in] stillStreamCount
- * \param[out] settingsId
- * \return OK when success, UNKNOWN_ERROR on failure
- */
-status_t GraphConfigManager::selectDefaultSetting(int videoStreamCount,
-                                                  int stillStreamCount,
-                                                  string &settingsId)
-{
-    // Determine which default setting to use
-    switch (videoStreamCount) {
-    case 0:
-        if (stillStreamCount == 1) {
-            settingsId = DEFAULT_SETTING_1_STILL; // 0 video, 1 still
-        } else if (stillStreamCount == 2) {
-            settingsId = DEFAULT_SETTING_2_STILL; // 0 video, 2 still
-        } else {
-            LOGE("Default settings cannot support 0 video, >2 still streams");
-            return UNKNOWN_ERROR;
-        }
-        break;
-    case 1:
-        if ((stillStreamCount == 0) || (stillStreamCount == 1)) {
-            settingsId = DEFAULT_SETTING_1_VIDEO_1_STILL; // 1 video, 1 still
-        } else if (stillStreamCount == 2) {
-            settingsId = DEFAULT_SETTING_2_VIDEO_2_STILL; // 2 video, 2 still
-        } else {
-            LOGE("Default settings cannot support 1 video, >2 still streams");
-            return UNKNOWN_ERROR;
-        }
-        break;
-    case 2:
-        // Works for 2 video 2 still, and 2 video 1 still.
-        settingsId = DEFAULT_SETTING_2_VIDEO_2_STILL; // 2 video, 2 still
-        if (stillStreamCount > 2) {
-            LOGE("Default settings cannot support 2 video, >2 still streams");
-            return UNKNOWN_ERROR;
-        }
-        break;
-    default:
-        LOGE("Default settings cannot support > 2 video streams");
-        return UNKNOWN_ERROR;
-    }
-    return OK;
 }
 
 /**
@@ -671,27 +275,11 @@ status_t GraphConfigManager::selectDefaultSetting(int videoStreamCount,
  */
 const MediaCtlConfig* GraphConfigManager::getMediaCtlConfig(IStreamConfigProvider::MediaType type) const
 {
-    vector<int> foundConfigId;
-    int id = 0;
 
     if (type >= MEDIA_TYPE_MAX_COUNT) {
         return nullptr;
     }
 
-    if (mFirstQueryResults.empty()) {
-        LOGE("Invalid operation, first level query no done yet");
-        return nullptr;
-    }
-
-    for (size_t i = 0; i < mFirstQueryResults.size(); i++) {
-        foundConfigId.push_back(id);
-    }
-    LOGI("Number of available Sensor+ISA configs for this stream config: %zu",
-            foundConfigId.size());
-    if (foundConfigId.empty()) {
-        LOGE("Could not find any sensor config id - BUG");
-        return nullptr;
-    }
     /*
      * The size of this vector should be ideally 1, but in the future we will
      * have different sensor modes for the high-speed video. We should
@@ -732,23 +320,8 @@ GraphConfigManager::getGraphConfig(Camera3Request &request)
         LOGE("Failed to acquire GraphConfig from pool!!- BUG");
         return gc;
     }
-
-    /*
-     * Do second level query.
-     *
-     * TODO: Do it based on number of output buffers
-     *
-     * TODO 2: add intent and other constrains
-     * Currently we just take the first result from the stream config query
-     *
-     *mGraphQueryManager->queryGraphs(mQuery,
-                                    mFirstQueryResults,
-                                    mSecondQueryResults);*/
-
     // Init graph config with the current request id
     gc->init(request.getId());
-
-    detectActiveSinks(request, gc);
     return gc;
 }
 
@@ -794,42 +367,6 @@ void GraphConfigManager::getSensorOutputSize(uint32_t &size) {
          size == 0 ? 0 : params[0].height);
 }
 
-/**
- * Analyze the request to get the active streams (the ones with buffer in this
- * request) and find the corresponding virtual sink id's (stored in the map
- * we create at stream config time).
- * Pass this list of active virtual sinks to the GraphConfig object so it can
- * determine with links are active.
- *
- * This is an intermediate step because we are re-using the same GC settings for
- * all request. Once this changes this step will be done inside the GC object
- * itself during init.
- *
- * \param[in] request
- * \param[out] gc GraphConfig object that we inform of the active sinks in the
- *                request
- */
-void GraphConfigManager::detectActiveSinks(Camera3Request &request,
-                                           std::shared_ptr<GraphConfig> gc)
-{
-    vector<uid_t> activeSinks;
-    camera3_stream *stream = nullptr;
-
-    const std::vector<camera3_stream_buffer>* outBufs = request.getOutputBuffers();
-    if (CC_UNLIKELY(outBufs == nullptr)) {
-        // This is impossible, but just to cover all cases
-        LOGE("No output bufs in a request -- BUG");
-        return;
-    }
-
-    for (size_t i = 0; i < outBufs->size(); i++) {
-        stream = outBufs->at(i).stream;
-        activeSinks.push_back(mStreamToSinkIdMap[stream]);
-    }
-
-    gc->setActiveSinks(activeSinks);
-    gc->setActiveStreamId(activeSinks);
-}
 /******************************************************************************
  *  HELPER METHODS
  ******************************************************************************/
@@ -875,18 +412,6 @@ void GraphConfigManager::dumpStreamConfig(const vector<camera3_stream_t*> &strea
                 videoEnc? "YES":"NO",
                 zsl? "YES":"NO");
     }
-}
-
-void GraphConfigManager::dumpQuery(const map<GCSS::ItemUID, std::string> &query)
-{
-    map<GCSS::ItemUID, std::string>::const_iterator it;
-    it = query.begin();
-    LOGW("Query Dump ------- Start");
-    for(; it != query.end(); ++it) {
-        LOGW("item: %s value %s", it->first.toString().c_str(),
-                                  it->second.c_str());
-    }
-    LOGW("Query Dump ------- End");
 }
 }  // namespace camera2
 }  // namespace android

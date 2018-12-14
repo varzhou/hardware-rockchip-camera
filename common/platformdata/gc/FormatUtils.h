@@ -34,6 +34,8 @@ int32_t getV4L2Format(const std::string& formatName);
 int32_t getBpl(int32_t format, int32_t width);
 int32_t getBpp(int32_t format);
 int32_t getBppFromCommon(int32_t format);
+const std::string pixelCode2String(int32_t code);
+int32_t pixelCode2fourcc(int32_t code);
 
 }  // namespace utils
 }  // namespace graphconfig

@@ -760,6 +760,7 @@
         <Hal_tuning_RKISP1> <!-- Parameters to tune the HAL and hacks for the HAL that are camera dependent -->
             <flipping value="" value_v=""/> <!-- value: SENSOR_FLIP_H or "", value_v: SENSOR_FLIP_V or "" -->
             <supportIsoMap value="false"/>
+            <supportTuningSize value="2592x1944"/>
             <graphSettingsFile value="graph_settings_ov5695.xml"/>
             <iqTuningFile value="OV5695_lens_CHT-842B-MD.xml"/>
         </Hal_tuning_RKISP1>

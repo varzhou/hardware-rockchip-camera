@@ -124,9 +124,18 @@ static const FormatInfo gFormatMapping[] = {
     { V4L2_MBUS_FMT_UYVY8_2X8, get_fourcc('U', 'Y', 'V', 'Y'), "V4L2_MBUS_FMT_UYVY8_2X8", "UYVY8_2X8", 16, FORMAT_MBUS_YUV },
 };
 
+bool isRawFormat(int32_t format) {
+    for (size_t i = 0; i < ARRAY_SIZE(gFormatMapping); i++) {
+        if (gFormatMapping[i].pixelCode == format) {
+            return gFormatMapping[i].type == FORMAT_RAW ? true : false;
+        }
+    }
+    LOGW("@%s:Invalid Format: 0x%x, %s", __FUNCTION__, format, v4l2Fmt2Str(format));
+    return false;
+}
+
 const string pixelCode2String(int32_t code)
 {
-
     for (size_t i = 0; i < ARRAY_SIZE(gFormatMapping); i++) {
         if (gFormatMapping[i].pixelCode == code) {
             return gFormatMapping[i].fullName;
@@ -140,6 +149,18 @@ const string pixelCode2String(int32_t code)
 
     LOGE("Invalid Pixel Format: 0x%x, %s", code, v4l2Fmt2Str(code));
     return "INVALID FORMAT";
+}
+
+int32_t pixelCode2fourcc(int32_t code)
+{
+    for (size_t i = 0; i < ARRAY_SIZE(gFormatMapping); i++) {
+        if (gFormatMapping[i].pixelCode == code) {
+            return gFormatMapping[i].commonPixelCode;
+        }
+    }
+
+    LOGE("@%s :Invalid Pixel Format: 0x%x, %s ", __FUNCTION__, code, v4l2Fmt2Str(code));
+    return -1;
 }
 
 /**

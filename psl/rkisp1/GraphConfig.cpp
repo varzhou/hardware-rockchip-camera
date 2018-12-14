@@ -28,6 +28,7 @@
 #include <v4l2device.h>
 #include <linux/v4l2-subdev.h>
 #include <algorithm>
+#include "FormatUtils.h"
 
 #include "MediaEntity.h"
 
@@ -36,7 +37,6 @@ using std::string;
 using std::vector;
 using std::map;
 using std::set;
-
 
 namespace android {
 namespace camera2 {
@@ -54,6 +54,14 @@ namespace gcu = graphconfig::utils;
 #define MEDIACTL_PAD_VF_NUM 3
 #define MEDIACTL_PAD_PV_NUM 4
 #define SCALING_FACTOR 1
+
+#define ISP_DEFAULT_OUTPUT_FORMAT V4L2_PIX_FMT_NV12
+// mainPath output capacity
+#define MP_MAX_WIDTH        4416
+#define MP_MAX_HEIGHT       3312
+// selfPath output capacity
+#define SP_MAX_WIDTH        1920
+#define SP_MAX_HEIGHT       1920
 
 const string csi2_without_port = "rockchip-mipi-dphy-rx";
 
@@ -89,7 +97,9 @@ GraphConfig::GraphConfig() :
     mStream2TuningMap.clear();
     createKernelListStructures();
     mCSIBE = CSI_BE + "0";
+    mIsMipiInterface = false;
     mSensorLinkedToCIF = false;
+    mMpOutputRaw = false;
     mMainNodeName.clear();
     mSecondNodeName.clear();
 }
@@ -157,6 +167,21 @@ const GCSS::IGraphConfig* GraphConfig::getInterface() const
 void GraphConfig::init(int32_t reqId)
 {
     mReqId = reqId;
+}
+
+/**
+ * Prepare graph config once per stream config.
+ * \param[in] manager
+ * \param[in] streamToSinkIdMap
+ */
+status_t GraphConfig::prepare(GraphConfigManager *manager,
+                              StreamToSinkMap &streamToSinkIdMap)
+{
+    mStreamIds.clear();
+    mManager = manager;
+    mStreamToSinkIdMap.clear();
+    mStreamToSinkIdMap = streamToSinkIdMap;
+    return OK;
 }
 
 /**
@@ -1045,7 +1070,6 @@ int32_t GraphConfig::portGetStreamId(Node *port)
     return streamId;
 }
 
-
 /**
  * Retrieve a list of program groups that belong to a  given stream id.
  * Iterates through the graph configuration storing the program groups
@@ -1671,7 +1695,7 @@ status_t GraphConfig::portGetClientStream(Node *port, camera3_stream_t **stream)
     }
 
     uid_t vPortId = GCSS::ItemUID::str2key(portName);
-    *stream = mManager->getStreamByVirtualId(vPortId);
+    /* *stream = mManager->getStreamByVirtualId(vPortId); */
 
     return OK;
 }
@@ -1838,7 +1862,6 @@ status_t GraphConfig::parseSensorNodeInfo(Node* sensorNode,
 
     // h-flip is not mandatory. Some sensors may not have this control
     ret = sensorNode->getValue(GCSS_KEY_HFLIP, info.horizontalFlip);
-
 
     Node *port0Node = nullptr;
     ret = sensorNode->getDescendant(GCSS_KEY_PORT_0, &port0Node);
@@ -2220,6 +2243,344 @@ status_t GraphConfig::getNodeInfo(const ia_uid uid, const Node &parent, int* wid
     return status;
 }
 
+void GraphConfig::cal_crop(uint32_t &src_w, uint32_t &src_h, uint32_t &dst_w, uint32_t &dst_h) {
+
+    float ratio_src = src_w * 1.0 / src_h;
+    float ratio_dst = dst_w * 1.0 / dst_h;
+    if(ratio_src > ratio_dst)
+        src_w = (uint32_t)(src_h * ratio_dst);
+    if(ratio_src < ratio_dst)
+        src_h = (uint32_t)(src_w / ratio_dst);
+    LOGD("@%s : src_ratio:%f, dst_ratio:%f, src(%dx%d), dst(%dx%d)", __FUNCTION__,
+         ratio_src, ratio_dst,src_w, src_h, dst_w, dst_h);
+}
+
+status_t GraphConfig::selectSensorOutputFormat(int32_t cameraId, int &w, int &h, uint32_t &format) {
+    camera3_stream_t* mpStream;
+    w = h = 0;
+
+    //get app stream size that map to mp stream
+    for (auto it = mStreamToSinkIdMap.begin(); it != mStreamToSinkIdMap.end(); ++it) {
+        if (it->second == GCSS_KEY_IMGU_VIDEO) {
+            mpStream = it->first;
+            break;
+        }
+    }
+    if (!mpStream) {
+        LOGE("@%s : mp stream is null", __FUNCTION__);
+        return UNKNOWN_ERROR;
+    }
+
+    if (0 == mAvailableSensorFormat.size()) {
+        LOGE("@%s : Emum sensor frame size may failed", __FUNCTION__);
+        return UNKNOWN_ERROR;
+    }
+
+    // default sensor Mbus code
+    /* TODO  add format select logic, now just pick the first one*/
+    format = mAvailableSensorFormat.begin()->first;
+
+    const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
+    const std::vector<struct FrameSize_t>& tuningSupportSize = cap->getSupportTuningSizes();
+
+    std::vector<struct SensorFrameSize> &frameSize = mAvailableSensorFormat[format];
+    // travel the frameSize from small to large to get the suitable sensor output
+    for (auto it = frameSize.begin(); it != frameSize.end(); ++it) {
+        if((*it).max_width >= mpStream->width &&
+           (*it).max_height >= mpStream->height) {
+            // travel the tuningSupportSize to check the sensor output size is supported
+            for (auto iter = tuningSupportSize.begin(); iter != tuningSupportSize.end(); ++iter) {
+                LOGD("@%s : tuningSupportSize: %dx%d", __FUNCTION__, (*iter).width, (*iter).height);
+                if((*it).max_width == (*iter).width &&
+                   (*it).max_height == (*iter).height) {
+                    LOGD("@%s Select sensor format: code 0x%x:%s,  Res(%dx%d)", __FUNCTION__,
+                         format, gcu::pixelCode2String(format).c_str(), (*it).max_width, (*it).max_height);
+                    w = (*it).max_width;
+                    h = (*it).max_height;
+                    break;
+                }
+                if(iter == tuningSupportSize.end())
+                    LOGD("@%s : Tuning not supprt the sensor output size %dx%d", __FUNCTION__,
+                         (*it).max_width, (*it).max_height);
+            }
+            // sensor fmt found
+            if(w != 0 && h != 0)
+                break;
+        }
+    }
+
+    if(frameSize.back().max_width < mpStream->width ||
+       frameSize.back().max_height < mpStream->height) {
+        LOGE("@%s : App stream size(%dx%d) larger than Sensor full size(%dx%d), Check camera3_profiles.xml",
+             __FUNCTION__, mpStream->width, mpStream->height, frameSize.back().max_width, frameSize.back().max_height);
+        return UNKNOWN_ERROR;
+    }
+    if((w == 0 || h == 0) && frameSize.size() != 0) {
+        w = frameSize.back().max_width;
+        h = frameSize.back().max_height;
+        LOGD("@%s : Can't find the tuning support sensor size, select sensor full size(%dx%d)",
+             __FUNCTION__, w, h);
+    }
+
+    return OK;
+}
+
+string GraphConfig::getSinkEntityName(std::shared_ptr<MediaEntity> entity, int port) {
+    std::vector<media_link_desc> links;
+    entity->getLinkDesc(links);
+    if (links.size()) {
+        struct media_pad_desc* pad = &links[port].sink;
+        struct media_entity_desc entityDesc;
+        mMediaCtl->findMediaEntityById(pad->entity, entityDesc);
+        return entityDesc.name;
+    }
+    return "none";
+}
+
+status_t GraphConfig::getSensorMediaCtlConfig(int32_t cameraId,
+                                          int32_t testPatternMode,
+                                          MediaCtlConfig *mediaCtlConfig) {
+    status_t ret = OK;
+
+    string sensorEntityName = "none";
+    ret = PlatformData::getCameraHWInfo()->getSensorEntityName(cameraId, sensorEntityName);
+    if (ret != NO_ERROR)
+        return UNKNOWN_ERROR;
+
+    ret = PlatformData::getCameraHWInfo()->getAvailableSensorOutputFormats(cameraId, mAvailableSensorFormat);
+    if (ret != NO_ERROR) {
+        LOGE("@%s : Can't enum sensor(%s) frame sizes", __FUNCTION__, sensorEntityName.c_str());
+        return UNKNOWN_ERROR;
+    }
+
+    std::shared_ptr<MediaEntity> sensorEntity = nullptr;
+    ret = mMediaCtl->getMediaEntity(sensorEntity, sensorEntityName.c_str());
+    if (ret != NO_ERROR) {
+        LOGE("@%s, fail to get sensor(%s) MediaEntity", __FUNCTION__, sensorEntityName.c_str());
+        return UNKNOWN_ERROR;
+    }
+    std::vector<media_link_desc> links;
+    sensorEntity->getLinkDesc(links);
+    if (links.size()) {
+        struct media_pad_desc* pad = &links[0].sink;
+        struct media_entity_desc entityDesc;
+        mMediaCtl->findMediaEntityById(pad->entity, entityDesc);
+        string name = entityDesc.name;
+        // check if mipi or DVP interface
+        if (name.find("cif") != std::string::npos)
+            mSensorLinkedToCIF = true;
+        if (name.find("mipi") != std::string::npos) {
+            mIsMipiInterface = true;
+            //check sensor->mipi->cif case
+            std::shared_ptr<MediaEntity> phyEntity = nullptr;
+            ret = mMediaCtl->getMediaEntity(phyEntity, name.c_str());
+            CheckError(ret != NO_ERROR, UNKNOWN_ERROR, "@%s,  failed to get csi(%s) MediaEntity",
+                           __FUNCTION__, name.c_str());
+
+            string ispname = getSinkEntityName(phyEntity, 0);
+            if(ispname.find("cif") != std::string::npos)
+                mSensorLinkedToCIF = true;
+        }
+        //link sensor --> nextEntity
+        //if it's mipi interface, the nextEntity is mipi_dphy
+        //if it's dvp interface, the nextEntity is isp
+        addLinkParams(sensorEntityName, links[0].source.index, name, links[0].sink.index, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+
+        int width, height;
+        uint32_t format;
+        ret = selectSensorOutputFormat(cameraId, width, height, format);
+        if (ret != OK)
+            return UNKNOWN_ERROR;
+        addFormatParams(sensorEntityName, width, height, links[0].source.index, format, 0, 0, mediaCtlConfig);
+        mCurSensorFormat = mediaCtlConfig->mFormatParams.back();
+        addSelectionParams(sensorEntityName, width, height, 0, 0, V4L2_SEL_TGT_CROP, links[0].source.index, mediaCtlConfig);
+    }
+
+    // Csi srcPad and sinkPad format and selection need config ?
+    // mipi phy driver get csi format from sensor rather than ioctls called by
+    // app, so it's no need to set csi pads format and selection
+
+    return OK;
+}
+
+status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
+                                          int32_t testPatternMode,
+                                          MediaCtlConfig *mediaCtlConfig)
+{
+    //CIF isp
+    if (mSensorLinkedToCIF) {
+        LOGI("@%s : sensor link to cif", __FUNCTION__);
+        //do not support crop now, don't set selection
+        addImguVideoNode(IMGU_NODE_VIDEO, MEDIACTL_VIDEONAME_CIF, mediaCtlConfig);
+        addFormatParams(MEDIACTL_VIDEONAME_CIF, mCurSensorFormat.width, mCurSensorFormat.height,
+                        0, V4L2_PIX_FMT_NV12, 0, 0, mediaCtlConfig);
+        return OK;
+    }
+
+    int csiSrcPad = 1;
+
+    int ispSinkPad = 0;
+    int ispParamPad = 1;
+    int ispSrcPad = 2;
+    int ispStatsPad = 3;
+
+    int mpSinkPad = 0;
+    int spSinkPad = 0;
+    int rpSinkPad = 0;
+    int statsSinkPad = 0;
+    int paramSrcPad = 0;
+
+    string csiName = "none";
+    string IspName = "none";
+    string mpName = "none";
+    string spName = "none";
+    string rpName = "none";
+    string statsName = "none";
+    string paramName = "none";
+    std::vector<std::string> elementNames;
+    PlatformData::getCameraHWInfo()->getMediaCtlElementNames(elementNames);
+    for (auto &it: elementNames) {
+        if (it.find("mipi") != std::string::npos)
+            csiName = it;
+        if (it.find("isp-subdev") != std::string::npos)
+            IspName = it;
+        if (it.find("mainpath") != std::string::npos)
+            mpName = it;
+        if (it.find("selfpath") != std::string::npos)
+            spName = it;
+        if (it.find("rawpath") != std::string::npos)
+            rpName = it;
+        if (it.find("statistics") != std::string::npos)
+            statsName = it;
+        if (it.find("input-params") != std::string::npos)
+            paramName = it;
+    }
+    LOGD("%s: csiName = %s", __FUNCTION__, csiName.c_str());
+    LOGD("%s: IspName = %s", __FUNCTION__, IspName.c_str());
+    LOGD("%s: mpName = %s", __FUNCTION__, mpName.c_str());
+    LOGD("%s: spName = %s", __FUNCTION__, spName.c_str());
+    LOGD("%s: rpName = %s", __FUNCTION__, rpName.c_str());
+    LOGD("%s: statsName = %s", __FUNCTION__, statsName.c_str());
+    LOGD("%s: paramName = %s", __FUNCTION__, paramName.c_str());
+
+    int ispOutWidth, ispInWidth ,ispOutHeight, ispInHeight;
+    uint32_t ispOutFormat ,ispInFormat;
+    ispOutWidth = ispInWidth = mCurSensorFormat.width;
+    ispOutHeight = ispInHeight = mCurSensorFormat.height;
+    ispInFormat = mCurSensorFormat.formatCode;
+    ispOutFormat = ISP_DEFAULT_OUTPUT_FORMAT;
+
+    camera3_stream_t* mpStream = NULL;
+    camera3_stream_t* spStream = NULL;
+    camera3_stream_t* rawStream = NULL;
+    for (auto it = mStreamToSinkIdMap.begin(); it != mStreamToSinkIdMap.end(); ++it) {
+        if (it->second == GCSS_KEY_IMGU_VIDEO)
+            mpStream = it->first;
+        if (it->second == GCSS_KEY_IMGU_PREVIEW)
+            spStream = it->first;
+        if (it->second == GCSS_KEY_IMGU_RAW)
+            rawStream = it->first;
+    }
+
+    //Dvp doesn't need this link
+    if(mIsMipiInterface)
+        addLinkParams(csiName, csiSrcPad, IspName, ispSinkPad, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+    // isp input pad format and selection config
+    addFormatParams(IspName, ispInWidth, ispInHeight, ispSinkPad, ispInFormat, 0, 0, mediaCtlConfig);
+    addSelectionParams(IspName, ispInWidth, ispInHeight, 0, 0, V4L2_SEL_TGT_CROP, ispSinkPad, mediaCtlConfig);
+
+    // if enable raw but isp doesn't support rawPath, use mainPath to output raw
+    if ((rawStream != NULL || LogHelper::isDumpTypeEnable(CAMERA_DUMP_RAW)) &&
+        rpName == "none") {
+        LOGI("@%s : MainPath outputs raw data for isp doesn't support rawPath", __FUNCTION__);
+        mMpOutputRaw = true;
+    }
+
+    // if mainPath output raw, ispOutput format should be set to raw format
+    if(mMpOutputRaw)
+        // conversion between V4L2_MBUS_FMT_xx formats and V4L2_PIX_FMT_xx formats
+        ispOutFormat = gcu::getV4L2Format(gcu::pixelCode2fourcc(mCurSensorFormat.formatCode));
+    // isp output pad format and selection config
+    addFormatParams(IspName, ispOutWidth, ispOutHeight, ispSrcPad, ispOutFormat, 0, 0, mediaCtlConfig);
+    addSelectionParams(IspName, ispOutWidth, ispOutHeight, 0, 0, V4L2_SEL_TGT_CROP, ispSrcPad, mediaCtlConfig);
+
+    // isp stats and param link enable
+    addLinkParams(IspName, ispStatsPad, statsName,  statsSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+    addLinkParams(paramName, paramSrcPad, IspName, ispParamPad, 1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+
+    struct v4l2_selection select;
+    CLEAR(select);
+    if(mpStream) {
+        /* videodev2.h says don't use *_MPLAEN */
+        uint32_t mpWidth = ispOutWidth;
+        uint32_t mpHeight = ispOutHeight;
+        if(mpStream->width > MP_MAX_WIDTH && mpStream->height > MP_MAX_HEIGHT) {
+            LOGE("@%s APP Stream size(%dx%d) can't beyond MP cap(%dx%d)", __FUNCTION__,
+                 mpStream->width, mpStream->height, MP_MAX_WIDTH, MP_MAX_HEIGHT);
+            return UNKNOWN_ERROR;
+        }
+        cal_crop(mpWidth, mpHeight, mpStream->width, mpStream->height);
+
+        select.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        select.target = V4L2_SEL_TGT_CROP;
+        select.flags = 0;
+        select.r.left = (ispOutWidth - mpWidth) / 2;
+        select.r.top = (ispOutHeight - mpHeight) / 2;
+        select.r.width = mpWidth;
+        select.r.height = mpHeight;
+        if(!mMpOutputRaw) {
+            addFormatParams(mpName, mpStream->width, mpStream->height, mpSinkPad, ispOutFormat, 0, 0, mediaCtlConfig);
+            addSelectionVideoParams(mpName, select, mediaCtlConfig);
+        } else {
+            addFormatParams(mpName, ispOutWidth, ispOutHeight, mpSinkPad, ispOutFormat, 0, 0, mediaCtlConfig);
+        }
+        addImguVideoNode(IMGU_NODE_VIDEO, mpName, mediaCtlConfig);
+        addLinkParams(IspName, ispSrcPad, mpName,  mpSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+    } else {
+        LOGE("@%s : No app stream map to mainPath", __FUNCTION__);
+        return UNKNOWN_ERROR;
+    }
+
+    //if mainPath is used to output raw, disable selfPath
+    if(spStream && spName != "none" && !mMpOutputRaw) {
+        uint32_t spWidth = ispOutWidth;
+        uint32_t spHeight = ispOutHeight;
+        // if SP output size beyond its capacity, the out frame is bad
+        if(spStream->width > SP_MAX_WIDTH && spStream->height > SP_MAX_HEIGHT) {
+            LOGW("@%s Stream %p size(%dx%d) beyond SP cap(%dx%d), should attach to MP", __FUNCTION__,
+                 spStream, spStream->width, spStream->height, SP_MAX_WIDTH, SP_MAX_HEIGHT);
+            return OK;
+        }
+        cal_crop(spWidth, spHeight, spStream->width, spStream->height);
+
+        select.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        select.target = V4L2_SEL_TGT_CROP;
+        select.flags = 0;
+        select.r.left = (ispOutWidth - spWidth) / 2;
+        select.r.top = (ispOutHeight - spHeight) / 2;
+        select.r.width = spWidth;
+        select.r.height = spHeight;
+        addFormatParams(spName, spStream->width, spStream->height, spSinkPad, ispOutFormat, 0, 0, mediaCtlConfig);
+        addSelectionVideoParams(spName, select, mediaCtlConfig);
+        addImguVideoNode(IMGU_NODE_VF_PREVIEW, spName, mediaCtlConfig);
+        addLinkParams(IspName, ispSrcPad, spName,  spSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+    } else {
+        //disable isp --> selfPath link
+        /* addLinkParams(IspName, ispSrcPad, spName,  spSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig); */
+        LOGI("@%s : No need for selfPath", __FUNCTION__);
+    }
+
+    //if isp support rawPath
+    if(rpName != "none") {
+        addFormatParams(rpName, mCurSensorFormat.width, mCurSensorFormat.height, rpSinkPad,
+                        gcu::getV4L2Format(gcu::pixelCode2fourcc(mCurSensorFormat.formatCode)),
+                        0, 0, mediaCtlConfig);
+        addImguVideoNode(IMGU_NODE_RAW, rpName, mediaCtlConfig);
+        addLinkParams(IspName, ispSrcPad, rpName,  rpSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
+    }
+
+    return OK;
+}
 
 /*
  * Imgu specific function
@@ -2464,7 +2825,6 @@ bool GraphConfig::doesNodeExist(string nodeName)
 
     return true;
 }
-
 
 /*
  * Get values for MediaCtlConfig control params.
@@ -2747,8 +3107,8 @@ void GraphConfig::addFormatParams(const string &entityName,
         mediaCtlFormatParams.field = field;
         mediaCtlFormatParams.quantization= quantization;
         config->mFormatParams.push_back(mediaCtlFormatParams);
-        LOGI("@%s, entityName:%s, width:%d, height:%d, pad:%d, format:%d, format:%s, field:%d",
-            __FUNCTION__, entityName.c_str(), width, height, pad, format, v4l2Fmt2Str(format), field);
+        LOGI("@%s, entityName:%s, width:%d, height:%d, pad:%d, format:0x%x:%s, field:%d",
+            __FUNCTION__, entityName.c_str(), width, height, pad, format, graphconfig::utils::pixelCode2String(format).c_str(), field);
     }
 }
 

@@ -142,6 +142,14 @@ struct SensorDriverDescriptor {
     int csiPort;
 };
 
+struct SensorFrameSize {
+    uint32_t min_width;
+    uint32_t min_height;
+    uint32_t max_width;
+    uint32_t max_height;
+};
+typedef std::map<uint32_t, std::vector<struct SensorFrameSize>> SensorFormat;
+
 enum ExtensionGroups {
     CAPABILITY_NONE = 0,
     CAPABILITY_CV = 1 << 0,
@@ -176,6 +184,10 @@ public:
     bool supportIPUAcceleration(void) const { return mSupportIPUAcceleration; }
     status_t getAvailableSensorModes(const std::string &sensorName,
                                      SensorModeVector &sensorModes) const;
+    status_t getSensorEntityName(int32_t cameraId,
+                                 std::string &sensorEntityName) const;
+    status_t getAvailableSensorOutputFormats(int32_t cameraId,
+                                     SensorFormat &OutputFormats) const;
     void getMediaCtlElementNames(std::vector<std::string> &elementNames) const;
     std::string getFullMediaCtlElementName(const std::vector<std::string> elementNames,
                                            const char *value) const;

@@ -343,6 +343,8 @@ private:
                      Node *settings,
                      StreamToSinkMap &streamToSinkIdMap,
                      bool fallback);
+    status_t prepare(GraphConfigManager *manager,
+                     StreamToSinkMap &streamToSinkIdMap);
     status_t analyzeSourceType();
     void setActiveSinks(std::vector<uid_t> &activeSinks);
     void setActiveStreamId(const std::vector<uid_t> &activeSinks);
@@ -354,12 +356,30 @@ private:
      */
     status_t parseSensorNodeInfo(Node* sensorNode, SourceNodeInfo &info);
     status_t parseTPGNodeInfo(Node* tpgNode, SourceNodeInfo &info);
+
+    /*
+     * legacy func to get MediaCtlConfig by parsing graph_setting_xx.xml
+     */
     status_t getMediaCtlData(MediaCtlConfig* mediaCtlConfig);
     status_t getImguMediaCtlData(int32_t cameraId,
                                  int32_t testPatternMode,
                                  MediaCtlConfig* mediaCtlConfig,
                                  MediaCtlConfig* mediaCtlConfigVideo,
                                  MediaCtlConfig* mediaCtlConfigStill);
+    /*
+     * new func to get MediaCtlConfig, no need graph_setting_xx.xml anymore
+     * the MediaCtlConfig is generated according to the app streams and sensor
+     * available output frame size
+     */
+    void cal_crop(uint32_t &src_w, uint32_t &src_h, uint32_t &dst_w, uint32_t &dst_h);
+    status_t selectSensorOutputFormat(int32_t cameraId, int &w, int &h, uint32_t &format);
+    string getSinkEntityName(std::shared_ptr<MediaEntity> entity, int port);
+    status_t getSensorMediaCtlConfig(int32_t cameraId,
+                                 int32_t testPatternMode,
+                                 MediaCtlConfig* mediaCtlConfig);
+    status_t getImguMediaCtlConfig(int32_t cameraId,
+                                 int32_t testPatternMode,
+                                 MediaCtlConfig* mediaCtlConfig);
     status_t addControls(const Node *sensorNode,
                          const SourceNodeInfo &sensorInfo,
                          MediaCtlConfig* config);
@@ -488,7 +508,11 @@ private:
 
     string mMainNodeName;
     string mSecondNodeName;
+    bool   mIsMipiInterface;
     bool   mSensorLinkedToCIF;
+    bool   mMpOutputRaw;
+    SensorFormat mAvailableSensorFormat;
+    MediaCtlFormatParams mCurSensorFormat;
 };
 
 } // namespace camera2

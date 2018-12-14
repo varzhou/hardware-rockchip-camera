@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <CameraMetadata.h>
+#include "RKISP1CameraCapInfo.h"
 // TODO this should come from the crl header file
 // crl is a common code module in sensor driver, which contains
 // basic functions for driver control
@@ -827,6 +828,107 @@ status_t CameraHWInfo::getCSIPortID(const std::string &deviceName, const std::st
     }
 
     return status;
+}
+
+const bool compareFuncForSensorFormat(struct v4l2_subdev_frame_size_enum s1, struct v4l2_subdev_frame_size_enum s2) {
+    return (s1.max_width <= s2.max_width &&
+            s1.max_height <= s2.max_height);
+}
+
+status_t CameraHWInfo::getSensorEntityName(int32_t cameraId,
+                             std::string &sensorEntityName) const
+{
+    status_t ret = NO_ERROR;
+
+    string sensorName;
+    sensorEntityName = "none";
+    const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
+    if (!cap) {
+        LOGE("Can't get Sensor name");
+        return UNKNOWN_ERROR;
+    } else {
+        sensorName = cap->getSensorName();
+    }
+
+    std::vector<std::string> elementNames;
+    PlatformData::getCameraHWInfo()->getMediaCtlElementNames(elementNames);
+    for (auto &it: elementNames) {
+        if (it.find(sensorName) != std::string::npos)
+            sensorEntityName = it;
+    }
+    if(sensorEntityName == "none") {
+        LOGE("@%s : Sensor name is case sensitive, Please check it in Camera3_profiles.xml with driver sensor name!!!",
+             __FUNCTION__, sensorName.c_str());
+        return UNKNOWN_ERROR;
+    }
+    LOGD("@%s : sensorName:%s, sensorEntityName:%s", __FUNCTION__, sensorName.c_str(), sensorEntityName.c_str());
+    return OK;
+}
+
+status_t CameraHWInfo::getAvailableSensorOutputFormats(int32_t cameraId,
+                                               SensorFormat &OutputFormats) const
+{
+    status_t ret = NO_ERROR;
+    const char *devname;
+    std::string sDevName;
+    OutputFormats.clear();
+
+    string sensorEntityName = "none";
+
+    ret = getSensorEntityName(cameraId, sensorEntityName);
+    if (ret != NO_ERROR)
+        return UNKNOWN_ERROR;
+
+    for (size_t i = 0; i < mSensorInfo.size(); i++) {
+        if (sensorEntityName.find(mSensorInfo[i].mSensorName) == std::string::npos)
+            continue;
+
+        std::ostringstream stringStream;
+        stringStream << "/dev/" << mSensorInfo[i].mDeviceName.c_str();
+        sDevName = stringStream.str();
+    }
+    devname = sDevName.c_str();
+    std::shared_ptr<V4L2Subdevice> device = std::make_shared<V4L2Subdevice>(devname);
+    if (device.get() == nullptr) {
+        LOGE("Couldn't open device %s", devname);
+        return UNKNOWN_ERROR;
+    }
+
+    ret = device->open();
+    if (ret != NO_ERROR) {
+        LOGE("Error opening device (%s)", devname);
+        return ret;
+    }
+
+    std::vector<uint32_t> formats;
+    device->queryFormats(0, formats);
+
+    std::vector<struct v4l2_subdev_frame_size_enum> fse;
+    struct SensorFrameSize frameSize;
+    for (auto it = formats.begin(); it != formats.end(); ++it) {
+        device->getSensorFormats(0, *it, fse);
+        //sort from smallest to biggest
+        std:sort(fse.begin(), fse.end(), compareFuncForSensorFormat);
+        for (auto iter = fse.begin(); iter != fse.end(); ++iter) {
+            frameSize.min_width = (*iter).min_width;
+            frameSize.min_height = (*iter).min_height;
+            frameSize.max_width = (*iter).max_width;
+            frameSize.max_height = (*iter).max_height;
+            LOGD("@%s %d: code: 0x%x, frame size: Min(%dx%d) Max(%dx%d)", __FUNCTION__, __LINE__,
+                 *it, frameSize.min_width, frameSize.min_height, frameSize.max_width, frameSize.max_height);
+            OutputFormats[*it].push_back(frameSize);
+        }
+    }
+    if(!formats.size() || !fse.size()) {
+        LOGE("@%s %s: Enum sensor frame size failed", __FUNCTION__, devname);
+        ret = UNKNOWN_ERROR;
+    }
+
+    ret |= device->close();
+    if (ret != NO_ERROR)
+        LOGE("Error closing device (%s)", devname);
+
+    return ret;
 }
 
 /**
