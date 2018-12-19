@@ -55,6 +55,7 @@ InputFrameWorker::flushWorker()
     mPostPipeline->flush();
     mPostPipeline->stop();
     mProcessingInputBufs.clear();
+    cleanListener();
 
     return OK;
 }

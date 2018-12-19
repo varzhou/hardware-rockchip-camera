@@ -122,6 +122,7 @@ void OutputFrameWorker::attachStream(camera3_stream_t* stream)
 void OutputFrameWorker::clearListeners()
 {
     mListeners.clear();
+    cleanListener();
 }
 
 status_t OutputFrameWorker::configPostPipeLine()
