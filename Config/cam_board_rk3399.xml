@@ -39,7 +39,7 @@
 					<VCMCurrent start="20" rated="80" vcmmax="100" stepmode="13"  drivermax="100"></VCMCurrent>
 				</VCM>
 				<Flash>
-					<FlashName name="Internal"></FlashName>
+					<FlashName name="NC"></FlashName>
 					<FlashI2cBusNum busnum="0"></FlashI2cBusNum>
 					<FlashI2cAddrByte byte="0"></FlashI2cAddrByte>
 					<FlashI2cRate rate="0"></FlashI2cRate>
@@ -170,7 +170,7 @@
 					<VCMCurrent start="20" rated="80" vcmmax="100" stepmode="13"  drivermax="100"></VCMCurrent>
 				</VCM>
 				<Flash>
-					<FlashName name="Internal"></FlashName>
+					<FlashName name="NC"></FlashName>
 					<FlashI2cBusNum busnum="0"></FlashI2cBusNum>
 					<FlashI2cAddrByte byte="0"></FlashI2cAddrByte>
 					<FlashI2cRate rate="0"></FlashI2cRate>
