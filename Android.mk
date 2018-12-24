@@ -118,6 +118,7 @@ LOCAL_C_INCLUDES += \
 endif
 LOCAL_C_INCLUDES += \
     hardware/rockchip/libgralloc \
+    hardware/libhardware/include \
     system/media/camera/include \
     kernel/include/uapi \
     hardware/rockchip/librkvpu \
@@ -134,6 +135,11 @@ CPPHACKS = \
     -DRKCAMERA_REDEFINE_LOG \
     -DRK_DRM_GRALLOC=1
     #-DRK_HW_JPEG_ENCODE \
+
+# rk3368 gralloc module from other platforms
+ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3368)
+LOCAL_CFLAGS += -DTARGET_RK3368
+endif
 
 ifeq ($(strip $(Have3AControlLoop)), true)
 CPPHACKS += \

@@ -15,8 +15,13 @@
 
 #include <base/synchronization/lock.h>
 
+#ifdef TARGET_RK3368
+#include <hardware/img_gralloc_public.h>
+#include <hardware/gralloc.h>
+#else
 #include <gralloc_drm.h>
 #include <gralloc_drm_handle.h>
+#endif
 
 // A V4L2 extension format which represents 32bit RGBX-8-8-8-8 format. This
 // corresponds to DRM_FORMAT_XBGR8888 which is used as the underlying format for
