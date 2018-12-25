@@ -217,8 +217,6 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     JpegInInfo.doThumbNail = 1;
     JpegInInfo.thumbW = exifMeta->mJpegSetting.thumbWidth;
     JpegInInfo.thumbH = exifMeta->mJpegSetting.thumbHeight;
-    JpegInInfo.thumbW = JpegInInfo.thumbW != 0 ? JpegInInfo.thumbW : 160;
-    JpegInInfo.thumbH = JpegInInfo.thumbH != 0 ? JpegInInfo.thumbH : 120;
     //if thumbData is NULL, do scale, the type above can not be 420_P or 422_UYVY
     JpegInInfo.thumbData = NULL;
     JpegInInfo.thumbDataLen = 0; //don't care when thumbData is Null
