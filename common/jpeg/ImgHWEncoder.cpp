@@ -48,7 +48,7 @@ status_t ImgHWEncoder::init()
 
     memset(&mExifInfo, 0, sizeof(RkExifInfo));
     memset(&mGpsInfo, 0, sizeof(RkGPSInfo));
-    if (create_vpu_memory_pool_allocator(&mPool, 1, 200*200*2) < 0) {
+    if (create_vpu_memory_pool_allocator(&mPool, 1, 320*240*2) < 0) {
         LOGE("@%s %d: create vpu memory failed ", __FUNCTION__, __LINE__);
         return UNKNOWN_ERROR;
     }
