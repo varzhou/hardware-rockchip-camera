@@ -140,6 +140,20 @@ void ImgHWEncoder::fillGpsInfo(RkGPSInfo &gpsInfo, exif_attribute_t* exifAttrs)
     gpsInfo.GpsProcessingMethodchars = 100;//length of GpsProcessingMethod
 }
 
+bool
+ImgHWEncoder::checkInputBuffer(CameraBuffer* buf) {
+    // just for YUV420 format buffer
+    int Ysize = ALIGN(buf->width(), 16) * ALIGN(buf->height(), 16);
+    int UVsize = ALIGN(buf->width(), 16) * ALIGN(buf->height() / 2, 16);
+    if(buf->size() >= Ysize + UVsize) {
+        return true;
+    } else {
+        LOGE("@%s : Input buffer (%dx%d) size(%d) can't  meet the HwJpeg input condition",
+             __FUNCTION__, buf->width(), buf->height(), buf->size());
+        return false;
+    }
+}
+
 /**
  * encodeSync
  *
@@ -171,6 +185,10 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     LOGI("@%s %d: in buffer fd:%d, vir_addr:%p, out buffer fd:%d, vir_addr:%p", __FUNCTION__, __LINE__,
          srcBuf->dmaBufFd(), srcBuf->data(),
          destBuf->dmaBufFd(), destBuf->data());
+
+    // HwJpeg encode require buffer width and height align to 16 or large enough.
+    if(!checkInputBuffer(srcBuf.get()))
+        return UNKNOWN_ERROR;
 
     JpegInInfo.pool = mPool;
     JpegInInfo.frameHeader = 1;

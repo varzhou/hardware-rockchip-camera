@@ -25,6 +25,7 @@
 #include "RgaCropScale.h"
 #include "LogHelper.h"
 
+#define ALIGN(value, x)	 ((value + (x-1)) & (~(x-1)))
 namespace android {
 namespace camera2 {
 
@@ -1510,11 +1511,22 @@ PostProcessUnitDigitalZoom::processFrame(const std::shared_ptr<PostProcBuffer>& 
                               const std::shared_ptr<PostProcBuffer>& out,
                               const std::shared_ptr<ProcUnitSettings>& settings) {
     CameraWindow& crop = settings->cropRegion;
+    int jpegBufCount = settings->request->getBufferCountOfFormat(HAL_PIXEL_FORMAT_BLOB);
 
     // check if zoom is required
     if (mBufType != kPostProcBufTypeExt &&
-        crop.width() ==  mApa.width() && crop.height() == mApa.height())
-        return STATUS_FORWRAD_TO_NEXT_UNIT;
+        crop.width() ==  mApa.width() && crop.height() == mApa.height()) {
+        // HwJpeg encode require buffer width and height align to 16 or large enough.
+        // digital zoom out buffer is internal gralloc buffer with size 2xWxH, so it
+        // can always meet the Hwjpeg input condition. we use it as a workaround
+        // for capture case
+        if(jpegBufCount != 0) {
+            LOGD("@%s : Use digital zoom out gralloc buffer as hwjpeg input buffer", __FUNCTION__);
+        } else {
+            return STATUS_FORWRAD_TO_NEXT_UNIT;
+        }
+    }
+
     if (!checkFmt(in->cambuf.get(), out->cambuf.get())) {
         LOGE("%s: unsupported format, only support NV12 or NV21 now !", __FUNCTION__);
         return UNKNOWN_ERROR;
