@@ -25,6 +25,10 @@ V1.1.0
 	- new camera engine project git repsitory:
 	  ssh://<user name>@10.10.10.29:29418/linux/external/camera_engine_rkisp
 	- fix a lot of CTS issues for RAW and SoC sensor
-	  - TODOS:
-	    - HW jpeg encoder has CTS issue for now, so using SW jpeg encoder
-		  currently
+V1.2.0
+	- support Android 9.x + RK1608
+	- support hw jpeg encode
+	- support get HalVersion by Cmd: $ adb shell getprop |grep "vendor.cam.hal3.ver"
+	- fix compile error for rk3368 Android9.x
+	- fix video issue: HAL runs lower and lower after long time video recording running
+	- fix videoSnapshot issue
