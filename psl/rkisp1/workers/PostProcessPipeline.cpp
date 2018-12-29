@@ -122,11 +122,11 @@ PostProcessUnit::PostProcessUnit(const char* name, int type, uint32_t buftype, P
     mCurPostProcBufIn(nullptr),
     mCurProcSettings(nullptr),
     mCurPostProcBufOut(nullptr) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
 }
 
 PostProcessUnit::~PostProcessUnit() {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
 
     if (mProcThread != nullptr) {
         mProcThread.reset();
@@ -143,7 +143,7 @@ PostProcessUnit::~PostProcessUnit() {
 
 status_t
 PostProcessUnit::prepare(const FrameInfo& outfmt, int bufNum) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
     status_t status = OK;
 
     if (mBufType == kPostProcBufTypeInt) {
@@ -159,7 +159,7 @@ PostProcessUnit::prepare(const FrameInfo& outfmt, int bufNum) {
 
 status_t
 PostProcessUnit::start() {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
 
     std::lock_guard<std::mutex> l(mApiLock);
 
@@ -174,7 +174,7 @@ PostProcessUnit::start() {
 
 status_t
 PostProcessUnit::stop() {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
 
     std::unique_lock<std::mutex> l(mApiLock, std::defer_lock);
     l.lock();
@@ -192,7 +192,7 @@ PostProcessUnit::stop() {
 
 status_t
 PostProcessUnit::flush() {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
 
     std::lock_guard<std::mutex> l(mApiLock);
 
@@ -209,7 +209,7 @@ PostProcessUnit::flush() {
 
 status_t
 PostProcessUnit::addOutputBuffer(std::shared_ptr<PostProcBuffer> buf) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
 
     std::lock_guard<std::mutex> l(mApiLock);
     if (mBufType != kPostProcBufTypeExt) {
@@ -224,7 +224,7 @@ PostProcessUnit::addOutputBuffer(std::shared_ptr<PostProcBuffer> buf) {
 
 status_t
 PostProcessUnit::setEnable(bool enable) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
 
     std::lock_guard<std::mutex> l(mApiLock);
 
@@ -235,7 +235,7 @@ PostProcessUnit::setEnable(bool enable) {
 
 status_t
 PostProcessUnit::setProcessSync(bool sync) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
     std::lock_guard<std::mutex> l(mApiLock);
 
     mSyncProcess = sync;
@@ -246,13 +246,14 @@ PostProcessUnit::setProcessSync(bool sync) {
 /* called by ThreadLoop */
 void
 PostProcessUnit::prepareProcess() {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
     // get a frame to be processed from input buffer queue
     std::unique_lock<std::mutex> l(mApiLock);
     if (mThreadRunning && mInBufferPool.empty())
         mCondition.wait(l);
     if (!mThreadRunning)
         return;
+    LOGD("%s: @%s, mInBufferPool size:%d, mOutBufferPool size:%d",
+        mName, __FUNCTION__, mInBufferPool.size(), mOutBufferPool.size());
     mCurPostProcBufIn = mInBufferPool[0].first;
     mCurProcSettings = mInBufferPool[0].second;
     mInBufferPool.erase(mInBufferPool.begin());
@@ -269,7 +270,22 @@ PostProcessUnit::prepareProcess() {
     case kPostProcBufTypeExt :
         if (!mOutBufferPool.empty()) {
             mCurPostProcBufOut = mOutBufferPool[0];
-            mOutBufferPool.erase(mOutBufferPool.begin());
+            uint32_t inBufReqId = mCurProcSettings->request->getId();
+            uint32_t outBufReqId = mCurPostProcBufOut->request->getId();
+            // check the input buffer is needed for this unit
+            if(inBufReqId == outBufReqId) {
+                mOutBufferPool.erase(mOutBufferPool.begin());
+            } else if(inBufReqId > outBufReqId) {
+                LOGE("@%s: %s, new request %d is comming, reqeust %d won't be processed",
+                     __FUNCTION__, mName, inBufReqId, outBufReqId);
+                mCurPostProcBufOut.reset();
+                return;
+            } else {
+                LOGW("@%s: %s, drop the input buffer for reqId mismatch, in(%d)/out(%d)",
+                     __FUNCTION__, mName, inBufReqId, outBufReqId);
+                mCurPostProcBufOut.reset();
+                return;
+            }
         }
         break;
     case kPostProcBufTypePre :
@@ -289,7 +305,7 @@ PostProcessUnit::prepareProcess() {
 /* called by ThreadLoop */
 status_t
 PostProcessUnit::relayToNextProcUnit(int err) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
     status_t status = OK;
 
     if (err == STATUS_NEED_NEXT_INPUT_FRAME) {
@@ -316,7 +332,7 @@ PostProcessUnit::relayToNextProcUnit(int err) {
 
 status_t
 PostProcessUnit::doProcess() {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s ", mName, __FUNCTION__);
 
     status_t status = OK;
 
@@ -340,7 +356,6 @@ PostProcessUnit::doProcess() {
 
 void
 PostProcessUnit::messageThreadLoop(void) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
 
     std::unique_lock<std::mutex> l(mApiLock, std::defer_lock);
     l.lock();
@@ -355,7 +370,7 @@ PostProcessUnit::messageThreadLoop(void) {
 status_t PostProcessUnit::notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                                          const std::shared_ptr<ProcUnitSettings>& settings,
                                          int err) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    LOGD("%s: @%s, mInBufferPool size:%d", mName, __FUNCTION__, mInBufferPool.size() + 1);
 
     std::unique_lock<std::mutex> l(mApiLock, std::defer_lock);
 
@@ -1001,17 +1016,15 @@ PostProcessUnitJpegEnc::processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                      const std::shared_ptr<ProcUnitSettings>& settings) {
     PERFORMANCE_ATRACE_CALL();
     status_t status = OK;
+    LOGD("%s: @%s, reqId: %d",
+         mName, __FUNCTION__, this, settings->request->getId());
 
     in->cambuf->dumpImage(CAMERA_DUMP_JPEG, "before_jpeg_converion_nv12");
     // JPEG encoding
     status = mJpegTask->handleMessageSettings(*settings.get());
     CheckError((status != OK), status, "@%s, set settings failed! [%d]!",
                __FUNCTION__, status);
-    /*
-     * TODO: don't know why settings->request->getSettings called in
-     * JpegEncodeTask::handleMessageNewJpegInput may return
-     * null sometimes.
-     */
+
     status = convertJpeg(in->cambuf, out->cambuf, out->request);
     CheckError((status != OK), status, "@%s, JPEG conversion failed! [%d]!",
                __FUNCTION__, status);
