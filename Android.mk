@@ -133,8 +133,8 @@ CPPHACKS = \
     -DCAMERA_HAL_DEBUG \
     -DDUMP_IMAGE \
     -DRKCAMERA_REDEFINE_LOG \
-    -DRK_DRM_GRALLOC=1
-    #-DRK_HW_JPEG_ENCODE \
+    -DRK_DRM_GRALLOC=1 \
+    -DRK_HW_JPEG_ENCODE \
 
 # rk3368 gralloc module from other platforms
 ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3368)

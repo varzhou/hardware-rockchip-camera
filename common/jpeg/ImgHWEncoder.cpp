@@ -22,11 +22,11 @@
 #include "PerformanceTraces.h"
 #include "CameraMetadataHelper.h"
 #include "PlatformData.h"
+#include <cutils/properties.h>
 
 namespace android {
 namespace camera2 {
-
-char ImgHWEncoder::sMaker[] = "rock";
+#define ALIGN(value, x)	 ((value + (x-1)) & (~(x-1)))
 
 ImgHWEncoder::ImgHWEncoder(int cameraid) :
     mCameraId(cameraid),
@@ -67,10 +67,18 @@ void ImgHWEncoder::deInit()
 
 void ImgHWEncoder::fillRkExifInfo(RkExifInfo &exifInfo, exif_attribute_t* exifAttrs)
 {
+    char maker_value[PROPERTY_VALUE_MAX] = {0};
+    char model_value[PROPERTY_VALUE_MAX] = {0};
+
+    property_get("ro.product.manufacturer", maker_value, "rockchip");
+    property_get("ro.product.model", model_value, "rockchip_mid");
+    strcpy(sMaker, maker_value);
+    strcpy(sModel, model_value);
     exifInfo.maker = sMaker;
-    exifInfo.makerchars = 4;  //gallery can't get the maker if maker value longer than 4byte
-    exifInfo.modelstr = sMaker;
-    exifInfo.modelchars = 4;  //gallery can't get the tag if the value longer than 4byte, need fix
+    exifInfo.makerchars = ALIGN(strlen(sMaker),4);  //gallery can't get the maker if maker value longer than 4byte
+    exifInfo.modelstr = sModel;
+    exifInfo.modelchars = ALIGN(strlen(sModel),4);  //gallery can't get the tag if the value longer than 4byte, need fix
+
     exifInfo.Orientation = exifAttrs->orientation;
     memcpy(exifInfo.DateTime, exifAttrs->date_time, 20);
     exifInfo.ExposureTime.num = exifAttrs->exposure_time.num;
@@ -106,6 +114,7 @@ void ImgHWEncoder::fillRkExifInfo(RkExifInfo &exifInfo, exif_attribute_t* exifAt
     exifInfo.SceneCaptureType = exifAttrs->scene_capture_type;
     exifInfo.makernote = NULL;
     exifInfo.makernotechars = 0;
+    memcpy(exifInfo.subsectime, exifAttrs->subsec_time, 8);
 }
 
 void ImgHWEncoder::fillGpsInfo(RkGPSInfo &gpsInfo, exif_attribute_t* exifAttrs)
@@ -182,7 +191,7 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     int quality = exifMeta->mJpegSetting.jpegQuality;
     int thumbquality = exifMeta->mJpegSetting.jpegThumbnailQuality;
 
-    LOGI("@%s %d: in buffer fd:%d, vir_addr:%p, out buffer fd:%d, vir_addr:%p", __FUNCTION__, __LINE__,
+    ALOGD("@%s %d: in buffer fd:%d, vir_addr:%p, out buffer fd:%d, vir_addr:%p", __FUNCTION__, __LINE__,
          srcBuf->dmaBufFd(), srcBuf->data(),
          destBuf->dmaBufFd(), destBuf->data());
 
@@ -214,7 +223,11 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     if(JpegInInfo.qLvl  > 10)
         JpegInInfo.qLvl = 9;
     //if not doThumb,please set doThumbNail,thumbW and thumbH to zero;
-    JpegInInfo.doThumbNail = 1;
+    if (exifMeta->mJpegSetting.thumbWidth && exifMeta->mJpegSetting.thumbHeight)
+        JpegInInfo.doThumbNail = 1;
+	else
+		JpegInInfo.doThumbNail = 0;
+	ALOGD("asx: exifAttrs->enableThumb = %d doThumbNail=%d", exifAttrs->enableThumb, JpegInInfo.doThumbNail);
     JpegInInfo.thumbW = exifMeta->mJpegSetting.thumbWidth;
     JpegInInfo.thumbH = exifMeta->mJpegSetting.thumbHeight;
     //if thumbData is NULL, do scale, the type above can not be 420_P or 422_UYVY
