@@ -48,7 +48,7 @@ status_t ImgHWEncoder::init()
 
     memset(&mExifInfo, 0, sizeof(RkExifInfo));
     memset(&mGpsInfo, 0, sizeof(RkGPSInfo));
-    if (create_vpu_memory_pool_allocator(&mPool, 1, 200*200*2) < 0) {
+    if (create_vpu_memory_pool_allocator(&mPool, 1, 320*240*2) < 0) {
         LOGE("@%s %d: create vpu memory failed ", __FUNCTION__, __LINE__);
         return UNKNOWN_ERROR;
     }
@@ -140,6 +140,20 @@ void ImgHWEncoder::fillGpsInfo(RkGPSInfo &gpsInfo, exif_attribute_t* exifAttrs)
     gpsInfo.GpsProcessingMethodchars = 100;//length of GpsProcessingMethod
 }
 
+bool
+ImgHWEncoder::checkInputBuffer(CameraBuffer* buf) {
+    // just for YUV420 format buffer
+    int Ysize = ALIGN(buf->width(), 16) * ALIGN(buf->height(), 16);
+    int UVsize = ALIGN(buf->width(), 16) * ALIGN(buf->height() / 2, 16);
+    if(buf->size() >= Ysize + UVsize) {
+        return true;
+    } else {
+        LOGE("@%s : Input buffer (%dx%d) size(%d) can't  meet the HwJpeg input condition",
+             __FUNCTION__, buf->width(), buf->height(), buf->size());
+        return false;
+    }
+}
+
 /**
  * encodeSync
  *
@@ -172,6 +186,10 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
          srcBuf->dmaBufFd(), srcBuf->data(),
          destBuf->dmaBufFd(), destBuf->data());
 
+    // HwJpeg encode require buffer width and height align to 16 or large enough.
+    if(!checkInputBuffer(srcBuf.get()))
+        return UNKNOWN_ERROR;
+
     JpegInInfo.pool = mPool;
     JpegInInfo.frameHeader = 1;
     // TODO: we only support DEGREE_0 now
@@ -199,8 +217,6 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     JpegInInfo.doThumbNail = 1;
     JpegInInfo.thumbW = exifMeta->mJpegSetting.thumbWidth;
     JpegInInfo.thumbH = exifMeta->mJpegSetting.thumbHeight;
-    JpegInInfo.thumbW = JpegInInfo.thumbW != 0 ? JpegInInfo.thumbW : 160;
-    JpegInInfo.thumbH = JpegInInfo.thumbH != 0 ? JpegInInfo.thumbH : 120;
     //if thumbData is NULL, do scale, the type above can not be 420_P or 422_UYVY
     JpegInInfo.thumbData = NULL;
     JpegInInfo.thumbDataLen = 0; //don't care when thumbData is Null

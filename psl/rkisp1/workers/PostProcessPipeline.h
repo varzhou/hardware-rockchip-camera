@@ -57,7 +57,7 @@ enum PostProcessType {
 
 #define NO_NEED_INTERNAL_BUFFER_PROCESS_TYPES \
     (kPostProcessTypeFaceDetection | kPostProcessTypeCopy)
-/* 
+/*
  * encapsulate the CameraBuffer so we can use SharedItemPool
  * to manage the CameraBuffer
  */
@@ -148,7 +148,7 @@ class PostProcessUnit : public IPostProcessListener,
     virtual status_t start();
     virtual status_t stop();
     virtual status_t flush();
-    /* 
+    /*
      * The processed frame result should be filled in output buffer
      * instead of the internal allocated buffer in this process unit.
      */
@@ -198,10 +198,10 @@ class PostProcessUnit : public IPostProcessListener,
     /* synchronize between api caller and work thread */
     std::mutex mApiLock;
     std::condition_variable mCondition;
-    /* enum PostProcessType */ 
+    /* enum PostProcessType */
     int mProcessUnitType;
     /*
-     * below members are only used in threadloop context when 
+     * below members are only used in threadloop context when
      * mSyncProcess is fales, and contrarily only in caller thread.
      */
     std::shared_ptr<PostProcBuffer> mCurPostProcBufIn;
@@ -215,7 +215,7 @@ class PostProcessUnit : public IPostProcessListener,
 
 class PostProcessUnitJpegEnc : public PostProcessUnit
 {
- public: 
+ public:
     explicit PostProcessUnitJpegEnc(const char* name, int type, uint32_t buftype = kPostProcBufTypeExt);
     virtual ~PostProcessUnitJpegEnc();
     status_t notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
@@ -238,7 +238,7 @@ class PostProcessUnitJpegEnc : public PostProcessUnit
 
 class PostProcessUnitSwLsc : public PostProcessUnit
 {
- public: 
+ public:
     explicit PostProcessUnitSwLsc(const char* name, int type, uint32_t buftype = kPostProcBufTypeExt);
     virtual ~PostProcessUnitSwLsc();
     virtual status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
@@ -329,7 +329,7 @@ class PostProcessPipeLine {
     void flush();
     /*
      * |in| buffer usually comes from driver,
-     * |out| buffers usually comes from camera3 streams, can be empty 
+     * |out| buffers usually comes from camera3 streams, can be empty
      */
     status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
                           const std::vector<std::shared_ptr<PostProcBuffer>>& out,

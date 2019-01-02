@@ -60,6 +60,7 @@ public: /* Methods */
 
 private:  /* Methods */
 
+    bool checkInputBuffer(CameraBuffer* buf);
     void fillRkExifInfo(RkExifInfo &exifInfo, exif_attribute_t* exifAttrs);
     void fillGpsInfo(RkGPSInfo &gpsInfo, exif_attribute_t* exifAttrs);
 
