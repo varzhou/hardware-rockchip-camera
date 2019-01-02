@@ -291,22 +291,29 @@ exit:
 status_t OutputFrameWorker::run()
 {
     status_t status = NO_ERROR;
+    int index = 0;
+    Camera3Request* request = mMsg->cbMetadataMsg.request;
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
 
     V4L2BufferInfo outBuf;
 
-    if (!mDevError)
+    if (!mDevError) {
         status = mNode->grabFrame(&outBuf);
 
-    // Update request sequence if needed
-    Camera3Request* request = mMsg->cbMetadataMsg.request;
-    int sequence = outBuf.vbuffer.sequence();
-    if (request->sequenceId() < sequence)
-        request->setSequenceId(sequence);
+        // Update request sequence if needed
+        int sequence = outBuf.vbuffer.sequence();
+        if (request->sequenceId() < sequence)
+            request->setSequenceId(sequence);
 
-    int index = outBuf.vbuffer.index();
-    mPostWorkingBuf = mPostWorkingBufs[index];
-    if (mDevError) {
+        index = outBuf.vbuffer.index();
+        mPostWorkingBuf = mPostWorkingBufs[index];
+        std::string s(mNode->name());
+        // node name is "/dev/videox", substr is videox
+        std::string substr = s.substr(5,10);
+        // CAMERA_DUMP_RAW only means that the buffers are not
+        // processed after dequed from driver, but not the raw format
+        mPostWorkingBuf->cambuf->dumpImage(CAMERA_DUMP_RAW, substr.c_str());
+    } else {
         LOGE("%s:%d device error!", __FUNCTION__, __LINE__);
         /* get the prepared but undequed buffers */
         for (int i = 0; i < mPipelineDepth; i++)
@@ -314,13 +321,8 @@ status_t OutputFrameWorker::run()
                 index = (i + mIndex) % mPipelineDepth;
                 break;
             }
+        status = UNKNOWN_ERROR;
     }
-    std::string s(mNode->name());
-    // node name is "/dev/videox", substr is videox
-    std::string substr = s.substr(5,10);
-    // CAMERA_DUMP_RAW only means that the buffers are not
-    // processed after dequed from driver, but not the raw format
-    mPostWorkingBuf->cambuf->dumpImage(CAMERA_DUMP_RAW, substr.c_str());
 
     mOutputBuffer = mOutputBuffers[index];
     mOutputBuffers[index] = nullptr;
@@ -353,6 +355,12 @@ status_t OutputFrameWorker::postRun()
     std::shared_ptr<PostProcBuffer> postOutBuf;
     std::shared_ptr<PostProcBuffer> tempBuf = std::make_shared<PostProcBuffer> ();
     int stream_type;
+
+    if (mDevError) {
+        LOGE("%s:%d device error!", __FUNCTION__, __LINE__);
+        status = UNKNOWN_ERROR;
+        goto exit;
+    }
 
     if (mMsg == nullptr) {
         LOGE("Message null - Fix the bug");
