@@ -34,6 +34,7 @@
 namespace android {
 namespace camera2 {
 
+class PostProcessPipeLine;
 /* priority form high to low, and from common process to
  * stream only
  */
@@ -70,6 +71,7 @@ struct PostProcBuffer {
         me->request = nullptr;
     }
     int index;
+    FrameInfo fmt;
     std::shared_ptr<CameraBuffer> cambuf;
     Camera3Request* request;
 };
@@ -79,11 +81,11 @@ class PostProcBufferPools {
     PostProcBufferPools() : mPostProcItemsPool("PostProcBufPool"),
                             mBufferPoolSize(0) {}
     virtual ~PostProcBufferPools() {}
-    status_t createBufferPools(int numbufs);
+    status_t createBufferPools(PostProcessPipeLine* pl, const FrameInfo& outfmt, int numBufs);
     status_t acquireItem(std::shared_ptr<PostProcBuffer> &procbuf);
     std::shared_ptr<PostProcBuffer> acquireItem();
-    std::vector<std::shared_ptr<CameraBuffer>> mCamBuffers;
  private:
+    PostProcessPipeLine* mPipeline;
     SharedItemPool<PostProcBuffer> mPostProcItemsPool;
     unsigned int mBufferPoolSize;
 };
@@ -142,7 +144,8 @@ class PostProcessUnit : public IPostProcessListener,
         kPostProcBufTypeExt  // stored to external set buffer
     };
 
-    explicit PostProcessUnit(const char* name, int type, uint32_t buftype = kPostProcBufTypeInt);
+    explicit PostProcessUnit(const char* name, int type, uint32_t buftype = kPostProcBufTypeInt,
+                             PostProcessPipeLine* pl = nullptr);
     virtual ~PostProcessUnit();
     virtual status_t prepare(const FrameInfo& outfmt, int bufNum = kDefaultAllocBufferNums);
     virtual status_t start();
@@ -200,6 +203,7 @@ class PostProcessUnit : public IPostProcessListener,
     std::condition_variable mCondition;
     /* enum PostProcessType */
     int mProcessUnitType;
+    PostProcessPipeLine* mPipeline;
     /*
      * below members are only used in threadloop context when
      * mSyncProcess is fales, and contrarily only in caller thread.
@@ -216,7 +220,8 @@ class PostProcessUnit : public IPostProcessListener,
 class PostProcessUnitJpegEnc : public PostProcessUnit
 {
  public:
-    explicit PostProcessUnitJpegEnc(const char* name, int type, uint32_t buftype = kPostProcBufTypeExt);
+    explicit PostProcessUnitJpegEnc(const char* name, int type, uint32_t buftype = kPostProcBufTypeExt,
+                                    PostProcessPipeLine* pl = nullptr);
     virtual ~PostProcessUnitJpegEnc();
     status_t notifyNewFrame(const std::shared_ptr<PostProcBuffer>& buf,
                             const std::shared_ptr<ProcUnitSettings>& settings,
@@ -239,7 +244,8 @@ class PostProcessUnitJpegEnc : public PostProcessUnit
 class PostProcessUnitSwLsc : public PostProcessUnit
 {
  public:
-    explicit PostProcessUnitSwLsc(const char* name, int type, uint32_t buftype = kPostProcBufTypeExt);
+    explicit PostProcessUnitSwLsc(const char* name, int type, uint32_t buftype = kPostProcBufTypeExt,
+                                PostProcessPipeLine* pl = nullptr);
     virtual ~PostProcessUnitSwLsc();
     virtual status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                   const std::shared_ptr<PostProcBuffer>& out,
@@ -284,8 +290,8 @@ class PostProcessUnitSwLsc : public PostProcessUnit
 class PostProcessUnitDigitalZoom : public PostProcessUnit
 {
  public:
-    PostProcessUnitDigitalZoom(const char* name, int type, int camid,
-                               uint32_t buftype = kPostProcBufTypeInt);
+    PostProcessUnitDigitalZoom(const char* name, int type, int camid, uint32_t buftype = kPostProcBufTypeInt,
+                                PostProcessPipeLine* pl = nullptr);
     virtual ~PostProcessUnitDigitalZoom();
     virtual status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                   const std::shared_ptr<PostProcBuffer>& out,
@@ -334,6 +340,9 @@ class PostProcessPipeLine {
     status_t processFrame(const std::shared_ptr<PostProcBuffer>& in,
                           const std::vector<std::shared_ptr<PostProcBuffer>>& out,
                           const std::shared_ptr<ProcUnitSettings>& settings);
+
+    int getCameraId() { return mCameraId; };
+
 
  private:
     int getRotationDegrees(camera3_stream_t* stream) const;

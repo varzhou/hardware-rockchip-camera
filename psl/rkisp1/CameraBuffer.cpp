@@ -234,10 +234,13 @@ status_t CameraBuffer::init(const camera3_stream_buffer *aBuffer, int cameraId)
     /* TODO: add some consistency checks here and return an error */
     return NO_ERROR;
 }
+void CameraBuffer::reConfig(int w, int h){
+    mWidth = w;
+    mHeight =h;
+}
 
 status_t CameraBuffer::init(const camera3_stream_t* stream,
-                            buffer_handle_t handle,
-                            int cameraId)
+                            buffer_handle_t handle)
 {
     mType = BUF_TYPE_HANDLE;
     mGbmBufferManager = arc::CameraBufferManager::GetInstance();
@@ -257,9 +260,12 @@ status_t CameraBuffer::init(const camera3_stream_t* stream,
     CLEAR(mUserBuffer);
     mUserBuffer.acquire_fence = -1;
     mUserBuffer.release_fence = -1;
-    mCameraId = cameraId;
-    LOGI("@%s, mHandle:%p, mFormat:%d, mWidth:%d, mHeight:%d, mStride:%d, mSize:%d",
-        __FUNCTION__, mHandle, mFormat, mWidth, mHeight, mStride, mSize);
+
+    // hal internal buffer, just lock it and unlock in destruct function
+    // mSize filled here
+    lock();
+    LOGI("@%s, mHandle:%p, mFormat:%d, mWidth:%d, mHeight:%d, mStride:%d, mSize:%d, V4l2Fmt:%s",
+        __FUNCTION__, mHandle, mFormat, mWidth, mHeight, mStride, mSize, v4l2Fmt2Str(mV4L2Fmt));
 
     return NO_ERROR;
 }
@@ -290,6 +296,8 @@ CameraBuffer::~CameraBuffer()
             // Allocated by the HAL
             if (!(mUserBuffer.stream)) {
                 LOGI("release internal buffer");
+                if(isLocked())
+                    unlock();
                 mGbmBufferManager->Free(mHandle);
             }
             break;
@@ -609,8 +617,7 @@ std::shared_ptr<CameraBuffer>
 allocateHandleBuffer(int w,
                      int h,
                      int gfxFmt,
-                     int usage,
-                     int cameraId)
+                     int usage)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     arc::CameraBufferManager* bufManager = arc::CameraBufferManager::GetInstance();
@@ -632,11 +639,97 @@ allocateHandleBuffer(int w,
     stream.height = h;
     stream.format = gfxFmt;
     stream.usage = usage;
-    ret = buffer->init(&stream, handle, cameraId);
+    ret = buffer->init(&stream, handle);
     if (ret != NO_ERROR) {
         // buffer handle will free in CameraBuffer destructure function
         return nullptr;
     }
+
+    return buffer;
+}
+
+#define MAX_CAMERA_INSTANCES 2
+// preAllocate buffer pool
+SharedItemPool<CameraBuffer> *PreAllocateBufferPool[MAX_CAMERA_INSTANCES];
+
+status_t
+creatHandlerBufferPool(int cameraId,
+                       int w,
+                       int h,
+                       int gfxFmt,
+                       int usage,
+                       int nums)
+{
+    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    arc::CameraBufferManager* bufManager = arc::CameraBufferManager::GetInstance();
+    buffer_handle_t handle;
+    status_t ret;
+    uint32_t stride = 0;
+
+    CheckError(cameraId >= MAX_CAMERA_INSTANCES, UNKNOWN_ERROR,
+               "@%s,  invaild cameraId: %d", __FUNCTION__, cameraId);
+
+    char BufPoolName[64];
+    snprintf(BufPoolName, 64, "%s-%d", "PreAllocateBufferPool", cameraId);
+    PreAllocateBufferPool[cameraId] = new SharedItemPool<CameraBuffer>(BufPoolName);
+    PreAllocateBufferPool[cameraId]->init(nums);
+
+    LOGI("%s, [wxh] = [%dx%d], format 0x%x, usage 0x%x, nums %d",
+          __FUNCTION__, w, h, gfxFmt, usage, nums);
+    for (int i = 0; i < nums; ++i) {
+        ret = bufManager->Allocate(w, h, gfxFmt, usage, arc::GRALLOC, &handle, &stride);
+        if (ret != 0) {
+            LOGE("Allocate handle failed! %d", ret);
+            return ret;
+        }
+        std::shared_ptr<CameraBuffer> buffer = nullptr;
+        PreAllocateBufferPool[cameraId]->acquireItem(buffer);
+
+        camera3_stream_t stream;
+        CLEAR(stream);
+        stream.width = w;
+        stream.height = h;
+        stream.format = gfxFmt;
+        stream.usage = usage;
+        ret = buffer->init(&stream, handle);
+    }
+
+    return ret;
+}
+
+void destroyHandleBufferPool(int cameraId) {
+    LOGD("@%s : cameraId:%d", __FUNCTION__, cameraId);
+    CheckError(cameraId >= MAX_CAMERA_INSTANCES, ,
+               "@%s,  invaild cameraId: %d", __FUNCTION__, cameraId);
+    if (PreAllocateBufferPool[cameraId])
+        delete PreAllocateBufferPool[cameraId];
+    PreAllocateBufferPool[cameraId] = NULL;
+}
+
+std::shared_ptr<CameraBuffer> acquireOneBuffer(int cameraId, int w, int h, bool allocate) {
+    status_t ret;
+    std::shared_ptr<CameraBuffer> buffer = nullptr;
+
+    PreAllocateBufferPool[cameraId]->acquireItem(buffer);
+    if(allocate && buffer.get() == nullptr) {
+        buffer = MemoryUtils::allocateHandleBuffer(w, h, HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED,
+                                                   GRALLOC_USAGE_SW_READ_OFTEN |
+                                                   GRALLOC_USAGE_HW_CAMERA_WRITE|
+                                                   /* TODO: same as the temp solution in RKISP1CameraHw.cpp configStreams func
+                                                    * add GRALLOC_USAGE_HW_VIDEO_ENCODER is a temp patch for gpu bug:
+                                                    * gpu cant alloc a nv12 buffer when format is
+                                                    * HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED. Need gpu provide a patch */
+                                                   GRALLOC_USAGE_HW_VIDEO_ENCODER);
+
+        CheckError((buffer.get() == nullptr), nullptr, "@%s : No memeory, failed allocate buffer",
+                   __FUNCTION__);
+        LOGW("@%s : shortage of internal buffer, allocate a new one ", __FUNCTION__);
+        return buffer;
+    }
+
+    // reuse the Camerabuffer, just change the stream width and height
+    if (buffer.get() != nullptr)
+        buffer->reConfig(w, h);
 
     return buffer;
 }

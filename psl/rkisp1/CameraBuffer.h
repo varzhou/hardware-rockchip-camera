@@ -74,8 +74,9 @@ public:
     /**
      * initialization for the fake framework buffer (allocated by the HAL)
      */
-    status_t init(const camera3_stream_t* stream, buffer_handle_t buffer,
-                  int cameraId);
+    status_t init(const camera3_stream_t* stream, buffer_handle_t buffer);
+    //just for hal preAllocate internal buffer
+    void reConfig(int w, int h);
 
     /**
      * deinitialization for the wrapper around the framework buffers
@@ -161,11 +162,19 @@ std::shared_ptr<CameraBuffer>
 allocateHandleBuffer(int w,
                      int h,
                      int gfxFmt,
-                     int usage,
-                     int cameraId);
+                     int usage);
+
+status_t creatHandlerBufferPool(int cameraId,
+                                int w,
+                                int h,
+                                int gfxFmt,
+                                int usage,
+                                int nums);
+void destroyHandleBufferPool(int cameraId);
+
+std::shared_ptr<CameraBuffer> acquireOneBuffer(int cameraId, int w, int h, bool allocate = true);
+
 };
-
-
 } NAMESPACE_DECLARATION_END
 
 #endif // _CAMERA3_HAL_CAMERA_BUFFER_H_

@@ -72,6 +72,35 @@ ImguUnit::ImguUnit(int cameraId,
     mSelfOutWorker =
         std::make_shared<OutputFrameWorker>(mCameraId, "SelfWork",
                                             IMGU_NODE_VF_PREVIEW, pipelineDepth);
+    // Pre allocate hal internal buffer in order to speed up some case need
+    // allocate buffer temporary.
+    // process unit in postpipeline which is not last unit will allocate
+    // internal buffer, now just acquire from the PreAllocateBuffer pool.
+    SensorFormat availableSensorFormat;
+    int ret = PlatformData::getCameraHWInfo()->getAvailableSensorOutputFormats(cameraId, availableSensorFormat);
+    if (ret != NO_ERROR)
+        return ;
+
+    struct SensorFrameSize &frameSize = availableSensorFormat.begin()->second.back();
+    int w, h, fmt, usage, num;
+    w = frameSize.max_width;
+    h = frameSize.max_height;
+    fmt = HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED;
+    usage = GRALLOC_USAGE_SW_READ_OFTEN |
+            GRALLOC_USAGE_HW_CAMERA_WRITE|
+            /* TODO: same as the temp solution in RKISP1CameraHw.cpp configStreams func
+             * add GRALLOC_USAGE_HW_VIDEO_ENCODER is a temp patch for gpu bug:
+             * gpu cant alloc a nv12 buffer when format is
+             * HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED. Need gpu provide a patch */
+            GRALLOC_USAGE_HW_VIDEO_ENCODER;
+
+    /* TODO buffer num should consider postpipeline depth
+     * */
+    num = pipelineDepth;
+
+    if (MemoryUtils::creatHandlerBufferPool(cameraId, w, h, fmt, usage, num) != OK) {
+        LOGE("@%s : Pre allocate buffers failed, wxh(%d,%d), num:%d", __FUNCTION__, w, h, num);
+    }
 }
 
 ImguUnit::~ImguUnit()
@@ -101,6 +130,7 @@ ImguUnit::~ImguUnit()
 
     cleanListener();
     clearWorkers();
+    MemoryUtils::destroyHandleBufferPool(mCameraId);
 }
 
 status_t ImguUnit::stopAllWorkers()
@@ -220,7 +250,7 @@ ImguUnit::configStreamsDone()
      * delay here. The actual delay time may be different for various sensors, so it could
      * be better to define this in camera_profiles.xml
      */
-    usleep(200 * 1000);
+    /* usleep(200 * 1000); */
 
     return status;
 }

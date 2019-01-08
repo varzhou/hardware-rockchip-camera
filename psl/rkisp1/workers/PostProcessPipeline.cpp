@@ -56,13 +56,13 @@ IPostProcessSource::notifyListeners(const std::shared_ptr<PostProcBuffer>& buf,
 }
 
 status_t
-PostProcBufferPools::createBufferPools(int numBufs) {
+PostProcBufferPools::createBufferPools(PostProcessPipeLine* pl, const FrameInfo& outfmt, int numBufs) {
     LOGI("@%s buffer num %d", __FUNCTION__, numBufs);
 
     mBufferPoolSize = numBufs;
+    mPipeline = pl;
 
     mPostProcItemsPool.init(mBufferPoolSize, PostProcBuffer::reset);
-    mCamBuffers.clear();
     for (unsigned int i = 0; i < mBufferPoolSize; i++) {
         std::shared_ptr<PostProcBuffer> postprocbuf = nullptr;
         mPostProcItemsPool.acquireItem(postprocbuf);
@@ -71,6 +71,7 @@ PostProcBufferPools::createBufferPools(int numBufs) {
             return UNKNOWN_ERROR;
         }
         postprocbuf->index = i;
+        postprocbuf->fmt = outfmt;
     }
 
     return OK;
@@ -78,28 +79,37 @@ PostProcBufferPools::createBufferPools(int numBufs) {
 
 status_t
 PostProcBufferPools::acquireItem(std::shared_ptr<PostProcBuffer> &procbuf) {
-    LOG1("@%s", __FUNCTION__);
 
-    status_t status = mPostProcItemsPool.acquireItem(procbuf);
+    LOGD("@%s : mPostProcItemsPool preallocate buffer %zu", __FUNCTION__, mPostProcItemsPool.availableItems());
+    mPostProcItemsPool.acquireItem(procbuf);
+    CheckError((procbuf.get() == nullptr), UNKNOWN_ERROR, "@%s, failed to acquire PostProcBuffer",
+               __FUNCTION__);
 
-    if (status == OK && mCamBuffers.size() > procbuf->index)
-        procbuf->cambuf = mCamBuffers[procbuf->index];
+    procbuf->cambuf = MemoryUtils::acquireOneBuffer(mPipeline->getCameraId(), procbuf->fmt.width, procbuf->fmt.height);
 
-    return status;
+    CheckError((procbuf->cambuf.get() == nullptr), UNKNOWN_ERROR, "@%s, failed to acquire cambuf",
+               __FUNCTION__);
+
+    return OK;
 }
 
 std::shared_ptr<PostProcBuffer>
 PostProcBufferPools::acquireItem() {
     std::shared_ptr<PostProcBuffer> procbuf;
 
-    if (mPostProcItemsPool.acquireItem(procbuf) == OK &&
-        mCamBuffers.size() > procbuf->index)
-        procbuf->cambuf = mCamBuffers[procbuf->index];
+    mPostProcItemsPool.acquireItem(procbuf);
+    CheckError((procbuf.get() == nullptr), nullptr, "@%s, acquire PostProcBuffer failed",
+               __FUNCTION__);
+
+    procbuf->cambuf = MemoryUtils::acquireOneBuffer(mPipeline->getCameraId(), procbuf->fmt.width, procbuf->fmt.height);
+
+    CheckError((procbuf->cambuf.get() == nullptr), nullptr, "@%s, acquire cambuf failed",
+               __FUNCTION__);
 
     return procbuf;
 }
 
-PostProcessUnit::PostProcessUnit(const char* name, int type, uint32_t buftype) :
+PostProcessUnit::PostProcessUnit(const char* name, int type, uint32_t buftype, PostProcessPipeLine* pl) :
     mInternalBufPool(new PostProcBufferPools()),
     mName(name),
     mBufType(buftype),
@@ -108,6 +118,7 @@ PostProcessUnit::PostProcessUnit(const char* name, int type, uint32_t buftype) :
     mThreadRunning(false),
     mProcThread(new MessageThread(this, name)),
     mProcessUnitType(type),
+    mPipeline(pl),
     mCurPostProcBufIn(nullptr),
     mCurProcSettings(nullptr),
     mCurPostProcBufOut(nullptr) {
@@ -122,6 +133,7 @@ PostProcessUnit::~PostProcessUnit() {
         mProcThread = nullptr;
     }
 
+    mPipeline = NULL;
     mInBufferPool.clear();
     mOutBufferPool.clear();
     mCurPostProcBufIn.reset();
@@ -135,50 +147,11 @@ PostProcessUnit::prepare(const FrameInfo& outfmt, int bufNum) {
     status_t status = OK;
 
     if (mBufType == kPostProcBufTypeInt) {
-         status = mInternalBufPool->createBufferPools(bufNum);
+         status = mInternalBufPool->createBufferPools(mPipeline, outfmt, bufNum);
          if (status) {
             LOGE("%s: init buffer pool failed %d", __FUNCTION__, status);
             return status;
          }
-
-         status = allocCameraBuffer(outfmt, bufNum);
-         if (status) {
-            LOGE("%s: alloc camera buffer failed %d", __FUNCTION__, status);
-            return status;
-         }
-    }
-
-    return OK;
-}
-
-status_t
-PostProcessUnit::allocCameraBuffer(const FrameInfo& outfmt, int bufNum) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
-
-    for (size_t i = 0; i < bufNum; i++) {
-        std::shared_ptr<PostProcBuffer> procbuf = nullptr;
-        mInternalBufPool->acquireItem(procbuf);
-        if (procbuf.get() == nullptr) {
-            LOGE("postproc task busy, no idle postproc frame!");
-            return UNKNOWN_ERROR;
-        }
-        procbuf->cambuf = MemoryUtils::allocateHandleBuffer(outfmt.width,
-                                                            outfmt.height,
-                                                            HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED,
-                                                            GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_HW_CAMERA_WRITE
-                                                            /* TODO: same as the temp solution in RKISP1CameraHw.cpp configStreams func
-                                                             * add GRALLOC_USAGE_HW_VIDEO_ENCODER is a temp patch for gpu bug:
-                                                             * gpu cant alloc a nv12 buffer when format is
-                                                             * HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED. Need gpu provide a patch */
-                                                            | GRALLOC_USAGE_HW_VIDEO_ENCODER,
-                                                            -1 /* ignore */);
-        if (procbuf->cambuf.get() == nullptr)
-            return NO_MEMORY;
-        if (!procbuf->cambuf->isLocked()) {
-            procbuf->cambuf->lock();
-        }
-        mInternalBufPool->mCamBuffers.push_back(procbuf->cambuf);
-        LOGI("%s:%d: postproc buffer allocated, address(%p)", __func__, __LINE__, procbuf->cambuf.get());
     }
 
     return OK;
@@ -213,18 +186,6 @@ PostProcessUnit::stop() {
     mThreadRunning = false;
     mCondition.notify_all();
     l.unlock();
-
-    for (size_t i = 0; i < kDefaultAllocBufferNums; i++) {
-        std::shared_ptr<PostProcBuffer> procbuf = nullptr;
-        mInternalBufPool->acquireItem(procbuf);
-        if (procbuf.get() == nullptr)
-            continue ;
-        if (procbuf->cambuf.get() == nullptr)
-            continue ;
-        if (procbuf->cambuf->isLocked()) {
-            procbuf->cambuf->unlock();
-        }
-    }
 
     return mProcThread->requestExitAndWait();
 }
@@ -655,28 +616,28 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
             case kPostProcessTypeDigitalZoom :
                 process_unit_name = "digitalzoom";
                 procunit_from = std::make_shared<PostProcessUnitDigitalZoom>
-                    (process_unit_name, test_type, mCameraId, buf_type);
+                    (process_unit_name, test_type, mCameraId, buf_type, this);
                 break;
             case kPostprocessTypeUvnr :
                 process_unit_name = "uvnr";
                 procunit_from = std::make_shared<PostProcessUnit>
-                    (process_unit_name, test_type, buf_type);
+                    (process_unit_name, test_type, buf_type, this);
                 break;
             case kPostProcessTypeCropRotationScale :
                 process_unit_name = "CropRotationScale";
                 procunit_from = std::make_shared<PostProcessUnit>
-                    (process_unit_name, test_type, buf_type);
+                    (process_unit_name, test_type, buf_type, this);
                 break;
             case kPostProcessTypeSwLsc :
                 process_unit_name = "SoftwareLsc";
                 procunit_from = std::make_shared<PostProcessUnitSwLsc>
-                    (process_unit_name, test_type, buf_type);
+                    (process_unit_name, test_type, buf_type, this);
                 break;
             case kPostProcessTypeFaceDetection :
                 process_unit_name = "faceDetection";
                 buf_type = PostProcessUnit::kPostProcBufTypePre;
                 procunit_from = std::make_shared<PostProcessUnit>
-                    (process_unit_name, test_type, buf_type);
+                    (process_unit_name, test_type, buf_type, this);
                 break;
             default:
                 LOGW("%s: have no common process.", __FUNCTION__);
@@ -740,17 +701,17 @@ PostProcessPipeLine::prepare(const FrameInfo& in,
                 case kPostProcessTypeScaleAndRotation :
                     process_unit_name = "ScaleRotation";
                     procunit_from = std::make_shared<PostProcessUnit>
-                                    (process_unit_name, test_type, buf_type);
+                                    (process_unit_name, test_type, buf_type, this);
                     break;
                 case kPostProcessTypeJpegEncoder :
                     process_unit_name = "JpegEnc";
                     procunit_from = std::make_shared<PostProcessUnitJpegEnc>
-                                    (process_unit_name, test_type, buf_type);
+                                    (process_unit_name, test_type, buf_type, this);
                     break;
                 case kPostProcessTypeCopy :
                     process_unit_name = "MemCopy";
                     procunit_from = std::make_shared<PostProcessUnit>
-                                    (process_unit_name, test_type, buf_type);
+                                    (process_unit_name, test_type, buf_type, this);
                     break;
                 default:
                     LOGE("%s: unknown stream process unit type 0x%x",
@@ -1001,8 +962,8 @@ addSyncBuffersIfNeed(const std::shared_ptr<PostProcBuffer>& in,
 }
 
 PostProcessUnitJpegEnc::PostProcessUnitJpegEnc(const char* name, int type,
-                                               uint32_t buftype)
-    : PostProcessUnit(name, type, buftype) {
+                                               uint32_t buftype, PostProcessPipeLine* pl)
+    : PostProcessUnit(name, type, buftype, pl) {
 }
 
 PostProcessUnitJpegEnc::~PostProcessUnitJpegEnc() {
@@ -1094,8 +1055,9 @@ PostProcessUnitJpegEnc::convertJpeg(std::shared_ptr<CameraBuffer> buffer,
 
 }
 
-PostProcessUnitSwLsc::PostProcessUnitSwLsc(const char* name, int type, uint32_t buftype)
-    : PostProcessUnit(name, type, buftype) {
+PostProcessUnitSwLsc::PostProcessUnitSwLsc(const char* name, int type,
+                                           uint32_t buftype, PostProcessPipeLine* pl)
+    : PostProcessUnit(name, type, buftype, pl) {
         memset(&mLscPara, 0, sizeof(mLscPara));
 }
 
@@ -1500,8 +1462,8 @@ PostProcessUnitSwLsc::lsc(uint8_t *indata, uint16_t input_h_size, uint16_t input
 }
 
 PostProcessUnitDigitalZoom::PostProcessUnitDigitalZoom(
-    const char* name, int type, int camid, uint32_t buftype)
-    : PostProcessUnit(name, type, buftype) {
+    const char* name, int type, int camid, uint32_t buftype, PostProcessPipeLine* pl)
+    : PostProcessUnit(name, type, buftype, pl) {
     mApa = PlatformData::getActivePixelArray(camid);
 }
 

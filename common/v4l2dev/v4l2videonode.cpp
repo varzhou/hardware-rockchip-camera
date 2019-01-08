@@ -1401,7 +1401,6 @@ int V4L2VideoNode::requestBuffers(size_t num_buffers, int memType)
     req_buf.count = num_buffers;
     req_buf.type = mBufType;
 
-    LOGI("%s: VIDIOC_REQBUFS, count=%u, memory:%s, type:%s", mName.c_str(), req_buf.count, ENUM2STR(v4l2_memory_enum,req_buf.memory), ENUM2STR(v4l2_buf_type_enum,req_buf.type));
     ret = pioctl(mFd, VIDIOC_REQBUFS, &req_buf, mName.c_str());
 
     if (ret < 0) {
@@ -1409,6 +1408,7 @@ int V4L2VideoNode::requestBuffers(size_t num_buffers, int memType)
             num_buffers, ret, strerror(errno));
         return ret;
     }
+    LOGI("%s: VIDIOC_REQBUFS, count=%u, memory:%s, type:%s", mName.c_str(), req_buf.count, ENUM2STR(v4l2_memory_enum,req_buf.memory), ENUM2STR(v4l2_buf_type_enum,req_buf.type));
 
     if (req_buf.count < num_buffers)
         LOGW("Got less buffers than requested! %u < %zu",req_buf.count, num_buffers);

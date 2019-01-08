@@ -544,8 +544,7 @@ OutputFrameWorker::getOutputBufferForListener()
                     mFormat.width(),
                     mFormat.height(),
                     HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED,
-                    GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_HW_CAMERA_WRITE,
-                    mCameraId);
+                    GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_HW_CAMERA_WRITE);
         } else if (mNode->getMemoryType() == V4L2_MEMORY_MMAP) {
             mOutputForListener = std::make_shared<CameraBuffer>(
                     mFormat.width(),
