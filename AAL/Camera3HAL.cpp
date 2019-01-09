@@ -37,7 +37,7 @@ static int
 hal_dev_initialize(const struct camera3_device * dev,
                    const camera3_callback_ops_t *callback_ops)
 {
-    PERFORMANCE_HAL_ATRACE();
+    PERFORMANCE_ATRACE_CALL();
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     // As per interface requirement this call should not take longer than 10ms
     HAL_KPI_TRACE_CALL(1,10000000);
@@ -50,7 +50,7 @@ static int
 hal_dev_configure_streams(const struct camera3_device * dev,
                           camera3_stream_configuration_t *stream_list)
 {
-    PERFORMANCE_HAL_ATRACE();
+    PERFORMANCE_ATRACE_CALL();
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     // As per interface requirement this call should not take longer than 1s
     HAL_KPI_TRACE_CALL(1,1000000000);
@@ -63,7 +63,7 @@ static const camera_metadata_t*
 hal_dev_construct_default_request_settings(const struct camera3_device * dev,
                                            int type)
 {
-    PERFORMANCE_HAL_ATRACE();
+    PERFORMANCE_ATRACE_CALL();
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     // As per interface requirement this call should not take longer than 5ms
     HAL_KPI_TRACE_CALL(1, 5000000);
@@ -79,7 +79,7 @@ static int
 hal_dev_process_capture_request(const struct camera3_device * dev,
                                 camera3_capture_request_t *request)
 {
-    PERFORMANCE_HAL_ATRACE();
+    PERFORMANCE_ATRACE_CALL();
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     /**
      *  As per interface requirement this call should not take longer than 4
@@ -109,6 +109,7 @@ hal_dev_dump(const struct camera3_device * dev, int fd)
 static int
 hal_dev_flush(const struct camera3_device * dev)
 {
+    PERFORMANCE_ATRACE_CALL();
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     // As per interface requirement this call should not take longer than 1000ms
     HAL_KPI_TRACE_CALL(1, 1000000000);

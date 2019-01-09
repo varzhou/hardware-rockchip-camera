@@ -620,6 +620,7 @@ allocateHandleBuffer(int w,
                      int usage)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    PERFORMANCE_ATRACE_NAME_SNPRINTF("Allocate One Buf %dx%d", w, h);
     arc::CameraBufferManager* bufManager = arc::CameraBufferManager::GetInstance();
     buffer_handle_t handle;
     uint32_t stride = 0;
@@ -661,6 +662,7 @@ creatHandlerBufferPool(int cameraId,
                        int nums)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    PERFORMANCE_ATRACE_NAME_SNPRINTF("PreBufPool %dx%d %d", w, h, nums);
     arc::CameraBufferManager* bufManager = arc::CameraBufferManager::GetInstance();
     buffer_handle_t handle;
     status_t ret;

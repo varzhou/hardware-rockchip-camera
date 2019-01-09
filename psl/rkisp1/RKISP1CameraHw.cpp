@@ -455,6 +455,7 @@ status_t RKISP1CameraHw::getTestPatternMode(Camera3Request* request, int32_t* te
 status_t RKISP1CameraHw::doConfigureStreams(UseCase newUseCase,
                                   uint32_t operation_mode, int32_t testPatternMode)
 {
+    PERFORMANCE_ATRACE_CALL();
     mUseCase = newUseCase;
     mTestPatternMode = testPatternMode;
     std::vector<camera3_stream_t*>& streams = (mUseCase == USECASE_STILL) ?

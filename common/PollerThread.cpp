@@ -190,6 +190,7 @@ status_t PollerThread::handlePollRequest(Message &msg)
     }
 
     do {
+        PERFORMANCE_ATRACE_NAME("PollRequest");
         ret = V4L2DeviceBase::pollDevices(mPollingDevices, mActiveDevices,
                                           mInactiveDevices,
                                           msg.data.request.timeout, mFlushFd[0],

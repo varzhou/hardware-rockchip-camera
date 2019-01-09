@@ -169,8 +169,8 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
                                            uint32_t operationMode,
                                            int32_t testPatternMode)
 {
+    PERFORMANCE_ATRACE_NAME("GraphConfigManager::configStreams");
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    HAL_KPI_TRACE_CALL(CAM_GLBL_DBG_HIGH, 1000000); /* 1 ms*/
     UNUSED(operationMode);
 
     status_t ret = OK;

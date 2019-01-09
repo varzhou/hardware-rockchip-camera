@@ -26,6 +26,7 @@
 #include <utils/Errors.h>
 #include "CommonUtilMacros.h"
 #include "LogHelperAndroid.h"
+#include "EnumPrinthelper.h"
 
 NAMESPACE_DECLARATION {
 /**

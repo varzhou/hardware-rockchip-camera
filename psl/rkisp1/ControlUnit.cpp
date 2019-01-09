@@ -384,6 +384,7 @@ ControlUnit::~ControlUnit()
 status_t
 ControlUnit::configStreams(bool configChanged)
 {
+    PERFORMANCE_ATRACE_NAME("ControlUnit::configStreams");
     LOGI("@%s %d: configChanged :%d", __FUNCTION__, __LINE__, configChanged);
     status_t status = OK;
     if(configChanged) {
@@ -919,6 +920,7 @@ ControlUnit::handleNewShutter(Message &msg)
 status_t
 ControlUnit::flush(bool configChanged)
 {
+    PERFORMANCE_ATRACE_NAME("ControlUnit::flush");
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     Message msg;
     msg.id = MESSAGE_ID_FLUSH;
@@ -957,9 +959,12 @@ ControlUnit::messageThreadLoop()
     while (mThreadRunning) {
         status_t status = NO_ERROR;
 
+        PERFORMANCE_ATRACE_BEGIN("CtlU-PollMsg");
         Message msg;
         mMessageQueue.receive(&msg);
+        PERFORMANCE_ATRACE_END();
 
+        PERFORMANCE_ATRACE_NAME_SNPRINTF("CtlU-%s", ENUM2STR(CtlUMsg_stringEnum, msg.id));
         PERFORMANCE_HAL_ATRACE_PARAM1("msg", msg.id);
         LOGD("@%s, receive message id:%d", __FUNCTION__, msg.id);
         switch (msg.id) {
@@ -991,6 +996,7 @@ ControlUnit::messageThreadLoop()
                     static_cast<int>(msg.id));
         LOGD("@%s, finish message id:%d", __FUNCTION__, msg.id);
         mMessageQueue.reply(msg.id, status);
+        PERFORMANCE_ATRACE_END();
     }
 
     LOGD("%s: Exit", __FUNCTION__);

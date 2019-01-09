@@ -388,7 +388,10 @@ status_t
 PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
                               const std::shared_ptr<PostProcBuffer>& out,
                               const std::shared_ptr<ProcUnitSettings>& settings) {
-    LOGD("@%s: instance:%p, name: %s", __FUNCTION__, this, mName);
+    PERFORMANCE_ATRACE_CALL();
+
+    LOGD("%s: @%s, reqId: %d",
+         mName, __FUNCTION__, this, settings->request->getId());
     status_t status = OK;
 
     /*
@@ -463,6 +466,7 @@ PostProcessUnit::processFrame(const std::shared_ptr<PostProcBuffer>& in,
 
         if (RgaCropScale::CropScaleNV12Or21(&rgain, &rgaout)) {
             LOGE("%s:  crop&scale by RGA failed...", __FUNCTION__);
+            PERFORMANCE_ATRACE_NAME("SWCropScale");
             ImageScalerCore::cropComposeUpscaleNV12_bl(
                              in->cambuf->data(), in->cambuf->height(), in->cambuf->width(),
                              cropleft, croptop, cropw, croph,
@@ -995,6 +999,7 @@ status_t
 PostProcessUnitJpegEnc::processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                      const std::shared_ptr<PostProcBuffer>& out,
                                      const std::shared_ptr<ProcUnitSettings>& settings) {
+    PERFORMANCE_ATRACE_CALL();
     status_t status = OK;
 
     in->cambuf->dumpImage(CAMERA_DUMP_JPEG, "before_jpeg_converion_nv12");
@@ -1042,6 +1047,7 @@ PostProcessUnitJpegEnc::convertJpeg(std::shared_ptr<CameraBuffer> buffer,
     msg.jpegInputbuffer = buffer;
     msg.request = request;
 
+    PERFORMANCE_ATRACE_CALL();
     LOGI("jpeg inbuf wxh %dx%d stride %d, fmt 0x%x,0x%x size 0x%x",
          buffer->width(), buffer->height(), buffer->stride(),
          buffer->format(), buffer->v4l2Fmt(),
@@ -1070,6 +1076,9 @@ status_t
 PostProcessUnitSwLsc::processFrame(const std::shared_ptr<PostProcBuffer>& in,
                                    const std::shared_ptr<PostProcBuffer>& out,
                                    const std::shared_ptr<ProcUnitSettings>& settings) {
+    PERFORMANCE_ATRACE_CALL();
+    LOGD("%s: @%s, reqId: %d",
+         mName, __FUNCTION__, this, settings->request->getId());
     ScopedPerfTrace lscper(3, "lscper", 30 * 1000);
 
     status_t status = OK;
@@ -1494,6 +1503,7 @@ status_t
 PostProcessUnitDigitalZoom::processFrame(const std::shared_ptr<PostProcBuffer>& in,
                               const std::shared_ptr<PostProcBuffer>& out,
                               const std::shared_ptr<ProcUnitSettings>& settings) {
+    PERFORMANCE_ATRACE_CALL();
     CameraWindow& crop = settings->cropRegion;
     int jpegBufCount = settings->request->getBufferCountOfFormat(HAL_PIXEL_FORMAT_BLOB);
 
@@ -1578,6 +1588,7 @@ PostProcessUnitDigitalZoom::processFrame(const std::shared_ptr<PostProcBuffer>& 
 
     if (RgaCropScale::CropScaleNV12Or21(&rgain, &rgaout)) {
         LOGW("%s: digital zoom by RGA failed, use arm instead...", __FUNCTION__);
+        PERFORMANCE_ATRACE_NAME("SWCropScale");
         ImageScalerCore::cropComposeUpscaleNV12_bl(
                          in->cambuf->data(), in->cambuf->height(), in->cambuf->width(),
                          mapleft, maptop, mapwidth, mapheight,

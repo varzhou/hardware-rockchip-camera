@@ -93,15 +93,14 @@ static int hal_get_number_of_cameras(void)
     PerformanceTraces::HalAtrace::reset();
 
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-
-    PERFORMANCE_HAL_ATRACE();
+    PERFORMANCE_ATRACE_CALL();
 
     return PlatformData::numberOfCameras();
 }
 
 static int hal_get_camera_info(int cameraId, struct camera_info *cameraInfo)
 {
-    PERFORMANCE_HAL_ATRACE();
+    PERFORMANCE_ATRACE_CALL();
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
 
     if (cameraId < 0 || !cameraInfo ||
@@ -128,11 +127,11 @@ static int hal_dev_open(const hw_module_t* module, const char* name,
     int camera_id;
 
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    rk_camera_debug_open();
     PerformanceTraces::reset();
     PerformanceTraces::HalAtrace::reset();
+    PERFORMANCE_ATRACE_CALL();
 
-    PERFORMANCE_HAL_ATRACE();
+    rk_camera_debug_open();
 
     if (!name || !module || !device) {
         LOGE("Camera name is nullptr");
@@ -171,7 +170,7 @@ static int hal_dev_open(const hw_module_t* module, const char* name,
 
 static int hal_dev_close(hw_device_t* device)
 {
-    PERFORMANCE_HAL_ATRACE();
+    PERFORMANCE_ATRACE_CALL();
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
 
     if (!device || sInstanceCount == 0) {

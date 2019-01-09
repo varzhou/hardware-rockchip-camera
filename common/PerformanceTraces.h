@@ -18,12 +18,14 @@
 #define ANDROID_LIBCAMERA_PERFORMANCE_TRACES
 #include <Utils.h>
 #include <string.h>
+#include <stdio.h>
 #include <mutex>
 #include "LogHelper.h"
 #include <utils/Trace.h>
 #include "IaAtrace.h"
 
-
+#undef ATRACE_TAG
+#define ATRACE_TAG ATRACE_TAG_CAMERA
 /**
  * \class PerformanceTraces
  *
@@ -73,6 +75,7 @@ namespace PerformanceTraces {
    * Helper macro to use HalAtrace.
    */
 #ifdef CAMERA_HAL_DEBUG
+  // Use hal define trace, not implement
   #define PERFORMANCE_HAL_ATRACE() \
       PerformanceTraces::HalAtrace atrace(__FUNCTION__, LOG_TAG);
   #define PERFORMANCE_HAL_ATRACE_PARAM1(note, value) \
@@ -81,6 +84,35 @@ namespace PerformanceTraces {
   #define PERFORMANCE_HAL_ATRACE()
   #define PERFORMANCE_HAL_ATRACE_PARAM1(note, value)
 #endif
+
+// Use Android ATRACE
+// How to get a trace ?
+// 1. get the systrace.py file
+//    path: android-sdk/platform-tools/systrace
+//          or external/chromium-trace/systrace.py
+// 2. $ python external/chromium-trace/systrace.py --time=10 -o trace.html camera
+//    this will start to trace 10s and get and the trace.html in current path,
+//    your process need to trace should be done in this 10 second.
+// 3. open the trace.html in google chrome web browser to analyzer the trace
+#define CAMERA_TRACE_BUF 64
+
+#define PERFORMANCE_ATRACE_CALL() ATRACE_CALL()
+#define PERFORMANCE_ATRACE_NAME(name) ATRACE_NAME(name)
+#define PERFORMANCE_ATRACE_BEGIN(name) ATRACE_BEGIN(name)
+#define PERFORMANCE_ATRACE_END() ATRACE_END()
+
+#define PERFORMANCE_ATRACE_ASYNC_BEGIN(name, cookie) ATRACE_ASYNC_BEGIN(name, cookie)
+#define PERFORMANCE_ATRACE_ASYNC_END(name, cookie) ATRACE_ASYNC_END(name, cookie)
+
+#define PERFORMANCE_ATRACE_NAME_SNPRINTF(fmt_str, ...) \
+  char atrace_name[CAMERA_TRACE_BUF]; \
+   snprintf(atrace_name, CAMERA_TRACE_BUF, fmt_str, ##__VA_ARGS__); \
+  ATRACE_NAME(atrace_name)
+
+#define PERFORMANCE_ATRACE_BEGIN_SNPRINTF(fmt_str, ...) \
+  char atrace_begin[CAMERA_TRACE_BUF]; \
+   snprintf(atrace_begin, CAMERA_TRACE_BUF, fmt_str, ##__VA_ARGS__); \
+  ATRACE_BEGIN(atrace_begin)
 
 } // ns PerformanceTraces
 
@@ -132,12 +164,8 @@ private:
  * longer than maxTime. In that case it prints an warning trace
  */
 #define HAL_KPI_TRACE_CALL(level, maxTime)  ScopedPerfTrace __kpiTracer(level, __FUNCTION__, maxTime)
-#ifdef CAMERA_HAL_DEBUG
-#define HAL_PER_TRACE_NAME(level, name) ScopedPerfTrace  ___tracer(level, name )
+#define HAL_PER_TRACE_NAME(level, name) ScopedPerfTrace  __perftracer(level, name )
 #define HAL_PER_TRACE_CALL(level)  HAL_PER_TRACE_NAME(level, __FUNCTION__)
-#else
-#define HAL_PER_TRACE_NAME(level, name)
-#define HAL_PER_TRACE_CALL(level)
-#endif
+
 } NAMESPACE_DECLARATION_END
 #endif // ANDROID_LIBCAMERA_PERFORMANCE_TRACES

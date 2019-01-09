@@ -26,6 +26,7 @@
 #include "LogHelper.h"
 #include "Utils.h"
 #include "RkCtrlLoop.h"
+#include "PerformanceTraces.h"
 
 NAMESPACE_DECLARATION {
 #if defined(ANDROID_VERSION_ABOVE_8_X)
@@ -46,6 +47,7 @@ status_t RkCtrlLoop::init(const char* sensorName,
                           const cl_result_callback_ops_t *cb)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
+    PERFORMANCE_ATRACE_NAME("RkCtrlLoop::init");
     status_t status = OK;
     /* get AIQ xml path */
     const CameraCapInfo* cap = PlatformData::getCameraCapInfo(mCameraId);
@@ -74,6 +76,7 @@ status_t RkCtrlLoop::init(const char* sensorName,
 void RkCtrlLoop::deinit()
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
+    PERFORMANCE_ATRACE_NAME("RkCtrlLoop::deinit");
 
     rkisp_cl_deinit(mControlLoopCtx);
     mControlLoopCtx = NULL;
@@ -84,6 +87,7 @@ status_t RkCtrlLoop::start(const struct rkisp_cl_prepare_params_s& params)
     if (mIsStarted == true)
         return OK;
 
+    PERFORMANCE_ATRACE_NAME("RkCtrlLoop::start");
     HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
     int ret = 0;
 
@@ -125,6 +129,7 @@ status_t RkCtrlLoop::stop()
 
     int ret = 0;
     HAL_TRACE_CALL(CAM_GLBL_DBG_INFO);
+    PERFORMANCE_ATRACE_NAME("RkCtrlLoop::stop");
 
     ret = rkisp_cl_stop(mControlLoopCtx);
     if (ret < 0) {

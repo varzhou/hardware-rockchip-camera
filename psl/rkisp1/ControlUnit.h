@@ -217,6 +217,16 @@ private:  /* Members */
     static ::metadata_result_callback sMetadatCb;
 };  // class ControlUnit
 
+const element_value_t CtlUMsg_stringEnum[] = {
+    {"MESSAGE_ID_EXIT", ControlUnit::MESSAGE_ID_EXIT },
+    {"MESSAGE_ID_NEW_REQUEST", ControlUnit::MESSAGE_ID_NEW_REQUEST },
+    {"MESSAGE_ID_NEW_SHUTTER", ControlUnit::MESSAGE_ID_NEW_SHUTTER },
+    {"MESSAGE_ID_NEW_REQUEST_DONE", ControlUnit::MESSAGE_ID_NEW_REQUEST_DONE },
+    {"MESSAGE_ID_METADATA_RECEIVED", ControlUnit::MESSAGE_ID_METADATA_RECEIVED },
+    {"MESSAGE_ID_FLUSH", ControlUnit::MESSAGE_ID_FLUSH },
+    {"MESSAGE_ID_MAX", ControlUnit::MESSAGE_ID_MAX },
+};
+
 }  // namespace camera2
 }  // namespace android
 

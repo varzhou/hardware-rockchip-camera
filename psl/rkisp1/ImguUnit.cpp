@@ -165,6 +165,7 @@ void ImguUnit::clearWorkers()
 status_t
 ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams, bool configChanged)
 {
+    PERFORMANCE_ATRACE_NAME("ImguUnit::configStreams");
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     LOGI("@%s %d: configChanged :%d", __FUNCTION__, __LINE__, configChanged);
 
@@ -230,6 +231,7 @@ ImguUnit::configStreams(std::vector<camera3_stream_t*> &activeStreams, bool conf
 status_t
 ImguUnit::configStreamsDone()
 {
+    PERFORMANCE_ATRACE_NAME("ImguUnit::configStreamsDone");
     if(!mConfigChanged)
         return OK;
     /*
@@ -810,7 +812,7 @@ ImguUnit::kickstart()
 status_t
 ImguUnit::startProcessing(DeviceMessage pollmsg)
 {
-    HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
+    PERFORMANCE_ATRACE_CALL();
 
     status_t status = OK;
     std::shared_ptr<V4L2VideoNode> *activeNodes = pollmsg.pollEvent.activeDevices;
@@ -1008,9 +1010,12 @@ ImguUnit::messageThreadLoop(void)
     while (mThreadRunning) {
         status_t status = NO_ERROR;
 
+        PERFORMANCE_ATRACE_BEGIN("Imgu-PollMsg");
         DeviceMessage msg;
         mMessageQueue.receive(&msg);
+        PERFORMANCE_ATRACE_END();
 
+        PERFORMANCE_ATRACE_NAME_SNPRINTF("Imgu-%s", ENUM2STR(ImguMsg_stringEnum, msg.id));
         PERFORMANCE_HAL_ATRACE_PARAM1("msg", msg.id);
         LOGD("@%s, receive message id:%d", __FUNCTION__, msg.id);
         switch (msg.id) {
@@ -1037,6 +1042,7 @@ ImguUnit::messageThreadLoop(void)
                  status, static_cast<int>(msg.id));
         LOGD("@%s, finish message id:%d", __FUNCTION__, msg.id);
         mMessageQueue.reply(msg.id, status);
+        PERFORMANCE_ATRACE_END();
     }
     LOGD("%s: Exit", __FUNCTION__);
 }
@@ -1066,6 +1072,7 @@ ImguUnit::requestExitAndWait(void)
 status_t
 ImguUnit::flush(void)
 {
+    PERFORMANCE_ATRACE_NAME("ImguUnit::flush");
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
     DeviceMessage msg;
     msg.id = MESSAGE_ID_FLUSH;

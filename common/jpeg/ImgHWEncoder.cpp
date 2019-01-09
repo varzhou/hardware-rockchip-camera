@@ -169,7 +169,7 @@ ImgHWEncoder::checkInputBuffer(CameraBuffer* buf) {
  */
 status_t ImgHWEncoder::encodeSync(EncodePackage & package)
 {
-    HAL_PER_TRACE_CALL(CAMERA_DEBUG_LOG_PERF_TRACES);
+    PERFORMANCE_ATRACE_CALL();
     status_t status = NO_ERROR;
 
     JpegEncInInfo  JpegInInfo;

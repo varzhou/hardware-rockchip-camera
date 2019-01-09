@@ -37,6 +37,15 @@ enum DeviceMessageId {
     MESSAGE_ID_MAX
 };
 
+const element_value_t ImguMsg_stringEnum[] = {
+    {"MESSAGE_ID_EXIT", MESSAGE_ID_EXIT },
+    {"MESSAGE_COMPLETE_REQ", MESSAGE_COMPLETE_REQ },
+    {"MESSAGE_ID_POLL", MESSAGE_ID_POLL },
+    {"MESSAGE_ID_POLL_META", MESSAGE_ID_POLL_META },
+    {"MESSAGE_ID_FLUSH", MESSAGE_ID_FLUSH },
+    {"MESSAGE_ID_MAX", MESSAGE_ID_MAX },
+};
+
 class MessageCallbackMetadata {
 public:
     Camera3Request* request;

@@ -533,6 +533,7 @@ status_t V4L2VideoNode::queryCap(struct v4l2_capability *cap)
         return INVALID_OPERATION;
     }
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_QUERYCAP");
     ret = pioctl(mFd, VIDIOC_QUERYCAP, cap, mName.c_str());
 
     if (ret < 0) {
@@ -560,6 +561,7 @@ status_t V4L2VideoNode::enumerateInputs(struct v4l2_input *anInput)
         return INVALID_OPERATION;
     }
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_ENUMINPUT");
     ret = pioctl(mFd, VIDIOC_ENUMINPUT, anInput, mName.c_str());
     int errno_copy = errno;
 
@@ -590,6 +592,7 @@ status_t V4L2VideoNode::queryCapturePixelFormats(std::vector<v4l2_fmtdesc> &form
     aFormat.index = 0;
     aFormat.type = mBufType;
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_ENUM_FMT");
     while (pioctl(mFd, VIDIOC_ENUM_FMT , &aFormat, mName.c_str()) == 0) {
         formats.push_back(aFormat);
         aFormat.index++;
@@ -625,6 +628,7 @@ status_t V4L2VideoNode::setInput(int index)
 
     input.index = index;
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_S_INPUT");
     ret = pioctl(mFd, VIDIOC_S_INPUT, &input, mName.c_str());
 
     if (ret < 0) {
@@ -654,6 +658,7 @@ int V4L2VideoNode::stop(bool keepBuffers)
 
     if (mState == DEVICE_STARTED) {
         //stream off
+        PERFORMANCE_ATRACE_NAME("VIDIOC_STREAMOFF");
         ret = pioctl(mFd, VIDIOC_STREAMOFF, &mBufType, mName.c_str());
         if (ret < 0) {
             LOGE("VIDIOC_STREAMOFF returned: %d (%s)", ret, strerror(errno));
@@ -694,6 +699,7 @@ int V4L2VideoNode::start(int initialSkips)
     }
 
     //stream on
+    PERFORMANCE_ATRACE_NAME("VIDIOC_STREAMON");
     ret = pioctl(mFd, VIDIOC_STREAMON, &mBufType, mName.c_str());
     if (ret < 0) {
         LOGE("VIDIOC_STREAMON returned: %d (%s)", ret, strerror(errno));
@@ -747,6 +753,7 @@ status_t V4L2VideoNode::setFormat(FrameInfo &aConfig)
         return INVALID_OPERATION;
     }
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_G_FMT");
     v4l2_fmt.setType(mBufType);
     ret = pioctl (mFd, VIDIOC_G_FMT, v4l2_fmt.get(), mName.c_str());
     if (ret < 0) {
@@ -814,6 +821,7 @@ status_t V4L2VideoNode::setPixFormat(V4L2Format &aFormat)
         return INVALID_OPERATION;
     }
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_S_FMT");
     aFormat.setType(mBufType);
     LOGI("%s: VIDIOC_S_FMT: %s width: %d, height: %d, bpl: %d, fourcc: %s, field: %d", mName.c_str(),
          mName.c_str(),
@@ -862,6 +870,7 @@ status_t V4L2VideoNode::setMetaFormat(V4L2Format &aFormat)
         v4l2Fmt2Str(aFormat.pixelformat()),
         aFormat.sizeimage());
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_S_FMT");
     ret = pioctl(mFd, VIDIOC_S_FMT, aFormat.get(), mName.c_str());
     if (ret < 0) {
         LOGE("VIDIOC_S_FMT failed: %s", strerror(errno));
@@ -888,6 +897,7 @@ status_t V4L2VideoNode::setSelection(const struct v4l2_selection &aSelection)
         return INVALID_OPERATION;
     }
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_S_SELECTION");
     sel->type = mBufType;
     LOGI("%s: VIDIOC_S_SELECTION, type: %u, target: 0x%x, flags: 0x%x, rect left: %d, rect top: %d, width: %d, height: %d",
         mName.c_str(),
@@ -980,6 +990,7 @@ int V4L2VideoNode::exportFrame(unsigned int index)
         return BAD_INDEX;
     }
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_EXPBUF");
     V4L2BufferInfo vbuf = mBufferPool.at(index);
     struct v4l2_exportbuffer ebuf;
     CLEAR(ebuf);
@@ -1003,6 +1014,7 @@ status_t V4L2VideoNode::setParameter (struct v4l2_streamparm *aParam)
     if (mState == DEVICE_CLOSED)
         return INVALID_OPERATION;
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_S_PARM");
     ret = pioctl(mFd, VIDIOC_S_PARM, aParam, mName.c_str());
     if (ret < 0) {
         LOGE("VIDIOC_S_PARM failed ret %d : %s", ret, strerror(errno));
@@ -1034,6 +1046,7 @@ status_t V4L2VideoNode::getMaxCropRectangle(struct v4l2_rect *crop)
     if (mState == DEVICE_CLOSED)
         return INVALID_OPERATION;
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_CROPCAP");
     CLEAR(cropcap);
     cropcap.type = mBufType;
     ret = pioctl(mFd, VIDIOC_CROPCAP, &cropcap, mName.c_str());
@@ -1072,6 +1085,7 @@ status_t V4L2VideoNode::setCropRectangle(struct v4l2_rect *crop)
     if (mState == DEVICE_CLOSED)
         return INVALID_OPERATION;
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_S_CROP");
     v4l2_crop.type     = mBufType;
     v4l2_crop.c.left   = crop->left;
     v4l2_crop.c.top    = crop->top;
@@ -1112,6 +1126,7 @@ status_t V4L2VideoNode::getCropRectangle(struct v4l2_rect *crop)
 
     v4l2_crop.type = mBufType;
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_G_CROP");
     // Update current configuration with the new one
     ret = pioctl(mFd, VIDIOC_G_CROP, &v4l2_crop, mName.c_str());
     if (ret != NO_ERROR)
@@ -1145,6 +1160,7 @@ int V4L2VideoNode::getFramerate(float * framerate, int width, int height, int pi
     frm_interval.height = height;
     *framerate = -1.0;
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_ENUM_FRAMEINTERVALS");
     ret = pioctl(mFd, VIDIOC_ENUM_FRAMEINTERVALS, &frm_interval, mName.c_str());
     if (ret < 0) {
         LOGW("ioctl VIDIOC_ENUM_FRAMEINTERVALS failed: %s", strerror(errno));
@@ -1401,6 +1417,7 @@ int V4L2VideoNode::requestBuffers(size_t num_buffers, int memType)
     req_buf.count = num_buffers;
     req_buf.type = mBufType;
 
+    PERFORMANCE_ATRACE_NAME_SNPRINTF("VIDIOC_REQBUFS - %zu", num_buffers);
     ret = pioctl(mFd, VIDIOC_REQBUFS, &req_buf, mName.c_str());
 
     if (ret < 0) {
@@ -1438,6 +1455,8 @@ int V4L2VideoNode::qbuf(V4L2BufferInfo *buf)
 {
     int ret = 0;
 
+    PERFORMANCE_ATRACE_NAME_SNPRINTF("VIDIOC_QBUF - %s", mName.c_str());
+
     buf->vbuffer.setFlags(buf->cache_flags);
     buf->vbuffer.setMemory(mMemoryType);
     buf->vbuffer.setType(mBufType);
@@ -1455,6 +1474,8 @@ int V4L2VideoNode::dqbuf(V4L2BufferInfo *buf)
 {
     V4L2Buffer &v4l2_buf = buf->vbuffer;
     int ret = 0;
+
+    PERFORMANCE_ATRACE_NAME_SNPRINTF("VIDIOC_DQBUF - %s", mName.c_str());
 
     v4l2_buf.setMemory(mMemoryType);
     v4l2_buf.setType(mBufType);
@@ -1532,6 +1553,7 @@ int V4L2VideoNode::newBuffer(int index, V4L2BufferInfo &buf, int memType)
     int ret;
     V4L2Buffer &vbuf = buf.vbuffer;
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_QUERYBUF");
     vbuf.setFlags(0x0);
     vbuf.setMemory(memType);
     vbuf.setType(mBufType);
@@ -1580,6 +1602,7 @@ status_t V4L2VideoNode::getFormat(V4L2Format &aFormat)
         return INVALID_OPERATION;
     }
 
+    PERFORMANCE_ATRACE_NAME("VIDIOC_G_FMT");
     aFormat.setType(mBufType);
     ret = pioctl(mFd, VIDIOC_G_FMT, aFormat.get(), mName.c_str());
     if (ret < 0) {

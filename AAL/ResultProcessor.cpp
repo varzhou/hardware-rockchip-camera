@@ -194,6 +194,8 @@ status_t ResultProcessor::handleShutterDone(Message &msg)
     reqId = request->getId();
     LOGD("%s for <Request : %d", __FUNCTION__, reqId);
     PERFORMANCE_HAL_ATRACE_PARAM1("reqId", reqId);
+    PERFORMANCE_ATRACE_NAME_SNPRINTF("handleShutterDone - %d", reqId);
+    PERFORMANCE_ATRACE_ASYNC_BEGIN("Shutter2Alldone", reqId);
 
     RequestState_t *reqState = nullptr;
     if (getRequestsInTransit(&reqState, reqId) == BAD_VALUE) {
@@ -269,6 +271,7 @@ status_t ResultProcessor::handleMetadataDone(Message &msg)
     int reqId = request->getId();
     LOGD("%s for <Request %d>", __FUNCTION__, reqId);
     PERFORMANCE_HAL_ATRACE_PARAM1("reqId", reqId);
+    PERFORMANCE_ATRACE_NAME_SNPRINTF("handleMetadataDone - %d", reqId);
 
     RequestState_t *reqState = nullptr;
     if (getRequestsInTransit(&reqState, reqId) == BAD_VALUE) {
@@ -401,6 +404,7 @@ status_t ResultProcessor::handleBufferDone(Message &msg)
     } else {
         PERFORMANCE_HAL_ATRACE_PARAM1("reqId", reqId);
     }
+    PERFORMANCE_ATRACE_NAME_SNPRINTF("handleBufferDone - %d", reqId);
 
     if (buffer.get()) {
         buffer->deinit();
@@ -620,6 +624,7 @@ status_t ResultProcessor::recycleRequest(Camera3Request *req)
 {
     status_t status = NO_ERROR;
     int id = req->getId();
+    PERFORMANCE_ATRACE_ASYNC_END("Shutter2Alldone", id);
     RequestState_t *reqState = mRequestsInTransit.at(id);
     status = mReqStatePool.releaseItem(reqState);
     if (status != NO_ERROR) {
