@@ -1178,19 +1178,25 @@ int PSLConfParser::readNvmData()
 std::string PSLConfParser::getSensorMediaDevice(int cameraId)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    if (mSensorMediaDevice.size() == 0)
-        mSensorMediaDevice = getMediaDeviceByName(getSensorMediaDeviceName(cameraId));
-    // TODO: maybe needn't record the parent media device in sensor info struct
-    return PlatformData::getCameraHWInfo()->mSensorInfo[cameraId].mParentMediaDev;
+
+    const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
+    CheckError(!cap, "none", "@%s, failed to get RKISP1CameraCapInfo", __FUNCTION__);
+    string sensorName = cap->getSensorName();
+
+    const std::vector<struct SensorDriverDescriptor>& sensorInfo = PlatformData::getCameraHWInfo()->mSensorInfo;
+    for (auto it = sensorInfo.begin(); it != sensorInfo.end(); ++it) {
+        if((*it).mSensorName == sensorName)
+            return (*it).mParentMediaDev;
+    }
+    LOGE("@%s : Can't get SensorMediaDevice, cameraId: %d, sensorName:%s", __FUNCTION__,
+         cameraId, sensorName.c_str());
+    return "none";
 }
 
 std::string PSLConfParser::getImguMediaDevice(int cameraId)
 {
     HAL_TRACE_CALL(CAM_GLBL_DBG_HIGH);
-    if (mImguMediaDevice.size() == 0)
-        mImguMediaDevice = getMediaDeviceByName(getImguEntityMediaDevice(cameraId));
-    // TODO: maybe needn't record the parent media device in sensor info struct
-    return PlatformData::getCameraHWInfo()->mSensorInfo[cameraId].mParentMediaDev;
+    return getSensorMediaDevice(cameraId);
 }
 
 std::vector<std::string> PSLConfParser::getSensorMediaDevicePath()

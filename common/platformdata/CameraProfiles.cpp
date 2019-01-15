@@ -976,16 +976,14 @@ void CameraProfiles::checkField(CameraProfiles *profiles,
         int attIndex = 2;
         if (atts[attIndex]) {
             if (strcmp(atts[attIndex], "name") == 0) {
-                mSensorIndex++;
-                LOGI("@%s: mSensorIndex = %d, name = %s, mSensorNames.size():%zu",
-                        __FUNCTION__, mSensorIndex,
-                        atts[attIndex + 1], profiles->mSensorNames.size());
-
                 profiles->mUseEntry = isSensorPresent(profiles->mSensorNames,
                                                       atts[attIndex + 1],
-                                                      mSensorIndex);
-
+                                                      mSensorIndex + 1);
                 if (profiles->mUseEntry) {
+                    mSensorIndex++;
+                    LOGI("@%s: mSensorIndex = %d, name = %s, mSensorNames.size():%zu",
+                         __FUNCTION__, mSensorIndex,
+                         atts[attIndex + 1], profiles->mSensorNames.size());
                     mCameraIdToSensorName.insert(make_pair(mSensorIndex, std::string(atts[attIndex + 1])));
                 }
             } else {
@@ -1163,7 +1161,9 @@ void CameraProfiles::startElement(void *userData, const char *name, const char *
         profiles->checkField(profiles, name, atts);
         return;
     }
-    LOGD("@%s: name:%s, for sensor %d", __FUNCTION__, name, profiles->mSensorIndex);
+
+    if (profiles->mUseEntry)
+        LOGD("@%s: name:%s, for sensor %d", __FUNCTION__, name, profiles->mSensorIndex);
 
     profiles->mItemsCount++;
 
