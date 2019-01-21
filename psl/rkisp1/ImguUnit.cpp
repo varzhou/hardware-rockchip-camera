@@ -316,22 +316,23 @@ status_t ImguUnit::mapStreamWithDeviceNode(int phyStreamsNum)
 
         if (phyStreamsNum > 1) {
             for (int i = 0; i < availableStreams.size(); i++) {
-                if (i == videoIdx) {
-                    continue ;
-                } else if (previewIdx == -1) {
-                    previewIdx = i;
+                if (i == videoIdx ||
+                    availableStreams[i]->width > SP_MAX_WIDTH ||
+                    availableStreams[i]->height > SP_MAX_HEIGHT) {
                     continue ;
                 } else {
-                    if (streamSizeEQ(availableStreams[i], availableStreams[videoIdx]))
-                        continue ;
+                    if(previewIdx == -1)
+                        previewIdx = i;
                     if (streamSizeGT(availableStreams[i], availableStreams[previewIdx]))
                         previewIdx = i;
                 }
             }
 
-            // all streams have the same size.
-            if (previewIdx == -1)
-                previewIdx = 1;
+            if (previewIdx == -1) {
+                LOGE("@%s : No stream map to SP while phyStreams(%d) more than one", __FUNCTION__, phyStreamsNum);
+                return UNKNOWN_ERROR;
+            }
+
             // deal with listners
             float videoSizeRatio = streamSizeRatio(availableStreams[videoIdx]);
             float previewSizeRatio = streamSizeRatio(availableStreams[previewIdx]);

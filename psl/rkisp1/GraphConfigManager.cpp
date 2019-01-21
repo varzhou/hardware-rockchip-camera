@@ -117,6 +117,10 @@ status_t GraphConfigManager::mapStreamToKey(const std::vector<camera3_stream_t*>
     } else if (availableStreams.size() == 2) {
         mainOutputIndex = (streamSizeGE(availableStreams[0], availableStreams[1])) ? 0 : 1;
         secondaryOutputIndex = mainOutputIndex ? 0 : 1;
+        if(availableStreams[secondaryOutputIndex]->width > SP_MAX_WIDTH ||
+           availableStreams[secondaryOutputIndex]->height > SP_MAX_HEIGHT) {
+            secondaryOutputIndex = -1;
+        }
     } else {
         mainOutputIndex = 0;
         // find the maxium size stream
@@ -126,25 +130,20 @@ status_t GraphConfigManager::mapStreamToKey(const std::vector<camera3_stream_t*>
         }
 
         for (int i = 0; i < availableStreams.size(); i++) {
-            if (i == mainOutputIndex) {
-                continue ;
-            } else if (secondaryOutputIndex == -1) {
-                secondaryOutputIndex = i;
+            if (i == mainOutputIndex ||
+                availableStreams[i]->width > SP_MAX_WIDTH ||
+                availableStreams[i]->height > SP_MAX_HEIGHT) {
                 continue ;
             } else {
                 /* because ISP can output two different size streams
                  * concurrently, so we prefer to use this feature.
                  */
-                if (streamSizeEQ(availableStreams[i], availableStreams[mainOutputIndex]))
-                    continue ;
+                if(secondaryOutputIndex == -1)
+                    secondaryOutputIndex = i;
                 if (streamSizeGT(availableStreams[i], availableStreams[secondaryOutputIndex]))
                     secondaryOutputIndex = i;
             }
         }
-
-        // all streams have the same size
-        if (secondaryOutputIndex == -1)
-            secondaryOutputIndex = 1;
     }
 
     LOGD("@%s, mainOutputIndex %d, secondaryOutputIndex %d ", __FUNCTION__, mainOutputIndex, secondaryOutputIndex);
