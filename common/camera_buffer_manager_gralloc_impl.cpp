@@ -66,7 +66,7 @@ int CameraBufferManagerImpl::GetHalPixelFormat(buffer_handle_t buffer) {
         CameraBufferManagerImpl::gm_module_;
 
     if (gm_module_ && gm_module_->perform) {
-        int ret = gm_module_->perform(gm_module_, 
+        int ret = gm_module_->perform(gm_module_,
                                       GRALLOC_MODULE_PERFORM_GET_HADNLE_FORMAT,
                                       buffer, &hal_pixel_format);
         if (ret < 0) {
@@ -150,7 +150,7 @@ size_t CameraBufferManager::GetPlaneStride(buffer_handle_t buffer,
         CameraBufferManagerImpl::gm_module_;
     int plane_stride = 0;
     if (gm_module_ && gm_module_->perform) {
-        int ret = gm_module_->perform(gm_module_, 
+        int ret = gm_module_->perform(gm_module_,
                                       GRALLOC_MODULE_PERFORM_GET_HADNLE_BYTE_STRIDE,
                                       buffer, &plane_stride);
 
@@ -179,10 +179,10 @@ size_t CameraBufferManager::GetPlaneSize(buffer_handle_t buffer, size_t plane) {
         //GRALLOC_MODULE_PERFORM_GET_HADNLE_SIZE gets the whole buffer size
         //while it should get the plane size here, but dut to we now support one
         //plane only, so it's ok to use buffer size to replace plane size
-        gm_module_->perform(gm_module_, 
-                            GRALLOC_MODULE_PERFORM_GET_HADNLE_SIZE, 
-                            buffer, 
-                            &size); 
+        gm_module_->perform(gm_module_,
+                            GRALLOC_MODULE_PERFORM_GET_HADNLE_SIZE,
+                            buffer,
+                            &size);
     }
     return size;
 }
@@ -222,7 +222,7 @@ int CameraBufferManagerImpl::Free(buffer_handle_t buffer) {
     auto buffer_context = context_it->second.get();
 
     if (buffer_context->type == GRALLOC) {
-        return alloc_device_->free(alloc_device_, buffer); 
+        return alloc_device_->free(alloc_device_, buffer);
     } else {
         // TODO(jcliang): Implement deletion of SharedMemory.
         return -EINVAL;
@@ -231,11 +231,11 @@ int CameraBufferManagerImpl::Free(buffer_handle_t buffer) {
 
 int CameraBufferManagerImpl::Register(buffer_handle_t buffer) {
     base::AutoLock l(lock_);
-    auto context_it = buffer_context_.find(buffer); 
+    auto context_it = buffer_context_.find(buffer);
     if (context_it != buffer_context_.end()) {
-        context_it->second->usage++;    
-        return 0;            
-    }                      
+        context_it->second->usage++;
+        return 0;
+    }
 
     std::unique_ptr<BufferContext> buffer_context(new struct BufferContext);
 
@@ -244,7 +244,7 @@ int CameraBufferManagerImpl::Register(buffer_handle_t buffer) {
 
     if (ret) {
         LOGF(ERROR) << "Failed to register gralloc buffer";
-        return ret; 
+        return ret;
     }
 
     buffer_context->usage = 1;
@@ -271,7 +271,7 @@ int CameraBufferManagerImpl::Deregister(buffer_handle_t buffer) {
 
             if (ret) {
                 LOGF(ERROR) << "Failed to unregister gralloc buffer";
-                return ret; 
+                return ret;
             }
         }
         return 0;
@@ -310,7 +310,7 @@ int CameraBufferManagerImpl::Lock(buffer_handle_t buffer,
     if (buffer_context->type == GRALLOC) {
         void* vir_addr = nullptr;
         if (gm_module_->lock) {
-            int ret = gm_module_->lock(gm_module_, buffer, flags, 
+            int ret = gm_module_->lock(gm_module_, buffer, flags,
                                        x, y, width, height, &vir_addr);
             if (ret < 0)
                 return -EINVAL;
@@ -376,7 +376,7 @@ int CameraBufferManagerImpl::Unlock(buffer_handle_t buffer) {
     }
     auto buffer_context = context_it->second.get();
     if (buffer_context->type == GRALLOC && gm_module_->unlock)
-        return gm_module_->unlock(gm_module_, buffer); 
+        return gm_module_->unlock(gm_module_, buffer);
 
     return 0;
 }
@@ -386,9 +386,9 @@ int CameraBufferManagerImpl::FlushCache(buffer_handle_t buffer) {
     int fd = -1;
 
     if (gm_module_ && gm_module_->perform)
-        gm_module_->perform(gm_module_, 
-                            GRALLOC_MODULE_PERFORM_GET_HADNLE_PRIME_FD, 
-                            buffer, &fd); 
+        gm_module_->perform(gm_module_,
+                            GRALLOC_MODULE_PERFORM_GET_HADNLE_PRIME_FD,
+                            buffer, &fd);
     if (fd == -1) {
         LOGF(ERROR) << "get fd error for buffer 0x" << std::hex << buffer;
         return -EINVAL;
@@ -400,6 +400,21 @@ int CameraBufferManagerImpl::FlushCache(buffer_handle_t buffer) {
         return -EINVAL;
 
     return 0;
+}
+
+int CameraBufferManagerImpl::GetHandleFd(buffer_handle_t buffer) {
+    int fd = -1;
+
+    if (gm_module_ && gm_module_->perform)
+        gm_module_->perform(gm_module_,
+                            GRALLOC_MODULE_PERFORM_GET_HADNLE_PRIME_FD,
+                            buffer, &fd);
+    if (fd == -1) {
+        LOGF(ERROR) << "get fd error for buffer 0x" << std::hex << buffer;
+        return -EINVAL;
+    }
+
+    return fd;
 }
 
 int CameraBufferManagerImpl::AllocateGrallocBuffer(size_t width,
@@ -418,7 +433,7 @@ int CameraBufferManagerImpl::AllocateGrallocBuffer(size_t width,
                                    format, usage, out_buffer,
                                    reinterpret_cast<int*>(out_stride));
     if (ret < 0)
-        return -EINVAL; 
+        return -EINVAL;
     buffer_context->usage = 1;
     buffer_context_[*out_buffer] = std::move(buffer_context);
     return 0;

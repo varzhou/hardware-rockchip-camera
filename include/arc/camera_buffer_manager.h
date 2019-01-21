@@ -215,6 +215,15 @@ class EXPORTED CameraBufferManager {
   //    0 on success; -EINVAL on invalid buffer handle.
   virtual int FlushCache(buffer_handle_t buffer) = 0;
 
+  // This method is used to get handle fd.
+  //
+  // Args:
+  //    |buffer|: The buffer handle to get fd.
+  //
+  // Returns:
+  //    fd
+  virtual int GetHandleFd(buffer_handle_t buffer) = 0;
+
   // Get the number of physical planes associated with |buffer|.
   //
   // Args:

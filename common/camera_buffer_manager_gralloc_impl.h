@@ -74,6 +74,7 @@ public:
                   struct android_ycbcr* out_ycbcr) final;
     int Unlock(buffer_handle_t buffer) final;
     int FlushCache(buffer_handle_t buffer) final;
+    int GetHandleFd(buffer_handle_t buffer) final;
 
 private:
     static int GetHalPixelFormat(buffer_handle_t buffer);
