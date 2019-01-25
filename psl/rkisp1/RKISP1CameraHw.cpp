@@ -31,7 +31,6 @@ namespace android {
 namespace camera2 {
 
 static const uint8_t DEFAULT_PIPELINE_DEPTH = 4;
-#define CONFIGURE_LARGE_SIZE (1920*1080)
 
 // Camera factory
 ICameraHw *CreatePSLCamera(int cameraId) {
@@ -240,32 +239,60 @@ status_t RKISP1CameraHw::checkStreamRotation(const std::vector<camera3_stream_t*
     return OK;
 }
 
+int64_t RKISP1CameraHw::getMinFrameDurationNs(camera3_stream_t* stream) {
+    CheckError(stream == NULL, -1, "@%s,  invalid stream", __FUNCTION__);
+
+    const int STREAM_DURATION_SIZE = 4;
+    const int STREAM_FORMAT_OFFSET = 0;
+    const int STREAM_WIDTH_OFFSET = 1;
+    const int STREAM_HEIGHT_OFFSET = 2;
+    const int STREAM_DURATION_OFFSET = 3;
+    camera_metadata_entry entry;
+    entry = mStaticMeta->find(ANDROID_SCALER_AVAILABLE_MIN_FRAME_DURATIONS);
+    for (size_t i = 0; i < entry.count; i+= STREAM_DURATION_SIZE) {
+        int64_t format = entry.data.i64[i + STREAM_FORMAT_OFFSET];
+        int64_t width = entry.data.i64[i + STREAM_WIDTH_OFFSET];
+        int64_t height = entry.data.i64[i + STREAM_HEIGHT_OFFSET];
+        int64_t duration = entry.data.i64[i + STREAM_DURATION_OFFSET];
+        LOGD("@%s : idex:%d, format:%" PRId64 ", wxh: %" PRId64 "x%" PRId64 ", duration:%" PRId64 "",
+             __FUNCTION__, i, format, width, height, duration);
+        if (format == stream->format && width == stream->width && height == stream->height)
+            return duration;
+    }
+
+    return -1;
+}
+
 camera3_stream_t*
 RKISP1CameraHw::findStreamForStillCapture(const std::vector<camera3_stream_t*>& streams)
 {
+    static const int64_t stillCaptureCaseThreshold = 33400000LL; // 33.4 ms
     camera3_stream_t* jpegStream = nullptr;
-    std::vector<camera3_stream_t*> yuvStreams;
+
     for (auto* s : streams) {
-        if (s->width * s->height > CONFIGURE_LARGE_SIZE) {
-            return s;
+        /* TODO  reprocess case*/
+        if (s->stream_type == CAMERA3_STREAM_INPUT ||
+            s->stream_type == CAMERA3_STREAM_BIDIRECTIONAL) {
+            LOGI("@%s : Reprocess case, not still capture case", __FUNCTION__);
+            return nullptr;
         }
 
-        if (s->format == HAL_PIXEL_FORMAT_BLOB) {
+        if (s->format == HAL_PIXEL_FORMAT_BLOB)
             jpegStream = s;
-        } else if (s->format == HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED
-            || s->format == HAL_PIXEL_FORMAT_YCbCr_420_888) {
-            yuvStreams.push_back(s);
-        }
     }
 
-    if (jpegStream && yuvStreams.size() >= 2) {
-        // Check if it is video snapshot case
-        int jpegSize = jpegStream->width * jpegStream->height;
-        if (jpegSize == yuvStreams[0]->width * yuvStreams[0]->height
-            || jpegSize == yuvStreams[1]->width * yuvStreams[1]->height)
+    // It means that sensor can output frames with different sizes and fps
+    // if minFrameDuration for HAL_PIXEL_FORMAT_BLOB format is larger 33.4ms,
+    // need do reconfig stream to reconfig media pipeline because preview always
+    // can reach 30 fps.
+    if(jpegStream) {
+        int64_t minFrameDurationNs = getMinFrameDurationNs(jpegStream);
+        if (minFrameDurationNs > stillCaptureCaseThreshold)
+            return jpegStream;
+        else
             return nullptr;
     }
-    return jpegStream;
+    return nullptr;
 }
 
 void
@@ -351,12 +378,6 @@ RKISP1CameraHw::configStreams(std::vector<camera3_stream_t*> &activeStreams,
     if (mStreamsVideo.empty()) {
         mUseCase = USECASE_STILL;
     }
-
-    //rk needn't reconfigstream for still case, we just use USECASE_VIDEO always.
-    mStreamsVideo = mStreamsStill;
-
-    LOGI("%s: select usecase %d, video/still stream num: %zu/%zu", __FUNCTION__,
-            mUseCase, mStreamsVideo.size(), mStreamsStill.size());
 
     status = doConfigureStreams(mUseCase, operation_mode, ANDROID_SENSOR_TEST_PATTERN_MODE_OFF);
 
@@ -462,6 +483,9 @@ status_t RKISP1CameraHw::doConfigureStreams(UseCase newUseCase,
     std::vector<camera3_stream_t*>& streams = (mUseCase == USECASE_STILL) ?
                                               mStreamsStill : mStreamsVideo;
 
+    LOGI("%s: select usecase: %s, video/still stream num: %zu/%zu", __FUNCTION__,
+            mUseCase ? "USECASE_VIDEO" : "USECASE_STILL", mStreamsVideo.size(), mStreamsStill.size());
+
     status_t status = mGCM.configStreams(streams, operation_mode, testPatternMode);
     if (status != NO_ERROR) {
         LOGE("Unable to configure stream: No matching graph config found! BUG");
@@ -474,7 +498,6 @@ status_t RKISP1CameraHw::doConfigureStreams(UseCase newUseCase,
     // mImguUnit->flush() moves to the controlunit for sync
     /* mImguUnit->flush(); */
     mControlUnit->flush(mConfigChanged);
-
 
     status = mImguUnit->configStreams(streams, mConfigChanged);
     if (status != NO_ERROR) {

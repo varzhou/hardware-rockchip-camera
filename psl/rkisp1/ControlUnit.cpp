@@ -1036,6 +1036,8 @@ ControlUnit::handleMetadataReceived(Message &msg) {
 
     std::map<int, std::shared_ptr<RequestCtrlState>>::iterator it =
                                     mWaitingForCapture.find(reqId);
+    if(reqId == -1)
+        return OK;
     if (it == mWaitingForCapture.end()) {
         LOGE("Unexpected request done event received for request %d - Fix the bug", reqId);
         return UNKNOWN_ERROR;

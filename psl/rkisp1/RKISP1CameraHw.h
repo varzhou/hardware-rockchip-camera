@@ -75,6 +75,7 @@ class RKISP1CameraHw: public ICameraHw {
 
     void checkNeedReconfig(std::vector<camera3_stream_t*> &activeStreams);
     UseCase checkUseCase(Camera3Request* request) const;
+    int64_t getMinFrameDurationNs(camera3_stream_t* stream);
     status_t doConfigureStreams(UseCase newUseCase, uint32_t operation_mode, int32_t testPatternMode);
 
  private:  //members
