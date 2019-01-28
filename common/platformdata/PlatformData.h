@@ -133,6 +133,13 @@ enum SensorDeviceType {
 };
 
 struct SensorDriverDescriptor {
+    /* sensor entity name format:
+     * m01_b_ov13850 1-0010, where 'm01' means
+     * module index number, 'b' means
+     * back or front, 'ov13850' is real
+     * sensor name, '1-0010' means the i2c bus
+     * and sensor i2c slave address
+     */
     std::string mSensorName;
     std::string mDeviceName;
     std::string mI2CAddress;
@@ -140,6 +147,11 @@ struct SensorDriverDescriptor {
     enum ISP_PORT mIspPort;
     enum SensorDeviceType mSensorDevType;
     int csiPort;
+    std::string mModuleLensDevName; // matched using mPhyModuleIndex
+    std::string mModuleFlashDevName; // matched using mPhyModuleIndex
+    std::string mModuleRealSensorName; //parsed frome sensor entity name
+    std::string mModuleIndexStr; // parsed from sensor entity name
+    char mPhyModuleOrient; // parsed from sensor entity name
 };
 
 struct SensorFrameSize {
@@ -214,6 +226,10 @@ private:
     status_t findMediaDeviceInfo(const std::string &mcPath);
     status_t initDriverListHelper(unsigned major, unsigned minor, const std::string &mcPath, SensorDriverDescriptor &drvInfo);
     status_t getCSIPortID(const std::string &deviceName, const std::string &mcPath, int &portId);
+    // parse module info from sensor entity name
+    status_t parseModuleInfo(const std::string &entity_name, SensorDriverDescriptor &drv_info);
+    // get VCM/FLASH etc. attached to the camera module
+    status_t findAttachedSubdevs(const std::string &mcPath, struct SensorDriverDescriptor &drv_info);
 };
 
 /**

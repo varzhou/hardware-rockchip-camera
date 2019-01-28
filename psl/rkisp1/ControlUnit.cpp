@@ -70,33 +70,23 @@ ControlUnit::getDevicesPath()
 {
     std::shared_ptr<MediaEntity> mediaEntity = nullptr;
     std::string entityName;
-    const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(mCameraId);
+    const CameraHWInfo* camHwInfo = PlatformData::getCameraHWInfo();
     std::shared_ptr<V4L2Subdevice> subdev = nullptr;
     status_t status = OK;
 
-    if (cap == nullptr) {
-        LOGE("Failed to get cameraCapInfo");
-        return UNKNOWN_ERROR;
-    }
-
     // get isp subdevice path
-    entityName = cap->getMediaCtlEntityName("isys_backend");
-    if (entityName == "none") {
-        LOGE("%s: No isys_backend found", __FUNCTION__);
+    entityName = "rkisp1-isp-subdev";
+    status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
+    if (mediaEntity == nullptr || status != NO_ERROR) {
+        LOGE("Could not retrieve media entity %s", entityName.c_str());
         return UNKNOWN_ERROR;
-    } else {
-        status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
-        if (mediaEntity == nullptr || status != NO_ERROR) {
-            LOGE("Could not retrieve media entity %s", entityName.c_str());
-            return UNKNOWN_ERROR;
-        }
-
-        mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
-        if (subdev.get())
-            mDevPathsMap[KDevPathTypeIspDevNode] = subdev->name();
     }
+
+    mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
+    if (subdev.get())
+        mDevPathsMap[KDevPathTypeIspDevNode] = subdev->name();
     // get sensor device path
-    entityName = cap->getMediaCtlEntityName("pixel_array");
+    camHwInfo->getSensorEntityName(mCameraId, entityName);
     if (entityName == "none") {
         LOGE("%s: No pixel_array found", __FUNCTION__);
         return UNKNOWN_ERROR;
@@ -139,32 +129,16 @@ ControlUnit::getDevicesPath()
         mDevPathsMap[KDevPathTypeIspStatsNode] = subdev->name();
 
     // get lens device path
-    entityName = cap->getMediaCtlEntityName("lens");
-    if (entityName == "none") {
+    if (camHwInfo->mSensorInfo[mCameraId].mModuleLensDevName == "") {
         LOGW("%s: No lens found", __FUNCTION__);
     } else {
-        /*
-         * use subdev path directly, now lens subdev has not been registered
-         * to media system in driver.
-         */
-#if 1
         struct stat sb;
-        int PathExists = stat(entityName.c_str(), &sb);
+        int PathExists = stat(camHwInfo->mSensorInfo[mCameraId].mModuleLensDevName.c_str(), &sb);
         if (PathExists != 0) {
             LOGE("Error, could not find lens subdev %s !", entityName.c_str());
         } else {
-            mDevPathsMap[KDevPathTypeLensNode] = entityName;
+            mDevPathsMap[KDevPathTypeLensNode] = camHwInfo->mSensorInfo[mCameraId].mModuleLensDevName;
         }
-#else
-        status = mMediaCtl->getMediaEntity(mediaEntity, entityName.c_str());
-        if (mediaEntity == nullptr || status != NO_ERROR) {
-            LOGE("%s, Could not retrieve Media Entity %s", __FUNCTION__, entityName.c_str());
-        } else {
-            mediaEntity->getDevice((std::shared_ptr<V4L2DeviceBase>&) subdev);
-            if (subdev.get())
-                mDevPathsMap[KDevPathTypeLensNode] = subdev->name();
-        }
-#endif
     }
 
     return OK;

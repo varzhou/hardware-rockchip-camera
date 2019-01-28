@@ -595,6 +595,8 @@ status_t CameraHWInfo::initDriverList()
             mHasMediaController = true;
             ret = findMediaControllerSensors(mcPathName);
             ret |= findMediaDeviceInfo(mcPathName);
+            for (auto &it : mSensorInfo)
+                ret |= findAttachedSubdevs(mcPathName, it);
         } else {
             LOGE("Could not find sensor names");
             ret = NO_INIT;
@@ -647,6 +649,192 @@ status_t CameraHWInfo::readProperty()
     return OK;
 }
 
+status_t CameraHWInfo::parseModuleInfo(const std::string &entity_name,
+                                       SensorDriverDescriptor &drv_info)
+{
+    status_t ret = OK;
+
+    // sensor entity name format SHOULD be like this:
+    // m00_b_ov13850 1-0010
+    if (entity_name.empty())
+        return UNKNOWN_ERROR;
+
+    int parse_index = 0;
+
+    if (entity_name.at(parse_index) != 'm') {
+        LOGE("%d:parse sensor entity name %s error at %d, please check sensor driver !",
+             __LINE__, entity_name.c_str(), parse_index);
+        return UNKNOWN_ERROR;
+    }
+
+    std::string index_str = entity_name.substr (parse_index, 3);
+    drv_info.mModuleIndexStr = index_str;
+
+    parse_index += 3;
+
+    if (entity_name.at(parse_index) != '_') {
+        LOGE("%d:parse sensor entity name %s error at %d, please check sensor driver !",
+             __LINE__, entity_name.c_str(), parse_index);
+        return UNKNOWN_ERROR;
+    }
+
+    parse_index++;
+
+    if (entity_name.at(parse_index) != 'b' &&
+        entity_name.at(parse_index) != 'f') {
+        LOGE("%d:parse sensor entity name %s error at %d, please check sensor driver !",
+             __LINE__, entity_name.c_str(), parse_index);
+        return UNKNOWN_ERROR;
+    }
+    drv_info.mPhyModuleOrient = entity_name.at(parse_index);
+
+    parse_index++;
+
+    if (entity_name.at(parse_index) != '_') {
+        LOGE("%d:parse sensor entity name %s error at %d, please check sensor driver !",
+             __LINE__, entity_name.c_str(), parse_index);
+        return UNKNOWN_ERROR;
+    }
+
+    parse_index++;
+
+    std::size_t real_name_end = string::npos;
+    if ((real_name_end = entity_name.find(' ')) == string::npos) {
+        LOGE("%d:parse sensor entity name %s error at %d, please check sensor driver !",
+             __LINE__, entity_name.c_str(), parse_index);
+        return UNKNOWN_ERROR;
+    }
+
+    std::string real_name_str = entity_name.substr(parse_index, real_name_end - parse_index);
+    drv_info.mModuleRealSensorName = real_name_str;
+
+    LOGD("%s:%d, real sensor name %s, module ori %c, module id %s",
+         __FUNCTION__, __LINE__, drv_info.mModuleRealSensorName.c_str(),
+         drv_info.mPhyModuleOrient, drv_info.mModuleIndexStr.c_str());
+
+    return ret;
+}
+
+status_t CameraHWInfo::findAttachedSubdevs(const std::string &mcPath,
+                                           struct SensorDriverDescriptor &drv_info)
+{
+    status_t ret = OK;
+
+    int portId = 0;
+    status_t status = UNKNOWN_ERROR;
+    std::size_t pos = string::npos;
+    bool find_lens = false;
+    unsigned lens_major;
+    unsigned lens_minor;
+    bool find_flashlight = false;
+    unsigned flashlight_major;
+    unsigned flashlight_minor;
+    struct media_entity_desc entity;
+
+    LOGI("@%s", __FUNCTION__);
+
+    int fd = open(mcPath.c_str(), O_RDONLY);
+    if (fd == -1) {
+        LOGW("Could not openg media controller device: %s!", strerror(errno));
+        return ENXIO;
+    }
+
+    CLEAR(entity);
+
+    do {
+        // Go through the list of media controller entities
+        entity.id |= MEDIA_ENT_ID_FLAG_NEXT;
+        if (ioctl(fd, MEDIA_IOC_ENUM_ENTITIES, &entity) < 0) {
+            if (errno == EINVAL) {
+                // Ending up here when no more entities left.
+                // Will simply 'break' if everything was ok
+                if (mSensorInfo.size() == 0) {
+                    // No registered drivers found
+                    LOGE("ERROR no sensor driver registered in media controller!");
+                    ret = NO_INIT;
+                }
+            } else {
+                LOGE("ERROR in browsing media controller entities: %s!", strerror(errno));
+                ret = FAILED_TRANSACTION;
+            }
+            break;
+        } else {
+            if (entity.type == MEDIA_ENT_T_V4L2_SUBDEV_LENS) {
+               if ((entity.name[0] = 'm') &&
+                   strncmp(entity.name, drv_info.mModuleIndexStr.c_str(), 3) == 0) {
+                   if (find_lens == true)
+                       LOGW("one module can attach only one lens now");
+                   find_lens = true;
+                   lens_major = entity.v4l.major;
+                   lens_minor = entity.v4l.minor;
+                   LOGD("%s:%d, found lens %s attatched to sensor %s",
+                        __FUNCTION__, __LINE__, entity.name, drv_info.mSensorName.c_str());
+               }
+            }
+
+            if (entity.type == MEDIA_ENT_T_V4L2_SUBDEV_FLASH) {
+               if ((entity.name[0] = 'm') &&
+                   strncmp(entity.name, drv_info.mModuleIndexStr.c_str(), 3) == 0) {
+                   if (find_flashlight == true)
+                       LOGW("one module can attach only one flashlight now");
+                   find_flashlight = true;
+                   flashlight_major = entity.v4l.major;
+                   flashlight_minor = entity.v4l.minor;
+                   LOGD("%s:%d, found flashlight %s attatched to sensor %s",
+                        __FUNCTION__, __LINE__, entity.name, drv_info.mSensorName.c_str());
+               }
+            }
+        }
+    } while (!ret);
+
+    if (close(fd)) {
+        LOGE("ERROR in closing media controller: %s!", strerror(errno));
+        if (!ret) ret = EPERM;
+    }
+
+    if (ret)
+        return ret;
+
+    string subdevPathName = "/dev/v4l-subdev";
+    string subdevPathNameN;
+
+    for (int n = 0; n < MAX_SUBDEV_ENUMERATE; n++) {
+        subdevPathNameN = subdevPathName + std::to_string(n);
+        struct stat fileInfo;
+        CLEAR(fileInfo);
+        if (!find_lens && !find_flashlight)
+            break;
+        if (stat(subdevPathNameN.c_str(), &fileInfo) < 0) {
+            if (errno == ENOENT) {
+                // We end up here when there is no Nth subdevice
+                // but there might be more subdevices, so continue.
+                // For an example if there are v4l subdevices 0, 4, 5 and 6
+                // we come here for subdevices 1, 2 and 3.
+                LOGI("Subdev missing: \"%s\"!", subdevPathNameN.c_str());
+                continue;
+            } else {
+                LOGE("ERROR querying sensor subdev filestat for \"%s\": %s!",
+                     subdevPathNameN.c_str(), strerror(errno));
+                return FAILED_TRANSACTION;
+            }
+        }
+
+        if (find_lens && ((lens_major == MAJOR(fileInfo.st_rdev)) &&
+            (lens_minor == MINOR(fileInfo.st_rdev)))) {
+            drv_info.mModuleLensDevName = subdevPathNameN;
+            find_lens = false;
+        }
+
+        if (find_flashlight && ((flashlight_major == MAJOR(fileInfo.st_rdev)) &&
+            (flashlight_minor == MINOR(fileInfo.st_rdev)))) {
+            drv_info.mModuleFlashDevName = subdevPathNameN;
+            find_flashlight = false;
+        }
+    }
+
+    return ret;
+}
+
 status_t CameraHWInfo::findMediaControllerSensors(const std::string &mcPath)
 {
     status_t ret = OK;
@@ -691,7 +879,8 @@ status_t CameraHWInfo::findMediaControllerSensors(const std::string &mcPath)
                 // Go through the subdevs one by one, see which one
                 // corresponds to this driver (if there is an error,
                 // the looping ends at 'while')
-                ret = initDriverListHelper(major, minor, mcPath, drvInfo);
+                if ((ret = parseModuleInfo(drvInfo.mSensorName, drvInfo)) == 0)
+                    ret = initDriverListHelper(major, minor, mcPath, drvInfo);
             }
         }
     } while (!ret);
@@ -852,8 +1041,11 @@ status_t CameraHWInfo::getSensorEntityName(int32_t cameraId,
 
     std::vector<std::string> elementNames;
     PlatformData::getCameraHWInfo()->getMediaCtlElementNames(elementNames);
+    const struct SensorDriverDescriptor* drvInfo =
+        &PlatformData::getCameraHWInfo()->mSensorInfo[cameraId];
     for (auto &it: elementNames) {
-        if (it.find(sensorName) != std::string::npos)
+        if (it.find(sensorName) != std::string::npos &&
+            it.find(drvInfo->mModuleIndexStr) != std::string::npos)
             sensorEntityName = it;
     }
     if(sensorEntityName == "none") {
@@ -1110,7 +1302,8 @@ CameraHWInfo::initDriverListHelper(unsigned major, unsigned minor,
             } else {
                 i = drvInfo.mSensorName.find(" ");
                 if (CC_LIKELY(i != std::string::npos)) {
-                    drvInfo.mSensorName = drvInfo.mSensorName.substr(0, i);
+                    //drvInfo.mSensorName = drvInfo.mSensorName.substr(0, i);
+                    drvInfo.mSensorName = drvInfo.mModuleRealSensorName;
                 } else {
                     LOGW("Could not extract sensor name correctly");
                 }
