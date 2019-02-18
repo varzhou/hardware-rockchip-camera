@@ -2282,6 +2282,15 @@ status_t GraphConfig::selectSensorOutputFormat(int32_t cameraId, int &w, int &h,
     for (auto it = frameSize.begin(); it != frameSize.end(); ++it) {
         if((*it).max_width >= mpStream->width &&
            (*it).max_height >= mpStream->height) {
+            //for SOC Sensor
+            if(cap->sensorType() == SENSOR_TYPE_SOC) {
+                w = (*it).max_width;
+                h = (*it).max_height;
+                LOGD("@%s Select sensor format: code 0x%x:%s,  Res(%dx%d)", __FUNCTION__,
+                     format, gcu::pixelCode2String(format).c_str(), (*it).max_width, (*it).max_height);
+                break;
+            }
+            //for RAW Sensor
             // travel the tuningSupportSize to check the sensor output size is supported
             for (auto iter = tuningSupportSize.begin(); iter != tuningSupportSize.end(); ++iter) {
                 LOGD("@%s : tuningSupportSize: %dx%d", __FUNCTION__, (*iter).width, (*iter).height);
