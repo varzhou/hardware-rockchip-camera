@@ -327,7 +327,8 @@ RKISP1CameraHw::configStreams(std::vector<camera3_stream_t*> &activeStreams,
     usage = GRALLOC_USAGE_SW_READ_OFTEN |
             GRALLOC_USAGE_SW_WRITE_NEVER |
             GRALLOC_USAGE_HW_VIDEO_ENCODER |
-            GRALLOC_USAGE_HW_CAMERA_WRITE;
+            GRALLOC_USAGE_HW_CAMERA_WRITE |
+            GRALLOC_USAGE_PRIVATE_1; // full range
 
     camera3_stream_t* stillStream = findStreamForStillCapture(activeStreams);
 
