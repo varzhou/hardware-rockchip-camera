@@ -23,6 +23,7 @@
 
 #include "LogHelper.h"
 #include "PlatformData.h"
+#include "rkcamera_vendor_tags.h"
 #include "PerformanceTraces.h"
 #include <cutils/properties.h>
 
@@ -96,6 +97,14 @@ static int hal_get_number_of_cameras(void)
     PERFORMANCE_ATRACE_CALL();
 
     return PlatformData::numberOfCameras();
+}
+
+static void hal_get_vendor_tag_ops(vendor_tag_ops_t* ops)
+{
+
+    PERFORMANCE_ATRACE_CALL();
+
+    RkCamera3VendorTags::get_vendor_tag_ops(ops);
 }
 
 static int hal_get_camera_info(int cameraId, struct camera_info *cameraInfo)
@@ -224,6 +233,7 @@ camera_module_t VISIBILITY_PUBLIC HAL_MODULE_INFO_SYM = {
     NAMED_FIELD_INITIALIZER(get_number_of_cameras) hal_get_number_of_cameras,
     NAMED_FIELD_INITIALIZER(get_camera_info) hal_get_camera_info,
     NAMED_FIELD_INITIALIZER(set_callbacks) hal_set_callbacks,
+    NAMED_FIELD_INITIALIZER(get_vendor_tag_ops) hal_get_vendor_tag_ops,
     NAMED_FIELD_INITIALIZER(open_legacy) nullptr,
 #ifdef CAMERA_MODULE_API_VERSION_2_4
     NAMED_FIELD_INITIALIZER(set_torch_mode) hal_set_torch_mode,
