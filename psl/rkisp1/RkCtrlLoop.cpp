@@ -54,6 +54,7 @@ status_t RkCtrlLoop::init(const char* sensorName,
     std::string iq_file = cap->getIqTuningFile();
     std::string iq_file_path(RK_3A_TUNING_FILE_PATH);
     std::string iq_file_full_path = iq_file_path + iq_file;
+#if 0
     struct stat fileInfo;
 
     CLEAR(fileInfo);
@@ -67,7 +68,7 @@ status_t RkCtrlLoop::init(const char* sensorName,
             return UNKNOWN_ERROR;
         }
     }
-
+#endif
     bool ret = (rkisp_cl_init(&mControlLoopCtx , iq_file_full_path.c_str(), cb) == 0 ? true : false);
     CheckError(ret == false, UNKNOWN_ERROR, "@%s, Error in isp control loop init", __FUNCTION__);
     return status;
