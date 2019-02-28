@@ -270,12 +270,6 @@
             <cITMaxMargin value="10"/> <!--coarse integration time max margin -->
         </Sensor_info_RKISP1>
 
-        <MediaCtl_elements_RKISP1>
-            <element name="gc2355 1-003c" type="pixel_array"/>
-            <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/>
-            <element name="rkisp1-isp-subdev" type="isys_backend"/>
-        </MediaCtl_elements_RKISP1>
-
 <!-- ******************PSL specific section end **************************************************************-->
     </Profiles>
 

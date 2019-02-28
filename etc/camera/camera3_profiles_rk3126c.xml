@@ -266,14 +266,6 @@
             <cITMaxMargin value="10"/> <!--coarse integration time max margin -->
         </Sensor_info_RKISP1>
 
-        <MediaCtl_elements_RKISP1>
-            <element name="gc2145 0-003c" type="pixel_array"/>
-            <!--
-            <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/>
-            -->
-            <element name="stream_cif" type="isys_backend"/>
-        </MediaCtl_elements_RKISP1>
-
 <!-- ******************PSL specific section end **************************************************************-->
     </Profiles>
     <Profiles cameraId="1" name="gc0329">
@@ -502,14 +494,6 @@
             <cITMaxMargin value="10"/> <!--coarse integration time max margin -->
         </Sensor_info_RKISP1>
 
-        <MediaCtl_elements_RKISP1>
-            <element name="gc0329 0-0031" type="pixel_array"/>
-            <!--
-            <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/>
-            -->
-            <element name="stream_cif" type="isys_backend"/>
-        </MediaCtl_elements_RKISP1>
-
 <!-- ******************PSL specific section end **************************************************************-->
     </Profiles>
 <![CDATA[
@@ -729,14 +713,6 @@
             <isoAnalogGain1 value="75"/> <!--Pseudo ISO corresponding analog gain value 1.0. -->
             <cITMaxMargin value="10"/> <!--coarse integration time max margin -->
         </Sensor_info_RKISP1>
-
-        <MediaCtl_elements_RKISP1>
-            <element name="gc0312 2-0021" type="pixel_array"/>
-            <!--
-            <element name="rockchip-mipi-dphy-rx" type="csi_receiver"/>
-            -->
-            <element name="rkisp1-isp-subdev" type="isys_backend"/>
-        </MediaCtl_elements_RKISP1>
 
 <!-- ******************PSL specific section end **************************************************************-->
     </Profiles>
