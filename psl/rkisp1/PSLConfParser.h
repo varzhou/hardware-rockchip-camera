@@ -42,6 +42,7 @@ public:
     virtual CameraCapInfo *getCameraCapInfo(int cameraId);
     virtual camera_metadata_t *constructDefaultMetadata(int cameraId, int reqTemplate);
 
+    // Deprecated: not valid from commit5977220afeb6bdc8bc674f836f193c1c4e37ac3f
     static const char *getSensorMediaDeviceName(int cameraId) {
         const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
         std::string entityName;
@@ -51,6 +52,7 @@ public:
         else
             return "rkcif";
     }
+    // Deprecated: not valid from commit5977220afeb6bdc8bc674f836f193c1c4e37ac3f
     static const char *getImguEntityMediaDevice(int cameraId) {
         const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
         std::string entityName;

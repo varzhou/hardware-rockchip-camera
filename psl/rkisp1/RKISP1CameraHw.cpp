@@ -307,8 +307,8 @@ RKISP1CameraHw::checkNeedReconfig(std::vector<camera3_stream_t*> &activeStreams)
     if (mConfigChanged)
         return ;
 
-    const char * device = PSLConfParser::getImguEntityMediaDevice(mCameraId);
-    if(strcmp(device, "rkcif") == 0) {
+    const MediaCtlConfig* imgu_ctl = mGCM.getMediaCtlConfig(IStreamConfigProvider::IMGU_COMMON);
+    if (imgu_ctl->mVideoNodes[0].name.find("rkcif") != std::string::npos) {
         LOGI("@%s : rkcif device, no need reconifg when sensor output size does not change", __FUNCTION__);
         mConfigChanged = false;
         return ;
