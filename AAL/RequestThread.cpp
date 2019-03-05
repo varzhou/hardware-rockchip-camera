@@ -345,13 +345,22 @@ RequestThread::handleReturnRequest(Message & msg)
         if (mWaitingRequest != nullptr &&
                 ((mBlockAction == REQBLK_WAIT_ONE_REQUEST_COMPLETED) ||
                 (mBlockAction == REQBLK_WAIT_ALL_PREVIOUS_COMPLETED && mRequestsInHAL == 1))) {
+            
+            // in the case: inFlightCount already reach max when capture request comming,
+            // captureRequest will return REQBLK_WAIT_ONE_REQUEST_COMPLETED
+            // first and then return REQBLK_WAIT_ALL_PREVIOUS_COMPLETED
             status = captureRequest(mWaitingRequest);
-            if (status != NO_ERROR) {
-                mWaitingRequest->deInit();
-                mRequestsPool.releaseItem(mWaitingRequest);
-                mRequestsInHAL--;
+            if (status == REQBLK_WAIT_ALL_PREVIOUS_COMPLETED
+                || status == REQBLK_WAIT_ONE_REQUEST_COMPLETED) {
+                LOGD("@%s : captureRequest blocking again, status:%d", __FUNCTION__, status);
+            } else {
+                if (status != NO_ERROR) {
+                    mWaitingRequest->deInit();
+                    mRequestsPool.releaseItem(mWaitingRequest);
+                    mRequestsInHAL--;
+                }
+                mWaitingRequest = nullptr;
             }
-            mWaitingRequest = nullptr;
         }
         if (mWaitingRequest == nullptr) {
             if (areAllStreamsUnderMaxBuffers()) {
