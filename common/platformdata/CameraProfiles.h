@@ -96,7 +96,7 @@ protected: /* Methods */
     void getDataFromXmlFile(void);
     void checkField(CameraProfiles *profiles, const char *name, const char **atts);
     bool isSensorPresent(std::vector<SensorDriverDescriptor> &detectedSensors,
-                         const char* profileName, int cameraId) const;
+                         const char* profileName, int cameraId, const char *moduleId) const;
     bool validateStaticMetadata(const char *name, const char **atts);
     const metadata_tag_t* findTagInfo(const char *name, const metadata_tag_t *tagsTable, unsigned int size);
     void handleSupportedHardware(const char *name, const char **atts);

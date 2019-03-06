@@ -912,13 +912,16 @@ int CameraProfiles::parseStreamConfigDuration(const char *src,
  *                            detected sensors.
  * \param[in] profileName name of the sensor present in the XML config file.
  * \param[in] cameraId camera Id for the sensor name in the XML.
+ * \param[in] moduleId module Id for the sensor name in the XML.
  *
  * \return true if the sensor named in the profile is available in HW.
  */
 bool CameraProfiles::isSensorPresent(std::vector<SensorDriverDescriptor> &detectedSensors,
-                                     const char *profileName, int cameraId) const
+                                     const char *profileName, int cameraId,
+                                     const char *moduleId) const
 {
     for (unsigned int i = 0; i < detectedSensors.size(); i++) {
+#if 0
         /*
          * Logic for legacy platforms with only 1-2 sensors.
          */
@@ -931,20 +934,19 @@ bool CameraProfiles::isSensorPresent(std::vector<SensorDriverDescriptor> &detect
                 return true;
             }
         }
+#endif
         /*
          * Logic for new platforms that support more than 2 sensors.
          * To uniquely match an XML profile to a sensor present in HW we will
          * use 2 pieces of information:
          * - sensor name
-         * - CSI port
-         * Current implementation only uses sensor name. CSI port is needed in
-         * cases where we have same sensor name in different ports.
-         * TODO add this to XML part
+         * - module id
          */
         if (detectedSensors[i].mSensorDevType == SENSOR_DEVICE_MC) {
-           if (detectedSensors[i].mSensorName == profileName) {
-               LOGI("@%s: mUseEntry is true, mSensorIndex = %d, name = %s",
-                       __FUNCTION__, cameraId, profileName);
+           if (detectedSensors[i].mSensorName == profileName &&
+               strcmp(detectedSensors[i].mModuleIndexStr.c_str(), moduleId) == 0) {
+               LOGI("@%s: mUseEntry is true, mSensorIndex = %d, name = %s module_id = %s",
+                       __FUNCTION__, cameraId, profileName, moduleId);
                return true;
            }
        }
@@ -978,12 +980,13 @@ void CameraProfiles::checkField(CameraProfiles *profiles,
             if (strcmp(atts[attIndex], "name") == 0) {
                 profiles->mUseEntry = isSensorPresent(profiles->mSensorNames,
                                                       atts[attIndex + 1],
-                                                      mSensorIndex + 1);
+                                                      mSensorIndex + 1,
+                                                      atts[attIndex + 3]);
                 if (profiles->mUseEntry) {
                     mSensorIndex++;
-                    LOGI("@%s: mSensorIndex = %d, name = %s, mSensorNames.size():%zu",
-                         __FUNCTION__, mSensorIndex,
-                         atts[attIndex + 1], profiles->mSensorNames.size());
+                    LOGI("@%s: mSensorIndex = %d, name = %s moduleId = %s, mSensorNames.size():%zu",
+                         __FUNCTION__, mSensorIndex, atts[attIndex + 1],
+                         atts[attIndex + 3], profiles->mSensorNames.size());
                     mCameraIdToSensorName.insert(make_pair(mSensorIndex, std::string(atts[attIndex + 1])));
                 }
             } else {

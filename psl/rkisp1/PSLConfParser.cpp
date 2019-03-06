@@ -777,14 +777,16 @@ void PSLConfParser::handleMediaCtlElements(const char *name, const char **atts)
  * to add to the XML the CSI port and also check here if the CSI port matches
  *
  * \param[in] sensorName: sensor name found in XML camera profile
+ * \param[in] moduleId: module id found in XML camera profile
  *
  * \return true if sensor is also in the list of detected sensors, false
  *              otherwise
  */
-bool PSLConfParser::isSensorPresent(const std::string &sensorName)
+bool PSLConfParser::isSensorPresent(const std::string &sensorName, const char* moduleId)
 {
     for (size_t i = 0; i < mDetectedSensors.size(); i++) {
-        if (mDetectedSensors[i].mSensorName == sensorName) {
+        if (mDetectedSensors[i].mSensorName == sensorName &&
+            strcmp(mDetectedSensors[i].mModuleIndexStr.c_str(), moduleId) == 0) {
             return true;
         }
     }
@@ -806,7 +808,7 @@ void PSLConfParser::checkField(const char *name, const char **atts)
                         __FUNCTION__,
                         mSensorIndex,
                         sensorName.c_str());
-                mUseProfile = isSensorPresent(sensorName);
+                mUseProfile = isSensorPresent(sensorName, atts[5]);
                 if (mUseProfile)
                     mSensorIndex++;
             } else {

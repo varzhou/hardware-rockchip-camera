@@ -14,7 +14,7 @@
      limitations under the License.
 -->
 <CameraSettings>
-	<Profiles cameraId="0" name="ov8858">
+	<Profiles cameraId="0" name="ov8858" moduleId="m00">
         <Supported_hardware>
             <hwType value="SUPPORTED_HW_RKISP1"/>
         </Supported_hardware>
@@ -289,7 +289,7 @@
 
 <!-- ******************PSL specific section end **************************************************************-->
     </Profiles>
-    <Profiles cameraId="1" name="gc2145">
+    <Profiles cameraId="1" name="gc2145" moduleId="m01">
         <Supported_hardware>
             <hwType value="SUPPORTED_HW_RKISP1"/>
         </Supported_hardware>
