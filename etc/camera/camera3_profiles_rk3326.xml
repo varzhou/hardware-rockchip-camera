@@ -534,7 +534,7 @@
             <control.availableEffects value="OFF"/>
             <!-- <control.awbAvailableModes value="AUTO"/> -->
             <control.awbAvailableModes value="AUTO,INCANDESCENT,FLUORESCENT,DAYLIGHT,CLOUDY_DAYLIGHT"/>
-            <control.awbLockAvailable value="false"/>
+            <control.awbLockAvailable value="true"/>
             <control.availableSceneModes value="DISABLED"/>
             <control.availableVideoStabilizationModes value="OFF"/>
             <control.maxRegions value="1,0,1"/>
