@@ -448,20 +448,26 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
     TAGINFO(ANDROID_SYNC_FRAME_NUMBER, bogusValue);
 
     // Default fps target range
-    int32_t fpsRange[] = {15, 30};
+    int32_t fpsRange_const[] = {30, 30};    //used for video
+    int32_t fpsRange_variable[] = {15, 30}; //used for preview
+    // find the max const fpsRange for video and max variable fpsRange for preview
     entry = metadata.find(ANDROID_CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
-    if ((entry.count >= 2) && (entry.count % 2 == 0)) {
-      // The first one in the entry list is used
-      fpsRange[0] = entry.data.i32[0];
-      fpsRange[1] = entry.data.i32[1];
-    } else {
-      LOGW("No AE FPS range found in profile, use default [15, 30]");
+    for (int i = 0, cnt = entry.count / 2; i < cnt; ++i) {
+        if(entry.data.i32[2 * i] == entry.data.i32[2 * i + 1]) {
+            fpsRange_const[0] = entry.data.i32[2 * i];
+            fpsRange_const[1] = entry.data.i32[2 * i + 1];
+        } else {
+            fpsRange_variable[0] = entry.data.i32[2 * i];
+            fpsRange_variable[1] = entry.data.i32[2 * i + 1];
+        }
     }
-    if (requestTemplate == ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD) {
-      // Stable range requried for video recording
-      fpsRange[0] = fpsRange[1];
-    }
-    TAGINFO_ARRAY(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, fpsRange, 2);
+    LOGD("@%s : fpsRange_const[%d %d], fpsRange_variable[%d %d]", __FUNCTION__,
+         fpsRange_const[0], fpsRange_const[1], fpsRange_variable[0], fpsRange_variable[1]);
+    // variable range for preview
+    TAGINFO_ARRAY(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, fpsRange_variable, 2);
+    // Stable range requried for video recording
+    if (requestTemplate == ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD)
+        TAGINFO_ARRAY(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, fpsRange_const, 2);
 
     value_u8 = ANDROID_CONTROL_AE_ANTIBANDING_MODE_AUTO;
     TAGINFO(ANDROID_CONTROL_AE_ANTIBANDING_MODE, value_u8);
