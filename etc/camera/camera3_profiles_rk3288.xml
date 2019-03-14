@@ -54,10 +54,10 @@
             <!-- Request -->
             <request.maxNumOutputStreams value="1,2,1"/>
             <request.pipelineMaxDepth value="4"/>
-            <request.maxNumInputStreams value="1"/>
+            <request.maxNumInputStreams value="0"/>
             <request.partialResultCount value="1"/>
-            <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/>
-            <!-- <request.availableCapabilities value="BACKWARD_COMPATIBLE"/> -->
+            <!-- <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/> -->
+            <request.availableCapabilities value="BACKWARD_COMPATIBLE"/>
             <request.availableRequestKeys value="blackLevel.lock,
                 colorCorrection.aberrationMode,
                 colorCorrection.gains,
@@ -171,23 +171,7 @@
                 IMPLEMENTATION_DEFINED,1280x720,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
                 IMPLEMENTATION_DEFINED,320x240,OUTPUT,
-                IMPLEMENTATION_DEFINED,176x144,OUTPUT,
-                YCbCr_420_888,3264x2448,INPUT,
-                YCbCr_420_888,2592x1944,INPUT,
-                YCbCr_420_888,1920x1080,INPUT,
-                YCbCr_420_888,1280x960,INPUT,
-                YCbCr_420_888,1280x720,INPUT,
-                YCbCr_420_888,640x480,INPUT,
-                YCbCr_420_888,320x240,INPUT,
-                YCbCr_420_888,176x144,INPUT,
-                IMPLEMENTATION_DEFINED,3264x2448,INPUT,
-                IMPLEMENTATION_DEFINED,2592x1944,INPUT,
-                IMPLEMENTATION_DEFINED,1920x1080,INPUT,
-                IMPLEMENTATION_DEFINED,1280x960,INPUT,
-                IMPLEMENTATION_DEFINED,1280x720,INPUT,
-                IMPLEMENTATION_DEFINED,640x480,INPUT,
-                IMPLEMENTATION_DEFINED,320x240,INPUT,
-                IMPLEMENTATION_DEFINED,176x144,INPUT"/>
+                IMPLEMENTATION_DEFINED,176x144,OUTPUT"/>
             <scaler.availableMinFrameDurations value="BLOB,3264x2448,66666666,
                 BLOB,2592x1944,66666666,
                 BLOB,1920x1080,66666666,
@@ -260,9 +244,9 @@
             <!-- maxCaptureStall -->
             <reprocess.maxCaptureStall value="4"/>
             <!-- Edge -->
-            <edge.availableEdgeModes value="OFF,FAST,HIGH_QUALITY,ZERO_SHUTTER_LAG"/>
+            <edge.availableEdgeModes value="OFF,FAST,HIGH_QUALITY"/>
             <!-- Noise Reduction -->
-            <noiseReduction.availableNoiseReductionModes value="OFF,FAST,HIGH_QUALITY,ZERO_SHUTTER_LAG"/>
+            <noiseReduction.availableNoiseReductionModes value="OFF,FAST,HIGH_QUALITY"/>
 
         </Android_metadata>
 
@@ -328,9 +312,10 @@
             <!-- Request -->
             <request.maxNumOutputStreams value="1,2,1"/>
             <request.pipelineMaxDepth value="4"/>
-            <request.maxNumInputStreams value="1"/>
+            <request.maxNumInputStreams value="0"/>
             <request.partialResultCount value="1"/>
-            <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/>
+            <!-- <request.availableCapabilities value="BACKWARD_COMPATIBLE,YUV_REPROCESSING,PRIVATE_REPROCESSING"/> -->
+            <request.availableCapabilities value="BACKWARD_COMPATIBLE"/>
             <request.availableRequestKeys value="blackLevel.lock,
                 colorCorrection.aberrationMode,
                 colorCorrection.gains,
@@ -435,19 +420,7 @@
                 IMPLEMENTATION_DEFINED,800x600,OUTPUT,
                 IMPLEMENTATION_DEFINED,640x480,OUTPUT,
                 IMPLEMENTATION_DEFINED,320x240,OUTPUT,
-                IMPLEMENTATION_DEFINED,176x144,OUTPUT,
-                IMPLEMENTATION_DEFINED,1600x1200,INPUT,
-                IMPLEMENTATION_DEFINED,1280x720,INPUT,
-                IMPLEMENTATION_DEFINED,800x600,INPUT,
-                IMPLEMENTATION_DEFINED,640x480,INPUT,
-                IMPLEMENTATION_DEFINED,320x240,INPUT,
-                IMPLEMENTATION_DEFINED,176x144,INPUT,
-                YCbCr_420_888,1600x1200,INPUT,
-                YCbCr_420_888,1280x720,INPUT,
-                YCbCr_420_888,800x600,INPUT,
-                YCbCr_420_888,640x480,INPUT,
-                YCbCr_420_888,320x240,INPUT,
-                YCbCr_420_888,176x144,INPUT"/>
+                IMPLEMENTATION_DEFINED,176x144,OUTPUT"/>
             <scaler.availableMinFrameDurations value="BLOB,1600x1200,50125313,
                 BLOB,1280x720,50125313,
                 BLOB,800x600,33333333,
@@ -512,9 +485,9 @@
             <!-- maxCaptureStall -->
             <reprocess.maxCaptureStall value="4"/>
             <!-- Edge -->
-            <edge.availableEdgeModes value="OFF,FAST,HIGH_QUALITY,ZERO_SHUTTER_LAG"/>
+            <edge.availableEdgeModes value="OFF,FAST,HIGH_QUALITY"/>
             <!-- Noise Reduction -->
-            <noiseReduction.availableNoiseReductionModes value="OFF,FAST,HIGH_QUALITY,ZERO_SHUTTER_LAG"/>
+            <noiseReduction.availableNoiseReductionModes value="OFF,FAST,HIGH_QUALITY"/>
 
         </Android_metadata>
 
