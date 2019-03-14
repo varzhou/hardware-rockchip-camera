@@ -237,6 +237,7 @@ status_t CameraBuffer::init(const camera3_stream_buffer *aBuffer, int cameraId)
 void CameraBuffer::reConfig(int w, int h){
     mWidth = w;
     mHeight =h;
+    mStride = w;
 }
 
 status_t CameraBuffer::init(const camera3_stream_t* stream,

@@ -26,7 +26,7 @@
 
 namespace android {
 namespace camera2 {
-#define ALIGN(value, x)	 ((value + (x-1)) & (~(x-1)))
+#define ALIGN(value, x)     ((value + (x-1)) & (~(x-1)))
 
 ImgHWEncoder::ImgHWEncoder(int cameraid) :
     mCameraId(cameraid),
@@ -225,9 +225,10 @@ status_t ImgHWEncoder::encodeSync(EncodePackage & package)
     //if not doThumb,please set doThumbNail,thumbW and thumbH to zero;
     if (exifMeta->mJpegSetting.thumbWidth && exifMeta->mJpegSetting.thumbHeight)
         JpegInInfo.doThumbNail = 1;
-	else
-		JpegInInfo.doThumbNail = 0;
-	ALOGD("asx: exifAttrs->enableThumb = %d doThumbNail=%d", exifAttrs->enableThumb, JpegInInfo.doThumbNail);
+    else
+        JpegInInfo.doThumbNail = 0;
+    LOGD("@%s : exifAttrs->enableThumb = %d doThumbNail=%d", __FUNCTION__,
+         exifAttrs->enableThumb, JpegInInfo.doThumbNail);
     JpegInInfo.thumbW = exifMeta->mJpegSetting.thumbWidth;
     JpegInInfo.thumbH = exifMeta->mJpegSetting.thumbHeight;
     //if thumbData is NULL, do scale, the type above can not be 420_P or 422_UYVY
