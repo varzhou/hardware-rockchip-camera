@@ -262,9 +262,6 @@
             <flipping value="" value_v=""/> <!-- value: SENSOR_FLIP_H or "", value_v: SENSOR_FLIP_V or "" -->
             <supportIsoMap value="false"/>
             <supportTuningSize value="4224x3136, 2112x1568"/>
-            <!-- <graphSettingsFile value="graph_settings_ov13850.xml"/> -->
-            <graphSettingsFile value="graph_settings_ov13850.xml"/>
-            <iqTuningFile value="OV13850.xml"/>
         </Hal_tuning_RKISP1>
 
         <Sensor_info_RKISP1> <!-- Information that parametrizes the behavior or qualities of the physical sensor -->
@@ -510,9 +507,7 @@
         <Hal_tuning_RKISP1> <!-- Parameters to tune the HAL and hacks for the HAL that are camera dependent -->
             <flipping value="" value_v=""/> <!-- value: SENSOR_FLIP_H or "", value_v: SENSOR_FLIP_V or "" -->
             <supportIsoMap value="false"/>
-            <!-- <graphSettingsFile value="graph_settings_ov13850.xml"/> -->
-            <graphSettingsFile value="graph_settings_ov4689.xml"/>
-            <iqTuningFile value="OV4689.xml"/>
+            <supportTuningSize value="2688x1520"/>
         </Hal_tuning_RKISP1>
 
         <Sensor_info_RKISP1> <!-- Information that parametrizes the behavior or qualities of the physical sensor -->
@@ -756,9 +751,7 @@
         <Hal_tuning_RKISP1> <!-- Parameters to tune the HAL and hacks for the HAL that are camera dependent -->
             <flipping value="" value_v=""/> <!-- value: SENSOR_FLIP_H or "", value_v: SENSOR_FLIP_V or "" -->
             <supportIsoMap value="false"/>
-            <!-- <graphSettingsFile value="graph_settings_gc2355.xml"/> -->
-            <graphSettingsFile value="graph_settings_gc2355.xml"/>
-            <iqTuningFile value="GC2355.xml"/>
+            <supportTuningSize value="1600x1200"/>
         </Hal_tuning_RKISP1>
 
         <Sensor_info_RKISP1> <!-- Information that parametrizes the behavior or qualities of the physical sensor -->
