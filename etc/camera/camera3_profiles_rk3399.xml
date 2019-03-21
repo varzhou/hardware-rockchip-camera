@@ -525,7 +525,7 @@
 
 <!-- ******************PSL specific section end **************************************************************-->
     </Profiles>
-    <Profiles cameraId="0" name="gc2355" moduleId="m00">
+    <Profiles cameraId="0" name="gc2355" moduleId="m01">
         <Supported_hardware>
             <hwType value="SUPPORTED_HW_RKISP1"/>
         </Supported_hardware>
