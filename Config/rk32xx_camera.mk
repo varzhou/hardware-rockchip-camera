@@ -258,7 +258,7 @@ PRODUCT_PACKAGES += \
     lib_rkisp1_api
 endif
 
-ifeq ($(strip $(TARGET_BOARD_PLATFORM)), rk3328)
+ifneq ($(filter rk3328 rk3228h, $(TARGET_BOARD_PLATFORM)), )
 PRODUCT_PACKAGES += \
     lib_rkisp1_api
 endif

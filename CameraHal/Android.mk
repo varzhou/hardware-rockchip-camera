@@ -107,7 +107,7 @@ LOCAL_SRC_FILES:=\
 	SensorListener.cpp\
 
 ifeq ($(strip $(BOARD_USE_DRM)), true)
-ifneq ($(filter rk3368 rk3399 rk3288 rk3366 rk3126c rk3328 rk3326 rk3128h rk322x rk3399pro, $(strip $(TARGET_BOARD_PLATFORM))), )
+ifneq ($(filter rk3368 rk3399 rk3288 rk3366 rk3126c rk3328 rk3326 rk3128h rk322x rk3399pro rk3228h, $(strip $(TARGET_BOARD_PLATFORM))), )
 LOCAL_SRC_FILES += \
 	camera_mem_gralloc.cpp\
 	camera_mem.cpp
@@ -179,7 +179,7 @@ LOCAL_SHARED_LIBRARIES += \
 	lib_rkisp1_api
 endif
 
-ifeq ($(filter rk3128h rk322x rk3328 , $(strip $(TARGET_BOARD_PLATFORM))), )
+ifeq ($(filter rk3128h rk322x rk3328 rk3228h , $(strip $(TARGET_BOARD_PLATFORM))), )
 LOCAL_SHARED_LIBRARIES += \
 	libjpeghwenc
 endif
@@ -342,14 +342,14 @@ LOCAL_CFLAGS += -DHAL_MOCKUP
 LOCAL_CFLAGS += -DHAVE_ARM_NEON
 endif
 
-ifeq ($(strip $(TARGET_BOARD_PLATFORM)),rk3328)
+ifneq ($(filter rk3328 rk3228h , $(TARGET_BOARD_PLATFORM)), )
 #LOCAL_CFLAGS += -DTARGET_BOARD_PLATFORM_RK30XX
 LOCAL_CFLAGS += -DTARGET_RK32
 LOCAL_CFLAGS += -DTARGET_RK3328
 LOCAL_CFLAGS += -DHAL_MOCKUP
 endif
 
-ifneq ($(filter rk3128h rk322x rk3328 , $(strip $(TARGET_BOARD_PLATFORM))), )
+ifneq ($(filter rk3128h rk322x rk3328 rk3228h, $(strip $(TARGET_BOARD_PLATFORM))), )
 LOCAL_CFLAGS += -DTARGET_RK322x
 LOCAL_SRC_FILES += Jpeg_soft_encode.cpp
 endif
@@ -408,7 +408,7 @@ endif
 endif
 
 ifeq ($(strip $(BOARD_USE_DRM)), true)
-ifneq ($(filter rk3368 rk3399 rk3288 rk3366 rk3126c rk3328 rk3326 rk3128h rk322x rk3399pro, $(strip $(TARGET_BOARD_PLATFORM))), )
+ifneq ($(filter rk3368 rk3399 rk3288 rk3366 rk3126c rk3328 rk3326 rk3128h rk322x rk3399pro rk3228h, $(strip $(TARGET_BOARD_PLATFORM))), )
 LOCAL_CFLAGS +=-DRK_DRM_GRALLOC=1
 endif
 endif
