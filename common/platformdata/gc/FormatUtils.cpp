@@ -127,7 +127,8 @@ static const FormatInfo gFormatMapping[] = {
 bool isRawFormat(int32_t format) {
     for (size_t i = 0; i < ARRAY_SIZE(gFormatMapping); i++) {
         if (gFormatMapping[i].pixelCode == format) {
-            return gFormatMapping[i].type == FORMAT_RAW ? true : false;
+            FormatType type = gFormatMapping[i].type;
+            return (type  == FORMAT_RAW || type == FORMAT_MBUS_BAYER) ? true : false;
         }
     }
     LOGW("@%s:Invalid Format: 0x%x, %s", __FUNCTION__, format, v4l2Fmt2Str(format));

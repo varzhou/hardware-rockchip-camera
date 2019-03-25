@@ -2573,8 +2573,8 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
         LOGI("@%s : No need for selfPath", __FUNCTION__);
     }
 
-    //if isp support rawPath
-    if(rpName != "none") {
+    //if isp support rawPath and sensor is raw sensor
+    if(rpName != "none" && graphconfig::utils::isRawFormat(mCurSensorFormat.formatCode)) {
         addFormatParams(rpName, mCurSensorFormat.width, mCurSensorFormat.height, rpSinkPad,
                         gcu::getV4L2Format(gcu::pixelCode2fourcc(mCurSensorFormat.formatCode)),
                         0, 0, mediaCtlConfig);
