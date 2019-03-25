@@ -837,6 +837,10 @@ status_t CameraHWInfo::findAttachedSubdevs(const std::string &mcPath,
     return ret;
 }
 
+const bool compareFuncForSensorInfo(struct SensorDriverDescriptor  s1, struct SensorDriverDescriptor s2) {
+    return (s1.mModuleIndexStr < s2.mModuleIndexStr);
+}
+
 status_t CameraHWInfo::findMediaControllerSensors(const std::string &mcPath)
 {
     status_t ret = OK;
@@ -886,6 +890,8 @@ status_t CameraHWInfo::findMediaControllerSensors(const std::string &mcPath)
             }
         }
     } while (!ret);
+
+    std:sort(mSensorInfo.begin(), mSensorInfo.end(), compareFuncForSensorInfo);
 
     if (close(fd)) {
         LOGE("ERROR in closing media controller: %s!", strerror(errno));

@@ -208,7 +208,7 @@ status_t CameraProfiles::addCamera(int cameraId)
         return NO_MEMORY;
     }
     LOGI("Add cameraId: %d to mStaticMeta", cameraId);
-    mStaticMeta.push_back(meta);
+    mStaticMeta[cameraId] = meta;
 
     return NO_ERROR;
 }
