@@ -249,6 +249,27 @@ int Camera3HAL::configure_streams(camera3_stream_configuration_t *stream_list)
     return (status == NO_ERROR) ? 0 : -EINVAL;
 }
 
+void Camera3HAL::dumpTemplateMeta(CameraMetadata& metadata, int type) {
+    LOGD("%s:%d: enter", __func__, __LINE__);
+    std::string fileName(gDumpPath);
+    if (CC_UNLIKELY(LogHelper::isDumpTypeEnable(CAMERA_DUMP_META))) {
+        const char intent_val[7][20] = {"CUSTOM", "PREVIEW", "STILL_CAPTURE", "VIDEO_RECORD", "VIDEO_SNAPSHOT", "ZERO_SHUTTER_LAG", "MANUAL"};
+        std::string strIntentName;
+        if(type < 7)
+            strIntentName = intent_val[type];
+
+        fileName += "dumpmeta_" + std::to_string(mCameraId) + "_TEMPLATE_" + strIntentName;
+        LOGI("%s filename is %s", __FUNCTION__, fileName.data());
+        int fd = open(fileName.data(), O_RDWR | O_CREAT, 0666);
+        if (fd != -1) {
+            metadata.dump(fd, 2);
+        } else {
+            LOGE("dumpTemplate: open failed, errmsg: %s\n", strerror(errno));
+        }
+        close(fd);
+    }
+}
+
 camera_metadata_t* Camera3HAL::construct_default_request_settings(int type)
 {
     LOGI("@%s, type:%d", __FUNCTION__, type);
@@ -260,6 +281,10 @@ camera_metadata_t* Camera3HAL::construct_default_request_settings(int type)
     status_t status = mRequestThread->constructDefaultRequest(type, &meta);
     if (status != NO_ERROR)
         return nullptr;
+
+    CameraMetadata metadata;
+    metadata = (const camera_metadata_t *)meta;
+    dumpTemplateMeta(metadata, type);
 
     return meta;
 }

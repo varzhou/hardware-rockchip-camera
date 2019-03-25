@@ -61,6 +61,7 @@ public:
     void get_metadata_vendor_tag_ops(vendor_tag_query_ops_t *ops);
 
     void dump(int fd);
+    void dumpTemplateMeta(CameraMetadata& metadata, int type);
 
     int flush();
 

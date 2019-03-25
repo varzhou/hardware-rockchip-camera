@@ -282,7 +282,8 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
     }
 
     int index = cameraId * CAMERA_TEMPLATE_COUNT + requestTemplate;
-    camera_metadata_t * req = mDefaultRequests[index];
+    // vector::at is bound-checked
+    camera_metadata_t * req = mDefaultRequests.at(index);
 
     if (req)
         return req;
@@ -430,9 +431,6 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
     value_f = 0.0;
     TAGINFO(ANDROID_LENS_FOCUS_DISTANCE, value_f);
 
-    value_u8 = ANDROID_BLACK_LEVEL_LOCK_OFF;
-    TAGINFO(ANDROID_BLACK_LEVEL_LOCK, value_u8);
-
     int32_t mode = ANDROID_SENSOR_TEST_PATTERN_MODE_OFF;
     TAGINFO(ANDROID_SENSOR_TEST_PATTERN_MODE, mode);
     TAGINFO(ANDROID_SENSOR_ROLLING_SHUTTER_SKEW, bogusValue);
@@ -463,11 +461,13 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
     }
     LOGD("@%s : fpsRange_const[%d %d], fpsRange_variable[%d %d]", __FUNCTION__,
          fpsRange_const[0], fpsRange_const[1], fpsRange_variable[0], fpsRange_variable[1]);
-    // variable range for preview
-    TAGINFO_ARRAY(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, fpsRange_variable, 2);
     // Stable range requried for video recording
-    if (requestTemplate == ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD)
+    if (requestTemplate == ANDROID_CONTROL_CAPTURE_INTENT_VIDEO_RECORD) {
         TAGINFO_ARRAY(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, fpsRange_const, 2);
+    } else {
+        // variable range for preview and others
+        TAGINFO_ARRAY(ANDROID_CONTROL_AE_TARGET_FPS_RANGE, fpsRange_variable, 2);
+    }
 
     value_u8 = ANDROID_CONTROL_AE_ANTIBANDING_MODE_AUTO;
     TAGINFO(ANDROID_CONTROL_AE_ANTIBANDING_MODE, value_u8);

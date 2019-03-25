@@ -82,7 +82,7 @@ void Camera3Request::dumpSetting()
             return;
         }
     }
-    LOGI("%s:%d: enter", __func__, __LINE__);
+    LOGD("%s:%d: enter", __func__, __LINE__);
     std::string fileName(gDumpPath);
     if (CC_UNLIKELY(LogHelper::isDumpTypeEnable(CAMERA_DUMP_META))) {
         const char intent_val[7][20] = {"CUSTOM", "PREVIEW", "STILL_CAPTURE", "VIDEO_RECORD", "VIDEO_SNAPSHOT", "ZERO_SHUTTER_LAG", "MANUAL"};
@@ -132,7 +132,7 @@ void Camera3Request::dumpResults()
         std::string strIntentName = intent_val[intent];
 
         fileName += "dumpmeta_" + std::to_string(mCameraId) + "_" + strIntentName  + "_result_" + std::to_string(mRequestId);
-        LOG2("%s filename is %s", __FUNCTION__, fileName.data());
+        LOGI("%s filename is %s", __FUNCTION__, fileName.data());
         int fd = open(fileName.data(), O_RDWR | O_CREAT, 0666);
         if (fd != -1) {
             mPartialResultBuffers[0].metaBuf->dump(fd, 2);
