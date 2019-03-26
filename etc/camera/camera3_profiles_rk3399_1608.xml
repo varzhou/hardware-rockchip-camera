@@ -14,7 +14,7 @@
      limitations under the License.
 -->
 <CameraSettings>
-    <Profiles cameraId="0" name="RK1608-dphy0" moduleId="m00">
+    <Profiles cameraId="0" name="RK1608-dphy" moduleId="m00">
         <Supported_hardware>
             <hwType value="SUPPORTED_HW_RKISP1"/>
         </Supported_hardware>
