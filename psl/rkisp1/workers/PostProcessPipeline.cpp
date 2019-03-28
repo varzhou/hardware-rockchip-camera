@@ -1082,7 +1082,7 @@ PostProcessUnitJpegEnc::prepare(const FrameInfo& outfmt, int bufNum) {
 
     if (!mJpegTask.get()) {
         LOGI("Create JpegEncodeTask");
-        mJpegTask.reset(new JpegEncodeTask(0));  // ignore camId
+        mJpegTask.reset(new JpegEncodeTask(mPipeline->getCameraId()));
 
         if (mJpegTask->init() != NO_ERROR) {
             LOGE("Failed to init JpegEncodeTask Task");
