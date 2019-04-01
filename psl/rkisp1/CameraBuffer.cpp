@@ -315,6 +315,7 @@ status_t CameraBuffer::waitOnAcquireFence()
     const int BUFFER_READY = -1;
 
     if (mUserBuffer.acquire_fence != BUFFER_READY) {
+        PERFORMANCE_ATRACE_NAME("waitOnAcquireFence");
         LOGI("%s: Fence in HAL is %d", __FUNCTION__, mUserBuffer.acquire_fence);
         int ret = sync_wait(mUserBuffer.acquire_fence, WAIT_TIME_OUT_MS);
         if (ret) {
