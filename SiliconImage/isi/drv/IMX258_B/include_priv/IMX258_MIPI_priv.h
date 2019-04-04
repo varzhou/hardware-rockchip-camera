@@ -1,25 +1,3 @@
-//IMX258_MIPI_priv.h
-/*****************************************************************************/
-/*!
- *  \file        OV8810_priv.h \n
- *  \version     1.0 \n
- *  \author      Meinicke \n
- *  \brief       Private header file for sensor specific code of the OV8810. \n
- *
- *  \revision    $Revision: 432 $ \n
- *               $Author: neugebaa $ \n
- *               $Date: 2009-06-30 11:48:59 +0200 (Di, 30 Jun 2009) $ \n
- *               $Id: OV8810_priv.h 432 2009-06-30 09:48:59Z neugebaa $ \n
- */
-/*  This is an unpublished work, the copyright in which vests in Silicon Image
- *  GmbH. The information contained herein is the property of Silicon Image GmbH
- *  and is supplied without liability for errors or omissions. No part may be
- *  reproduced or used expect as authorized by contract or other written
- *  permission. Copyright(c) Silicon Image GmbH, 2009, all rights reserved.
- */
-/*****************************************************************************/
-
-
 #ifndef __IMX258_MIPI_PRIV_H__
 #define __IMX258_MIPI_PRIV_H__
 
@@ -37,67 +15,18 @@ extern "C"
 /*
 *              SILICONIMAGE LIBISP VERSION NOTE
 *
-*v0.1.0x00 : first version:preview && focus;   1: 2lane 3264x2448 is ok    2: 4lane can't preview now //hkw
-*v0.2.0x00 : fix 2lane 3264x2448;
-*v0.3.0:  tunning first version;
-*v0.4.0:
-*   1). limit AecMinIntegrationTime 0.0001 for aec.
-*v0.5.0:
-*   1). add sensor drv version in get sensor i2c info func
-*v0.6.0:
-*   1). support for isi v0.5.0
-*v0.7.0:
-*	1)fix AE difference between preview and capture;
-*	2)fix MOTOR speed;
-*v0.8.0:
-*   1)support 1 lane;
-*v0.9.0:
-*   1) support for isi v0.6.0
-*v0.a.0
-*   1). support for isi v0.7.0
-*v0.b.0
-*   1). support mutil framerate and Afps;
-*v0.c.0
-*   1)  Skip frames when resolution change in OV8858_IsiChangeSensorResolutionIss;
-*v0.d.0
-*   1). support OTP;
-*v0.e.0
-*   1). support OTP i2c info;
-*v0.f.0
-*   1). support R1A&R2A OTP info;
-*v1.0.0
-*   1). fix some issues in v0.f.0;
-*v1.1.0
-*   1). fix somme issuse in r2a
-*   2). support different otp rg bg typetical value
-*v1.2.0
-*   1). support another type of R1A.
-*v1.3.0:
-*   1). support the same sensor but different versions with the same lens.
-*v1.4.0:
-*   1). move code added in v1.3.0 to new interface get_sensor_version.
-*v1.5.0:
-*   1). change R2A setting HTS fromt 0x0f10 to 0x0788.
-*v1.6.0:
-*   1). OV8858_IsiGetAfpsInfoIss support one lane.
-*v1.7.0
-*	1). sensor OTP data application can enable/disable by property setting.
-*	2). typical OTP rg/bg value moved to IQ file.
-*v1.8.0
-*   1). support for isi v0.0xc.0
-*   2). change VPol from ISI_VPOL_NEG to ISI_VPOL_POS
-*v2.0.0
-*   1). support for isi v0.0xc.0
-*   2). change for support IMX258
+*v0.1.0x00 : first version;   1: 4lane 2100X1560 and 4208x3120 is ok    2: GZ otp awb lsc spc is ok, CMK not ok
+*v0.2.0x00 : 1: GZ&CMK AF is ok;
+*v0.3.0x00 :
 */
 
 
-#define CONFIG_SENSOR_DRV_VERSION  KERNEL_VERSION(2, 0, 0)
+#define CONFIG_SENSOR_DRV_VERSION  KERNEL_VERSION(0, 3, 0)
 
 /*****************************************************************************
  * System control registers
  *****************************************************************************/
-//hkw  
+
 #define IMX258_MODE_SELECT                  (0x0100) // rw - Bit[7:1]not used  Bit[0]Streaming set 0: software_standby  1: streaming       
 #define IMX258_MODE_SELECT_OFF              (0x00U)
 #define IMX258_MODE_SELECT_ON								(0x01U)
@@ -115,8 +44,6 @@ extern "C"
 
 #define IMX258_AEC_AGC_ADJ_H                (0x0204) // rw- Bit[0]gain output to sensor Gain[8]
 #define IMX258_AEC_AGC_ADJ_L                (0x0205) // rw- Bit[7:0]gain output to sensor Gain[7:0] 
-
-//#define SENSOR_SPECIAL_TAG					(0xfefe5aa5) //R1A?R2A?
 
 typedef struct IMX258_VcmInfo_s                 /* ddl@rock-chips.com: v0.3.0 */
 {
@@ -160,8 +87,8 @@ typedef struct IMX258_Context_s
     uint32_t            OldFineIntegrationTime;
 
     IsiSensorMipiInfo   IsiSensorMipiInfo;
-	IMX258_VcmInfo_t    VcmInfo; 
-	uint32_t			preview_minimum_framerate;
+		IMX258_VcmInfo_t    VcmInfo; 
+		uint32_t			preview_minimum_framerate;
 } IMX258_Context_t;
 
 #ifdef __cplusplus

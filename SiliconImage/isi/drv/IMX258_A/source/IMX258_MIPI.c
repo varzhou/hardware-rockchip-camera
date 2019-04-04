@@ -1,11 +1,9 @@
-// Fix from OV 8858
-
 /**
  * @file IMX258_MIPI.c
  *
  * @brief
- *   11/08/2017 IMX258_MIPI.c make
- *	 henryhuang@synnex.com.tw
+ *   07/09/2018 IMX258_MIPI.c make
+ *	 
  *
  *****************************************************************************/
 #include <ebase/types.h>
@@ -24,11 +22,6 @@
 #define  IMX258_NEWEST_TUNING_XML "18-7-2014_oyyf-hkw_IMX258_CMK-CB0407-FV1_v0.1.2"
 
 
-
-//hkw no use;
-#define CC_OFFSET_SCALING  2.0f
-#define I2C_COMPLIANT_STARTBIT 1U
-
 /******************************************************************************
  * local macro definitions
  *****************************************************************************/
@@ -43,10 +36,10 @@ CREATE_TRACER( IMX258_NOTICE1, "IMX258: ", TRACE_NOTICE1, 1U );
 
 
 #define IMX258_SLAVE_ADDR       0x20U                           /**< i2c slave address of the IMX258 camera sensor */
-#define IMX258_SLAVE_ADDR2      0x20U//0x34U
+#define IMX258_SLAVE_ADDR2      0x34U
 #define IMX258_SLAVE_AF_ADDR    0x18U         //?                  /**< i2c slave address of the IMX258 integrated AD5820 */
-#define Sensor_OTP_SLAVE_ADDR   0xA0U
-//#define Sensor_OTP_SLAVE_ADDR2   0x34U
+
+
 
 #define IMX258_MAXN_GAIN 		(512.0f)
 #define IMX258_MIN_GAIN_STEP   ( 1.0f / IMX258_MAXN_GAIN); /**< min gain step size used by GUI ( 32/(32-7) - 32/(32-6); min. reg value is 6 as of datasheet; depending on actual gain ) */
@@ -88,12 +81,12 @@ CREATE_TRACER( IMX258_NOTICE1, "IMX258: ", TRACE_NOTICE1, 1U );
 const char IMX258_g_acName[] = "IMX258_MIPI";
 
 extern const IsiRegDescription_t IMX258_g_aRegDescription_fourlane[];
-extern const IsiRegDescription_t IMX258_g_2100x1560_fourlane[];
-extern const IsiRegDescription_t IMX258_g_2100x1560P30_fourlane_fpschg[];
-extern const IsiRegDescription_t IMX258_g_2100x1560P25_fourlane_fpschg[];
-extern const IsiRegDescription_t IMX258_g_2100x1560P20_fourlane_fpschg[];
-extern const IsiRegDescription_t IMX258_g_2100x1560P15_fourlane_fpschg[];
-extern const IsiRegDescription_t IMX258_g_2100x1560P10_fourlane_fpschg[];
+extern const IsiRegDescription_t IMX258_g_2096x1560_fourlane[];
+extern const IsiRegDescription_t IMX258_g_2096x1560P30_fourlane_fpschg[];
+extern const IsiRegDescription_t IMX258_g_2096x1560P25_fourlane_fpschg[];
+extern const IsiRegDescription_t IMX258_g_2096x1560P20_fourlane_fpschg[];
+extern const IsiRegDescription_t IMX258_g_2096x1560P15_fourlane_fpschg[];
+extern const IsiRegDescription_t IMX258_g_2096x1560P10_fourlane_fpschg[];
 extern const IsiRegDescription_t IMX258_g_4208x3120_fourlane[];
 extern const IsiRegDescription_t IMX258_g_4208x3120P30_fourlane_fpschg[];
 extern const IsiRegDescription_t IMX258_g_4208x3120P25_fourlane_fpschg[];
@@ -106,8 +99,6 @@ extern const IsiRegDescription_t IMX258_g_4208x3120P7_fourlane_fpschg[];
 const IsiSensorCaps_t IMX258_g_IsiSensorDefaultConfig;
 
 
-
-#define IMX258_I2C_START_BIT        (I2C_COMPLIANT_STARTBIT)    // I2C bus start condition
 #define IMX258_I2C_NR_ADR_BYTES     (2U)                        // 1 byte base address
 #define IMX258_I2C_NR_DAT_BYTES     (1U)                        // 8 bit registers
 
@@ -191,9 +182,62 @@ static struct otp_struct g_otp_info ={0};
 int  RG_Ratio_Typical=0;
 int  BG_Ratio_Typical=0;
 
-#define RG_Ratio_Typical_Default 0x281;
-#define BG_Ratio_Typical_Default 0x259;
+#define RG_Ratio_Typical_Default 281;
+#define BG_Ratio_Typical_Default 317;
 
+#define MODULE_GZ 1
+#define MODULE_CMK 2
+#define MODULE_NAME MODULE_GZ
+
+#if MODULE_NAME == MODULE_GZ
+	#define Sensor_OTP_SLAVE_ADDR   0xA0U
+	#define MODULE_INFO_FLAG_REG 0X0000
+	#define MODULE_ID_REG 0X0005
+	#define MODULE_PRODUCT_YEAR_REG 0X000A
+	#define MODULE_PRODUCT_MONTH_REG 0X000B
+	#define MODULE_PRODUCT_DAY_REG 0X000C
+	#define MODULE_AWB_FLAG_REG 0x001c
+	#define MODULE_CUR_R_REG 0x001d
+	#define MODULE_CUR_Gr_REG 0x001e
+	#define MODULE_CUR_Gb_REG 0x001f
+	#define MODULE_CUR_B_REG 0x0020
+	#define MODULE_GOLDEN_R_REG 0x0021
+	#define MODULE_GOLDEN_Gr_REG 0x0022
+	#define MODULE_GOLDEN_Gb_REG 0x0023
+	#define MODULE_GOLDEN_B_REG 0x0024
+	#define MODULE_AWB_CHECKSUM_REG 0x0025
+	#define MODULE_LSC_FLAG_REG 0X003A
+	#define MODULE_LSC_DATA_START_REG 0x003B
+	#define MODULE_LSC_CHECKSUM_REG 0x0233
+	#define MODULE_SPC_FLAG_REG 0X0CE1
+	#define MODULE_SPC_DATA_START_REG 0x0CE2
+	#define MODULE_SPC_CHECKSUM_REG 0x0d60
+	
+#elif MODULE_NAME == MODULE_CMK
+	#define Sensor_OTP_SLAVE_ADDR   0xB0U
+	#define MODULE_INFO_FLAG_REG 0X0C00
+	#define MODULE_ID_REG 0X0C01
+	#define MODULE_PRODUCT_YEAR_REG 0X0C06
+	#define MODULE_PRODUCT_MONTH_REG 0X0C07
+	#define MODULE_PRODUCT_DAY_REG 0X0C08
+	#define MODULE_AWB_FLAG_REG 0x0C2A
+	#define MODULE_CUR_R_REG 0x0C37
+	#define MODULE_CUR_Gr_REG 0x0C38
+	#define MODULE_CUR_Gb_REG 0x0C39
+	#define MODULE_CUR_B_REG 0x0C3A
+	#define MODULE_GOLDEN_R_REG 0x0C3B
+	#define MODULE_GOLDEN_Gr_REG 0x0C3C
+	#define MODULE_GOLDEN_Gb_REG 0x0C3D
+	#define MODULE_GOLDEN_B_REG 0x0C3E
+	#define MODULE_AWB_CHECKSUM_REG 0x0C4F
+	#define MODULE_LSC_FLAG_REG 0X1000
+	#define MODULE_LSC_DATA_START_REG 0x1003
+	#define MODULE_LSC_CHECKSUM_REG 0x174F
+	#define MODULE_SPC_FLAG_REG 0X0CA0
+	#define MODULE_SPC_DATA_START_REG 0x0CA1
+	#define MODULE_SPC_CHECKSUM_REG 0x0D1F
+#endif
+	
 static bool bDumpRaw_OTP_switch = false;
 
 static uint8_t IMX258MIPI_SPC_Data[126]={0};
@@ -204,33 +248,31 @@ static RESULT load_imx258_SPC_Data(IsiSensorHandle_t   handle)
 	int i;
 	int temp = 0;
 	RESULT result = RET_SUCCESS;
-#if 0
+
 	for(i=0; i<63; i++)
 	{
 		result = IMX258_IsiRegWriteIss(handle, 0xD04C+i, IMX258MIPI_SPC_Data[i]);
 		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-		//TRACE( IMX258_ERROR, "to sensor reg = 0x%04x, SPC_Data[%d] = %d\n",0xD04C+i, i, IMX258MIPI_SPC_Data[i]);
+		TRACE( IMX258_DEBUG, "to sensor reg = 0x%04x, SPC_Data[%d] = %d\n",0xD04C+i, i, IMX258MIPI_SPC_Data[i]);
 	}
 	for(i=0; i<63; i++)
 	{
 		result = IMX258_IsiRegWriteIss(handle, 0xD08C+i, IMX258MIPI_SPC_Data[i+63]);
 		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-		//TRACE( IMX258_ERROR, "to sensor reg = 0x%04x, SPC_Data[%d] = %d\n", 0xD08C+i, i+63, IMX258MIPI_SPC_Data[i+63]);
+		TRACE( IMX258_DEBUG, "to sensor reg = 0x%04x, SPC_Data[%d] = %d\n", 0xD08C+i, i+63, IMX258MIPI_SPC_Data[i+63]);
 	}
-#endif
+
 	osSleep(10);
-	#if 0
-	result = IMX258_IsiRegWriteIss(handle, 0x0B00, 0x00);
-	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-	result = IMX258_IsiRegWriteIss(handle, 0x3051, 0x00);
-	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-	result = IMX258_IsiRegWriteIss(handle, 0x3052, 0x00);
-	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-	result = IMX258_IsiRegWriteIss(handle, 0x7BCA, 0x00);
-	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-	result = IMX258_IsiRegWriteIss(handle, 0x7BCB, 0x00);
-	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-	#endif
+	//result = IMX258_IsiRegWriteIss(handle, 0x0B00, 0x00);
+	//RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+	//result = IMX258_IsiRegWriteIss(handle, 0x3051, 0x00);
+	//RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+	//result = IMX258_IsiRegWriteIss(handle, 0x3052, 0x00);
+	//RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+	//result = IMX258_IsiRegWriteIss(handle, 0x7BCA, 0x00);
+	//RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+	//result = IMX258_IsiRegWriteIss(handle, 0x7BCB, 0x00);
+	//RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	result = IMX258_IsiRegWriteIss(handle, 0x7BC8, 0x01);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 #if 0
@@ -239,21 +281,21 @@ static RESULT load_imx258_SPC_Data(IsiSensorHandle_t   handle)
 	{
 		result = IMX258_IsiRegReadIss(handle, 0xD04C+i, &temp);
 		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-		TRACE( IMX258_ERROR, "read from sensor = 0x%04x, SPC_Data[%d] = %d\n",0xD04C+i, i, temp);
+		TRACE( IMX258_DEBUG, "read from sensor = 0x%04x, SPC_Data[%d] = %d\n",0xD04C+i, i, temp);
 	}
 	for(i=0; i<63; i++)
 	{
 		result = IMX258_IsiRegReadIss(handle, 0xD08C+i, &temp);
 		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-		TRACE( IMX258_ERROR, "read from sensor = 0x%04x, SPC_Data[%d] = %d\n", 0xD08C+i, i+63, temp);
+		TRACE( IMX258_DEBUG, "read from sensor = 0x%04x, SPC_Data[%d] = %d\n", 0xD08C+i, i+63, temp);
 	}
 	result = IMX258_IsiRegReadIss(handle, 0x7BC8, &temp);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-	TRACE( IMX258_ERROR, "read from sensor 0x7BC8 = 0x%02x\n", temp);
+	TRACE( IMX258_DEBUG, "read from sensor 0x7BC8 = 0x%02x\n", temp);
 	result = IMX258_IsiRegReadIss(handle, 0x7BC9, &temp);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-	TRACE( IMX258_ERROR, "read from sensor 0x7BC9 = 0x%02x\n", temp);
-#endif
+	TRACE( IMX258_DEBUG, "read from sensor 0x7BC9 = 0x%02x\n", temp);
+#endif /*print info*/
 	return result;
 }
 
@@ -262,55 +304,69 @@ static RESULT load_imx258_AWB_Data(IsiSensorHandle_t   handle)
 	float RG_c = 0;
 	float BG_c = 0;
 	float GrGb_c = 0;
-	float RG_g = 0;
-	float BG_g = 0;
-	float GrGb_g = 0;
 	int Rgain = 0;
 	int Bgain = 0;
+	int Ggain = 0;
 	int Grgain = 0;
 	int Gbgain = 0;
+	int Basegain = 0;
 	RESULT result = RET_SUCCESS;
 	float current_R = (float)g_otp_info.current_R;
 	float current_Gr = (float)g_otp_info.current_Gr;
 	float current_Gb = (float)g_otp_info.current_Gb;
 	float current_B = (float)g_otp_info.current_B;
-	float golden_R = (float)g_otp_info.golden_R;
-	float golden_Gr = (float)g_otp_info.golden_Gr;
-	float golden_Gb = (float)g_otp_info.golden_Gb;
-	float golden_B = (float)g_otp_info.golden_B;
 	
-	RG_c = current_R / (current_Gr + current_Gb)*1024;
-	BG_c = current_B / (current_Gr + current_Gb)*1024;
-	GrGb_c = current_Gr / current_Gb *1024;
+	if((RG_Ratio_Typical==0) && (BG_Ratio_Typical==0)){
+		TRACE( IMX258_NOTICE0, "%s:  --OTP typical value in IQ file is zero, we will try another match rule.\n", __FUNCTION__);
+        RG_Ratio_Typical = RG_Ratio_Typical_Default;
+        BG_Ratio_Typical = BG_Ratio_Typical_Default;
+	}
+	TRACE( IMX258_NOTICE0, "%s:  --Finally, the (RG,BG) is (0x%x, 0x%x)\n", __FUNCTION__ , RG_Ratio_Typical, BG_Ratio_Typical);
 	
-	RG_g = golden_R / (golden_Gr + golden_Gb)*1024;
-	BG_g = golden_B / (golden_Gr + golden_Gb)*1024;
-	GrGb_g = golden_Gr / golden_Gb *1024;
 	
-	Rgain = (int)((RG_g * (GrGb_g + 1)) / (RG_c * (GrGb_c + 1)) * 256 + 0.5);
-	Bgain = (int)((BG_g * (GrGb_g + 1)) / (BG_c * (GrGb_c + 1)) * 256 + 0.5);
-	Grgain = (int)(GrGb_g / GrGb_c * 256 + 0.5);
-	Gbgain = 256;
+	RG_c = current_R / (current_Gr + current_Gb) * 1024;
+	BG_c = current_B / (current_Gr + current_Gb) * 1024;
 	
-//	TRACE( IMX258_ERROR, "otp write Rgain = %d\n",Rgain);
+	
+	Rgain = (int)(256 * RG_Ratio_Typical / RG_c + 0.5);
+	Bgain = (int)(256 * BG_Ratio_Typical / BG_c + 0.5);
+	Ggain = 256;
+	TRACE( IMX258_NOTICE0, "RG_c = %f, BG_c = %f, RG_Ratio_Typical = %d\n",RG_c,BG_c,RG_Ratio_Typical);
+	if (Rgain < 256 || Bgain < 256)
+  {
+  	if (Rgain < Bgain)
+    	Basegain = Rgain;
+    else
+      Basegain = Bgain;
+  }
+  else
+  {
+    Basegain = Ggain;
+  }
+  Rgain = 0x100 * Rgain / (Basegain);
+  Bgain = 0x100 * Bgain / (Basegain);
+  Grgain = 0x100 * Ggain / (Basegain);
+  Gbgain = 0x100 * Ggain / (Basegain);
+	
+	TRACE( IMX258_DEBUG, "otp write Rgain = %d\n",Rgain);
 	result = IMX258_IsiRegWriteIss(handle, 0x0210, (Rgain >> 8) & 0xff);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	result = IMX258_IsiRegWriteIss(handle, 0x0211, Rgain & 0xff);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	
-//	TRACE( IMX258_ERROR, "otp write Bgain = %d\n",Bgain);
+	TRACE( IMX258_DEBUG, "otp write Bgain = %d\n",Bgain);
 	result = IMX258_IsiRegWriteIss(handle, 0x0212, (Bgain >> 8) & 0xff);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	result = IMX258_IsiRegWriteIss(handle, 0x0213, Bgain & 0xff);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	
-//	TRACE( IMX258_ERROR, "otp write Grgain = %d\n",Grgain);
+	TRACE( IMX258_DEBUG, "otp write Grgain = %d\n",Grgain);
 	result = IMX258_IsiRegWriteIss(handle, 0x020e, (Grgain >> 8) & 0xff);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	result = IMX258_IsiRegWriteIss(handle, 0x020f, Grgain & 0xff);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	
-//	TRACE( IMX258_ERROR, "otp write Gbgain = %d\n",Gbgain);
+	TRACE( IMX258_DEBUG, "otp write Gbgain = %d\n",Gbgain);
 	result = IMX258_IsiRegWriteIss(handle, 0x0214, (Gbgain >> 8) & 0xff);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	result = IMX258_IsiRegWriteIss(handle, 0x0215, Gbgain & 0xff);
@@ -322,37 +378,38 @@ static RESULT load_imx258_AWB_Data(IsiSensorHandle_t   handle)
 static RESULT load_imx258_LSC_Data(IsiSensorHandle_t   handle)
 {
 	int i;
-	int temp = 0;
+	uint32_t temp = 0;
 	RESULT result = RET_SUCCESS;
-#if 1
+	
 	for(i=0; i<504; i++)
 	{
-		result = IMX258_IsiRegWriteIss(handle, 0xA100+i, IMX258MIPI_LSC_Data[i]);
+		result = IMX258_IsiRegWriteIss(handle, 0xA300+i, IMX258MIPI_LSC_Data[i]);
 		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-		//TRACE( IMX258_ERROR, "to sensor reg = 0x%04x, LSC_Data[%d] = %d\n",0xA100+i, i, IMX258MIPI_LSC_Data[i]);
+		TRACE( IMX258_DEBUG, "to sensor reg = 0x%04x, LSC_Data[%d] = %d\n",0xA300+i, i, IMX258MIPI_LSC_Data[i]);
 	}
-#endif
+	
 	osSleep(10);
-	//enable lsc
-	result = IMX258_IsiRegWriteIss(handle, 0x0B00, 0x01);
-	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	//choose lsc table 1
-	result = IMX258_IsiRegWriteIss(handle, 0x3021, 0x00);
+	result = IMX258_IsiRegReadIss(handle, 0x3021, &temp);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-#if 0
-	//read table choose status
-	result = IMX258_IsiRegReadIss(handle, 0x3025, &temp);
+	temp |= 0x01;
+	result = IMX258_IsiRegWriteIss(handle, 0x3021, temp);
 	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-	TRACE( IMX258_ERROR, "read from sensor,lsc choose table %d\n", temp+1);
-#endif
-
+	
+	//enable lsc
+	result = IMX258_IsiRegReadIss(handle, 0x0B00, &temp);
+	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+	temp |= 0x01;
+	result = IMX258_IsiRegWriteIss(handle, 0x0B00, temp);
+	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+	
 #if 0
 	osSleep(200);
 	for(i=0; i<504; i++)
 	{
-		result = IMX258_IsiRegReadIss(handle, 0xA100+i, &temp);
+		result = IMX258_IsiRegReadIss(handle, 0xA300+i, &temp);
 		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-		TRACE( IMX258_ERROR, "read from sensor = 0x%04x, LSC_Data[%d] = %d\n",0xA100+i, i, temp);
+		TRACE( IMX258_DEBUG, "read from sensor = 0x%04x, LSC_Data[%d] = %d\n",0xA300+i, i, temp);
 	}
 #endif
 
@@ -378,84 +435,84 @@ static int check_read_otp(
 	i2c_base_info[0] = Sensor_OTP_SLAVE_ADDR; //otp i2c addr
   i2c_base_info[1] = 2; //otp i2c reg size
   i2c_base_info[2] = 1; //otp i2c value size
- 	temp = sensor_i2c_read_p(context,camsys_fd,0x0000,i2c_base_info);
+ 	temp = sensor_i2c_read_p(context,camsys_fd,MODULE_INFO_FLAG_REG,i2c_base_info);
  	g_otp_info.base_info_flag = temp;
  	if(0x01 == g_otp_info.base_info_flag){
- 			TRACE( IMX258_ERROR, "%s(%d):otp base info flag : %d, data is valid\n", __FUNCTION__, __LINE__,g_otp_info.base_info_flag);
- 			temp = sensor_i2c_read_p(context,camsys_fd,0x0005,i2c_base_info);
+ 			TRACE( IMX258_DEBUG, "%s(%d):otp base info flag : %d, data is valid\n", __FUNCTION__, __LINE__,g_otp_info.base_info_flag);
+ 			temp = sensor_i2c_read_p(context,camsys_fd,MODULE_ID_REG,i2c_base_info);
  			g_otp_info.module_integrator_id = temp;
- 			temp = sensor_i2c_read_p(context,camsys_fd,0x000a,i2c_base_info);
+ 			temp = sensor_i2c_read_p(context,camsys_fd,MODULE_PRODUCT_YEAR_REG,i2c_base_info);
  			g_otp_info.production_year = temp;
- 			temp = sensor_i2c_read_p(context,camsys_fd,0x000b,i2c_base_info);
+ 			temp = sensor_i2c_read_p(context,camsys_fd,MODULE_PRODUCT_MONTH_REG,i2c_base_info);
  			g_otp_info.production_month = temp;
- 			temp = sensor_i2c_read_p(context,camsys_fd,0x000c,i2c_base_info);
+ 			temp = sensor_i2c_read_p(context,camsys_fd,MODULE_PRODUCT_DAY_REG,i2c_base_info);
  			g_otp_info.production_day = temp;
- 			TRACE( IMX258_ERROR, "%s(%d):otp module_integrator_id = 0x%02x", __FUNCTION__, __LINE__,g_otp_info.module_integrator_id);
- 			TRACE( IMX258_ERROR, "%s(%d):otp production year/month/day = %04d/%02d/%02d\n", __FUNCTION__, __LINE__,g_otp_info.production_year+2000,g_otp_info.production_month,g_otp_info.production_day);
+ 			TRACE( IMX258_DEBUG, "%s(%d):otp module_integrator_id = 0x%02x", __FUNCTION__, __LINE__,g_otp_info.module_integrator_id);
+ 			TRACE( IMX258_DEBUG, "%s(%d):otp production year/month/day = %04d/%02d/%02d\n", __FUNCTION__, __LINE__,g_otp_info.production_year+2000,g_otp_info.production_month,g_otp_info.production_day);
  	}else{
  			TRACE( IMX258_ERROR, "%s(%d):otp base info flag : %d, data is invalid\n", __FUNCTION__, __LINE__,g_otp_info.base_info_flag);
  	}
  	
- 	temp = sensor_i2c_read_p(context,camsys_fd,0x001c,i2c_base_info);
+ 	temp = sensor_i2c_read_p(context,camsys_fd,MODULE_AWB_FLAG_REG,i2c_base_info);
  	g_otp_info.awb_flag = temp;
  	if(0x01 == g_otp_info.awb_flag){
- 		TRACE( IMX258_ERROR, "%s(%d):otp awb flag : %d, data is valid\n", __FUNCTION__, __LINE__,g_otp_info.awb_flag);
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x001d,i2c_base_info);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp awb flag : %d, data is valid\n", __FUNCTION__, __LINE__,g_otp_info.awb_flag);
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_CUR_R_REG,i2c_base_info);
  		g_otp_info.current_R = temp;
  		check_sum_awb += temp;
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x001e,i2c_base_info);
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_CUR_Gr_REG,i2c_base_info);
  		g_otp_info.current_Gr = temp;
  		check_sum_awb += temp;
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x001f,i2c_base_info);
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_CUR_Gb_REG,i2c_base_info);
  		g_otp_info.current_Gb = temp;
  		check_sum_awb += temp;
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x0020,i2c_base_info);
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_CUR_B_REG,i2c_base_info);
  		g_otp_info.current_B = temp;
  		check_sum_awb += temp;
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x0021,i2c_base_info);
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_GOLDEN_R_REG,i2c_base_info);
  		g_otp_info.golden_R = temp;
  		check_sum_awb += temp;
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x0022,i2c_base_info);
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_GOLDEN_Gr_REG,i2c_base_info);
  		g_otp_info.golden_Gr = temp;
  		check_sum_awb += temp;
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x0023,i2c_base_info);
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_GOLDEN_Gb_REG,i2c_base_info);
  		g_otp_info.golden_Gb = temp;
  		check_sum_awb += temp;
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x0024,i2c_base_info);
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_GOLDEN_B_REG,i2c_base_info);
  		g_otp_info.golden_B = temp;
  		check_sum_awb += temp;
- 		
- 		temp = sensor_i2c_read_p(context,camsys_fd,0x0025,i2c_base_info);
+ 			
+ 		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_AWB_CHECKSUM_REG,i2c_base_info);
 		if((check_sum_awb%0xff) != temp){
 				TRACE( IMX258_ERROR, "%s(%d):otp awb check sum error,sum add value = %d,read from otp = %d\n", __FUNCTION__, __LINE__,check_sum_awb%0xff,temp);
 		}
 			
- 		TRACE( IMX258_ERROR, "%s(%d):otp current_R = %d\n", __FUNCTION__, __LINE__,g_otp_info.current_R);
- 		TRACE( IMX258_ERROR, "%s(%d):otp current_Gr = %d\n", __FUNCTION__, __LINE__,g_otp_info.current_Gr);
- 		TRACE( IMX258_ERROR, "%s(%d):otp current_Gb = %d\n", __FUNCTION__, __LINE__,g_otp_info.current_Gb);
- 		TRACE( IMX258_ERROR, "%s(%d):otp current_B = %d\n", __FUNCTION__, __LINE__,g_otp_info.current_B);
- 		TRACE( IMX258_ERROR, "%s(%d):otp golden_R = %d\n", __FUNCTION__, __LINE__,g_otp_info.golden_R);
- 		TRACE( IMX258_ERROR, "%s(%d):otp golden_Gr = %d\n", __FUNCTION__, __LINE__,g_otp_info.golden_Gr);
- 		TRACE( IMX258_ERROR, "%s(%d):otp golden_Gb = %d\n", __FUNCTION__, __LINE__,g_otp_info.golden_Gb);
- 		TRACE( IMX258_ERROR, "%s(%d):otp golden_B = %d\n", __FUNCTION__, __LINE__,g_otp_info.golden_B);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp current_R = %d\n", __FUNCTION__, __LINE__,g_otp_info.current_R);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp current_Gr = %d\n", __FUNCTION__, __LINE__,g_otp_info.current_Gr);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp current_Gb = %d\n", __FUNCTION__, __LINE__,g_otp_info.current_Gb);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp current_B = %d\n", __FUNCTION__, __LINE__,g_otp_info.current_B);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp golden_R = %d\n", __FUNCTION__, __LINE__,g_otp_info.golden_R);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp golden_Gr = %d\n", __FUNCTION__, __LINE__,g_otp_info.golden_Gr);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp golden_Gb = %d\n", __FUNCTION__, __LINE__,g_otp_info.golden_Gb);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp golden_B = %d\n", __FUNCTION__, __LINE__,g_otp_info.golden_B);
     
   }else{
   	TRACE( IMX258_ERROR, "%s(%d):otp awb flag : %d, data is invalid\n", __FUNCTION__, __LINE__,g_otp_info.awb_flag);
   }
  	
- 	temp = sensor_i2c_read_p(context,camsys_fd,0x003a,i2c_base_info);
+ 	temp = sensor_i2c_read_p(context,camsys_fd,MODULE_LSC_FLAG_REG,i2c_base_info);
  	g_otp_info.lsc_flag = temp;
  	if(0x01 == g_otp_info.lsc_flag){
- 		TRACE( IMX258_ERROR, "%s(%d):otp lsc flag : %d, data is valid\n", __FUNCTION__, __LINE__,g_otp_info.lsc_flag);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp lsc flag : %d, data is valid\n", __FUNCTION__, __LINE__,g_otp_info.lsc_flag);
  		for (i = 0; i < 504; i++)
 		{
-			temp= sensor_i2c_read_p(context,camsys_fd,0x003B+i,i2c_base_info);
+			temp= sensor_i2c_read_p(context,camsys_fd,MODULE_LSC_DATA_START_REG+i,i2c_base_info);
 			IMX258MIPI_LSC_Data[i] = temp;
 			check_sum_lsc += temp;
-			TRACE( IMX258_ERROR, "read from eeprom reg = 0x%04x, IMX258MIPI_LSC_Data[%d] = %d\n",0x003B+i, i, IMX258MIPI_LSC_Data[i]);
+			TRACE( IMX258_DEBUG, "read from eeprom reg = 0x%04x, IMX258MIPI_LSC_Data[%d] = %d\n",0x003B+i, i, IMX258MIPI_LSC_Data[i]);
 		}
 		
-		temp = sensor_i2c_read_p(context,camsys_fd,0x0233,i2c_base_info);
+		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_LSC_CHECKSUM_REG,i2c_base_info);
 		if((check_sum_lsc%0xff) != temp){
 				TRACE( IMX258_ERROR, "%s(%d):otp lsc check sum error,sum add value = %d,read from otp = %d\n", __FUNCTION__, __LINE__,check_sum_lsc%0xff,temp);
 		}
@@ -464,19 +521,19 @@ static int check_read_otp(
   	TRACE( IMX258_ERROR, "%s(%d):otp lsc flag : %d, data is invalid\n", __FUNCTION__, __LINE__,g_otp_info.lsc_flag);
   }
   
- 	temp = sensor_i2c_read_p(context,camsys_fd,0x0ce1,i2c_base_info);
+ 	temp = sensor_i2c_read_p(context,camsys_fd,MODULE_SPC_FLAG_REG,i2c_base_info);
  	g_otp_info.spc_flag = temp;
  	if(0x01 == g_otp_info.spc_flag){
- 		TRACE( IMX258_ERROR, "%s(%d):otp spc flag : %d, data is valid\n", __FUNCTION__, __LINE__,g_otp_info.spc_flag);
+ 		TRACE( IMX258_DEBUG, "%s(%d):otp spc flag : %d, data is valid\n", __FUNCTION__, __LINE__,g_otp_info.spc_flag);
  		for (i = 0; i < 126; i++)
 		{
-			temp= sensor_i2c_read_p(context,camsys_fd,0x0CE2+i,i2c_base_info);
+			temp= sensor_i2c_read_p(context,camsys_fd,MODULE_SPC_DATA_START_REG+i,i2c_base_info);
 			IMX258MIPI_SPC_Data[i] = temp;
 			check_sum_spc += temp;
-			TRACE( IMX258_ERROR, "read from eeprom reg = 0x%04x, IMX258MIPI_SPC_Data[%d] = %d\n",0x0CE2+i, i, IMX258MIPI_SPC_Data[i]);
+			TRACE( IMX258_DEBUG, "read from eeprom reg = 0x%04x, IMX258MIPI_SPC_Data[%d] = %d\n",0x0CE2+i, i, IMX258MIPI_SPC_Data[i]);
 		}
 		
-		temp = sensor_i2c_read_p(context,camsys_fd,0x0d60,i2c_base_info);
+		temp = sensor_i2c_read_p(context,camsys_fd,MODULE_SPC_CHECKSUM_REG,i2c_base_info);
 		if((check_sum_spc%0xff) != temp){
 				TRACE( IMX258_ERROR, "%s(%d):otp spc check sum error,sum add value = %d,read from otp = %d\n", __FUNCTION__, __LINE__,check_sum_spc%0xff,temp);
 		}
@@ -489,16 +546,16 @@ static int check_read_otp(
 
 static int apply_otp_data(IsiSensorHandle_t   handle,struct otp_struct *otp_ptr)
 {
+	if(0x01 == g_otp_info.spc_flag){
+		load_imx258_SPC_Data(handle);
+	}
 	if (0x01 == g_otp_info.awb_flag){
 		load_imx258_AWB_Data(handle);
 	}
 	if(0x01 == g_otp_info.lsc_flag){
 		load_imx258_LSC_Data(handle);
 	}
-	if(0x01 == g_otp_info.spc_flag){
-		load_imx258_SPC_Data(handle);
-	}
-	TRACE( IMX258_NOTICE0,  "%s: success!!!\n",  __FUNCTION__ );
+	TRACE( IMX258_INFO,  "%s: success!!!\n",  __FUNCTION__ );
 	return RET_SUCCESS;
 }
 
@@ -519,17 +576,9 @@ static RESULT IMX258_IsiSetOTPInfo
         TRACE( IMX258_ERROR, "%s: Invalid sensor handle (NULL pointer detected)\n", __FUNCTION__ );
         return ( RET_WRONG_HANDLE );
     }
-#if 0
 	RG_Ratio_Typical = OTPInfo>>16;
 	BG_Ratio_Typical = OTPInfo&0xffff;
 	TRACE( IMX258_NOTICE0, "%s:  --(RG,BG) in IQ file:(0x%x, 0x%x)\n", __FUNCTION__ , RG_Ratio_Typical, BG_Ratio_Typical);
-	if((RG_Ratio_Typical==0) && (BG_Ratio_Typical==0)){
-		TRACE( IMX258_ERROR, "%s:  --OTP typical value in IQ file is zero, we will try another match rule.\n", __FUNCTION__);
-        RG_Ratio_Typical = RG_Ratio_Typical_Default;
-        BG_Ratio_Typical = BG_Ratio_Typical_Default;
-	}
-	TRACE( IMX258_NOTICE0, "%s:  --Finally, the (RG,BG) is (0x%x, 0x%x)\n", __FUNCTION__ , RG_Ratio_Typical, BG_Ratio_Typical);
-#endif
 	return (result);
 }
 
@@ -640,7 +689,7 @@ static RESULT IMX258_IsiCreateSensorIss
     result = HalSetCamConfig( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false, true, false ); //pwdn,reset active;hkw
     RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 
-    result = HalSetClock( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, 12000000U);
+    result = HalSetClock( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, 24000000U);
     RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 
     TRACE( IMX258_INFO, "%s (exit)\n", __FUNCTION__);
@@ -713,7 +762,7 @@ static RESULT IMX258_IsiGetCapsIssInternal
 )
 {
     RESULT result = RET_SUCCESS;
-    TRACE( IMX258_INFO, "csq %s pIsiSensorCaps->Index is %d\n", __FUNCTION__,pIsiSensorCaps->Index);
+    
     if ( pIsiSensorCaps == NULL )
     {
         return ( RET_NULL_POINTER );
@@ -722,53 +771,38 @@ static RESULT IMX258_IsiGetCapsIssInternal
     {
         if (mipi_lanes == SUPPORT_MIPI_FOUR_LANE) {            
             switch (pIsiSensorCaps->Index) 
-            {     
-
-							//	case 0:
-               // {
-               //     pIsiSensorCaps->Resolution = ISI_RES_4208_3120P7;
-                //    break;
-                //}
+            {    
                 case 0:
                 {
-                    pIsiSensorCaps->Resolution = ISI_RES_4208_3120P10;
+                    pIsiSensorCaps->Resolution = ISI_RES_4208_3120P20;
                     break;
                 }
                 case 1:
                 {
                     pIsiSensorCaps->Resolution = ISI_RES_4208_3120P15;
                     break;
-                }   
-        #if 1 // csqerr
+                }
                 case 2:
-                { 
-                    pIsiSensorCaps->Resolution = ISI_RES_2100_1560P10;
+                {
+                    pIsiSensorCaps->Resolution = ISI_RES_2096_1560P30;
                     break;
                 }
                 case 3:
                 {
-                    pIsiSensorCaps->Resolution = ISI_RES_2100_1560P15;
+                    pIsiSensorCaps->Resolution = ISI_RES_2096_1560P25;
                     break;
                 }
-
                 case 4:
                 {
-                    pIsiSensorCaps->Resolution = ISI_RES_2100_1560P20;
+                    pIsiSensorCaps->Resolution = ISI_RES_2096_1560P20;
+                    break;
+                }
+                case 5:
+                {
+                    pIsiSensorCaps->Resolution = ISI_RES_2096_1560P15;
                     break;
                 }
 
-                case 5:
-                {
-                    pIsiSensorCaps->Resolution = ISI_RES_2100_1560P25;
-                    break;
-                }
-                
-                case 6:
-                {
-                    pIsiSensorCaps->Resolution = ISI_RES_2100_1560P30;
-                    break;
-                }
-        #endif
                 default:
                 {
                     result = RET_OUTOFRANGE;
@@ -811,25 +845,7 @@ static RESULT IMX258_IsiGetCapsIssInternal
 end:
     return result;
 }
-
-/*
-&isp0 {
-        status = "okay";
-};
-
-&isp0_mmu {
-        status = "okay";
-};
-
-&isp1 {
-        status = "okay";
-};
-
-&isp1_mmu {
-        status = "okay";
-};
-
-*/
+ 
 static RESULT IMX258_IsiGetCapsIss
 (
     IsiSensorHandle_t handle,
@@ -878,7 +894,7 @@ const IsiSensorCaps_t IMX258_g_IsiSensorDefaultConfig =
     ISI_BLS_OFF,                // Bls
     ISI_GAMMA_OFF,              // Gamma
     ISI_CCONV_OFF,              // CConv
-    ISI_RES_2100_1560P30, 
+    ISI_RES_2096_1560P30, 
     ISI_DWNSZ_SUBSMPL,          // DwnSz
     ISI_BLC_AUTO,               // BLC
     ISI_AGC_OFF,                // AGC
@@ -1253,99 +1269,99 @@ static RESULT IMX258_SetupOutputWindowInternal
 	uint16_t usTimeHts;
 	uint16_t usTimeVts;
     float    rVtPixClkFreq      = 0.0f;
-    int xclk = 12000000;
+    int xclk = 24000000;
     
 	TRACE( IMX258_INFO, "%s (enter)\n", __FUNCTION__);
 	
 	if(pIMX258Ctx->IsiSensorMipiInfo.ucMipiLanes == SUPPORT_MIPI_FOUR_LANE) {
-    	pIMX258Ctx->IsiSensorMipiInfo.ulMipiFreq = 800;
-
+    
         switch ( pConfig->Resolution )
         {
-            case ISI_RES_2100_1560P30:
-            case ISI_RES_2100_1560P25:
-            case ISI_RES_2100_1560P20:
-            case ISI_RES_2100_1560P15:
-            case ISI_RES_2100_1560P10:            
+            case ISI_RES_2096_1560P30:
+            case ISI_RES_2096_1560P25:
+            case ISI_RES_2096_1560P20:
+            case ISI_RES_2096_1560P15:
+            case ISI_RES_2096_1560P10:            
             {
-            	result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
                 if (set2Sensor == BOOL_TRUE) {                    
                     if (res_no_chg == BOOL_FALSE) {
-											result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2100x1560_fourlane);
+											result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2096x1560_fourlane);
+											TRACE( IMX258_DEBUG, "%s set IMX258_g_2096x1560_fourlane\n", __FUNCTION__);
                     }
-            #if 1
-                    if (pConfig->Resolution == ISI_RES_2100_1560P30) {                        
-                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2100x1560P30_fourlane_fpschg);
-                    } else if (pConfig->Resolution == ISI_RES_2100_1560P25) {
-                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2100x1560P25_fourlane_fpschg);
-                    } else if (pConfig->Resolution == ISI_RES_2100_1560P20) {
-                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2100x1560P20_fourlane_fpschg);
-                    } else if (pConfig->Resolution == ISI_RES_2100_1560P15) {
-                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2100x1560P15_fourlane_fpschg);
-                    } else if (pConfig->Resolution == ISI_RES_2100_1560P10) {
-                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2100x1560P10_fourlane_fpschg);
-                    }
-					#endif			
-							result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
+                    if (pConfig->Resolution == ISI_RES_2096_1560P30) {                        
+                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2096x1560P30_fourlane_fpschg);
+                    } else if (pConfig->Resolution == ISI_RES_2096_1560P25) {
+                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2096x1560P25_fourlane_fpschg);
+                    } else if (pConfig->Resolution == ISI_RES_2096_1560P20) {
+                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2096x1560P20_fourlane_fpschg);
+                    } else if (pConfig->Resolution == ISI_RES_2096_1560P15) {
+                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2096x1560P15_fourlane_fpschg);
+                    } else if (pConfig->Resolution == ISI_RES_2096_1560P10) {
+                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_2096x1560P10_fourlane_fpschg);
+                    }	
         		}
+        	pIMX258Ctx->IsiSensorMipiInfo.ulMipiFreq = 798;
     			usTimeHts = 5352; 
     			rVtPixClkFreq = 319200000;
-                if (pConfig->Resolution == ISI_RES_2100_1560P30) {
+                if (pConfig->Resolution == ISI_RES_2096_1560P30) {
                     usTimeVts = 1988;   // 33.34pfs
-                } else if (pConfig->Resolution == ISI_RES_2100_1560P25) {
+                } else if (pConfig->Resolution == ISI_RES_2096_1560P25) {
                     usTimeVts = 2385;   // 25.00 fps
-                } else if (pConfig->Resolution == ISI_RES_2100_1560P20) {
+                } else if (pConfig->Resolution == ISI_RES_2096_1560P20) {
                     usTimeVts = 2982;  // 20.00 fps
-                } else if (pConfig->Resolution == ISI_RES_2100_1560P15) {
+                } else if (pConfig->Resolution == ISI_RES_2096_1560P15) {
                     usTimeVts = 3976;  // 16.67 fps
-                } else if (pConfig->Resolution == ISI_RES_2100_1560P10) {
+                } else if (pConfig->Resolution == ISI_RES_2096_1560P10) {
                     usTimeVts = 5964;  // 10.00 fps
                 }
                 
-    		    /* sleep a while, that sensor can take over new default values */
-    		    osSleep( 10 );
     			break;
                 
             }
-  #if 1
-            //case ISI_RES_4208_3120P7:
+            case ISI_RES_4208_3120P7:
             case ISI_RES_4208_3120P10:
             case ISI_RES_4208_3120P15:
-            //case ISI_RES_4208_3120P20:
-            //case ISI_RES_4208_3120P25:
-            //case ISI_RES_4208_3120P30:
+            case ISI_RES_4208_3120P20:
+            case ISI_RES_4208_3120P25:
             {
                 if (set2Sensor == BOOL_TRUE) {
                     if (res_no_chg == BOOL_FALSE) {
-											result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_4208x3120_fourlane);
-        		   			 }
-           
-                    if (pConfig->Resolution == ISI_RES_4208_3120P15) {                        
+						result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_4208x3120_fourlane);
+						TRACE( IMX258_ERROR, "%s set IMX258_g_4208x3120_fourlane\n", __FUNCTION__);
+					}
+					if (pConfig->Resolution == ISI_RES_4208_3120P25) {
+						result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_4208x3120P25_fourlane_fpschg);
+                    }else if (pConfig->Resolution == ISI_RES_4208_3120P20) {
+                    	result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_4208x3120P20_fourlane_fpschg);
+                    }else if (pConfig->Resolution == ISI_RES_4208_3120P15) {                        
                         result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_4208x3120P15_fourlane_fpschg);
                     } else if (pConfig->Resolution == ISI_RES_4208_3120P10) {                        
                         result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_4208x3120P10_fourlane_fpschg);
                     } 
-                    //else if (pConfig->Resolution == ISI_RES_4208_3120P7) {
-                     //   result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_4208x3120P7_fourlane_fpschg);
-                   // }
+                    else if (pConfig->Resolution == ISI_RES_4208_3120P7) {
+                        result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_4208x3120P7_fourlane_fpschg);
+                    }
         	    
         		}
-        	rVtPixClkFreq = 597200000;	
-    			usTimeHts = 5352;                
-                if (pConfig->Resolution == ISI_RES_4208_3120P15) {                        
-                    usTimeVts = 7440;  // 16.67 fps
-                } else if (pConfig->Resolution == ISI_RES_4208_3120P10) {                        
-                    usTimeVts = 11160;   // 10.00 fps
+        	pIMX258Ctx->IsiSensorMipiInfo.ulMipiFreq = 996;
+        	rVtPixClkFreq = 398400000;	
+    			usTimeHts = 5352;
+    			if (pConfig->Resolution == ISI_RES_4208_3120P25) {
+    				usTimeVts = 0x0d35;//22 fps
+                } else if (pConfig->Resolution == ISI_RES_4208_3120P20) {
+                    usTimeVts = 3720;  //20 fps
+                } else if (pConfig->Resolution == ISI_RES_4208_3120P15) {
+                    usTimeVts = 4962;  // 16.67 fps
+                } else if (pConfig->Resolution == ISI_RES_4208_3120P10) {
+                    usTimeVts = 7443;   // 10.00 fps
                 } 
-                //else if (pConfig->Resolution == ISI_RES_4208_3120P7) {
-                //    usTimeVts = 15942;   // 7.69 fps
-                //}
-    		    /* sleep a while, that sensor can take over new default values */
-    		    osSleep( 10 );
+                else if (pConfig->Resolution == ISI_RES_4208_3120P7) {
+                    usTimeVts = 10634;   // 7.69 fps
+                }
+
     			break;
                 
             }
-  #endif
         }        
 
     }
@@ -1395,7 +1411,6 @@ RESULT IMX258_SetupImageControl
 {
     RESULT result = RET_SUCCESS;
 
-//    uint32_t RegValue = 0U;
 
     TRACE( IMX258_INFO, "%s (enter)\n", __FUNCTION__);
 
@@ -1601,6 +1616,8 @@ static RESULT IMX258_AecSetModeParameters
     //pIMX258Ctx->GroupHold                = true; //must be true (for unknown reason) to correctly set gain the first time
 
     TRACE( IMX258_INFO, "%s%s (exit)\n", __FUNCTION__, pIMX258Ctx->isAfpsRun?"(AFPS)":"");
+    	
+    
 
     return ( result );
 }
@@ -1653,10 +1670,9 @@ static RESULT IMX258_IsiSetupSensorIss
     MEMCPY( &pIMX258Ctx->Config, pConfig, sizeof( IsiSensorConfig_t ) );
 
     /* 1.) SW reset of image IMX258 (via I2C register interface)  be careful, bits 6..0 are reserved, reset bit is not sticky */
-    result = IMX258_IsiRegWriteIss ( pIMX258Ctx, IMX258_SOFTWARE_RST, IMX258_SOFTWARE_RST_VALUE );//ºê¶¨Òå hkw£»
-    RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+    //result = IMX258_IsiRegWriteIss ( pIMX258Ctx, IMX258_SOFTWARE_RST, IMX258_SOFTWARE_RST_VALUE );//ºê¶¨Òå hkw£»
+   // RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 
-    osSleep( 10 );
 
     TRACE( IMX258_DEBUG, "%s: IMX258 System-Reset executed\n", __FUNCTION__);
     // disable streaming during sensor setup
@@ -1674,10 +1690,10 @@ static RESULT IMX258_IsiSetupSensorIss
     //result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_aRegDescription );
     
 	  if(pIMX258Ctx->IsiSensorMipiInfo.ucMipiLanes == SUPPORT_MIPI_FOUR_LANE){
-	  		result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
+	  		//result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
        // RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 	      result = IsiRegDefaultsApply( pIMX258Ctx, IMX258_g_aRegDescription_fourlane);
-	      result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
+	     // result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
     }
  
     /* End of SYNNEX DEBUG */
@@ -1686,8 +1702,6 @@ static RESULT IMX258_IsiSetupSensorIss
         return ( result );
     }
 
-    /* sleep a while, that IMX258 can take over new default values */
-    osSleep( 10 );
 
 
     /* 3.) verify default values to make sure everything has been written correctly as expected */
@@ -1747,7 +1761,8 @@ static RESULT IMX258_IsiSetupSensorIss
         TRACE( IMX258_ERROR, "%s: Can't write IMX258 Image System Register (disable streaming failed)\n", __FUNCTION__ );
         return ( result );
     }
-		
+    
+	//	osSleep(30);
 		apply_otp_data(pIMX258Ctx,NULL);
     
     result = IMX258_IsiRegWriteIss( pIMX258Ctx, IMX258_MODE_SELECT, IMX258_MODE_SELECT_OFF );
@@ -1926,8 +1941,6 @@ static RESULT IMX258_IsiSensorSetStreamingIss
     bool_t              on
 )
 {
-    uint32_t RegValue = 0;
-
     IMX258_Context_t *pIMX258Ctx = (IMX258_Context_t *)handle;
 
     RESULT result = RET_SUCCESS;
@@ -1947,59 +1960,21 @@ static RESULT IMX258_IsiSensorSetStreamingIss
     if (on == BOOL_TRUE)
     {
         /* enable streaming */
-        result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
-       // RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-        result = IMX258_IsiRegWriteIss ( pIMX258Ctx, 0x0104, 0x01);
+        
         result = IMX258_IsiRegWriteIss ( pIMX258Ctx, IMX258_MODE_SELECT, IMX258_MODE_SELECT_ON);//IMX258_MODE_SELECT,stream on; hkw
-
-		
-		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0104, &RegValue);
-		TRACE( IMX258_ERROR, "%s frame length low,read reg(0x0104)=0x%02x\n", __FUNCTION__,RegValue);
-
-		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0100, &RegValue);
-		TRACE( IMX258_ERROR, "%s frame length low,read reg(0x0100)=0x%02x\n", __FUNCTION__,RegValue);
-
         RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-         result = IMX258_IsiRegWriteIss ( pIMX258Ctx, 0x0104, 0x00);
-
-		result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0104, &RegValue);
-		TRACE( IMX258_ERROR, "%s frame length low,read reg(0x0104)=0x%02x\n", __FUNCTION__,RegValue);
-        osSleep(10);
-       	result = IMX258_IsiRegReadIss ( pIMX258Ctx, IMX258_MODE_SELECT, &RegValue);
-      	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-      	TRACE( IMX258_ERROR, "%s Set Stream IMX258_MODE_SELECT_ON,read reg=0x%04x\n", __FUNCTION__,RegValue);
-      	
-      	result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0340, &RegValue);
-      	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-      	TRACE( IMX258_ERROR, "%s frame length high,read reg=0x%02x\n", __FUNCTION__,RegValue);
-      	result = IMX258_IsiRegReadIss ( pIMX258Ctx, 0x0341, &RegValue);
-      	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-      	TRACE( IMX258_ERROR, "%s frame length low,read reg=0x%02x\n", __FUNCTION__,RegValue);
-      	
-        result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
+      	    
     }
     else
     {
-    		result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
-        /* disable streaming */
-       // result = IMX258_IsiRegReadIss ( pIMX258Ctx, IMX258_MODE_SELECT, &RegValue);
-       // RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-       result = IMX258_IsiRegWriteIss ( pIMX258Ctx, 0x0104, 0x01);
         result = IMX258_IsiRegWriteIss ( pIMX258Ctx, IMX258_MODE_SELECT, IMX258_MODE_SELECT_OFF);
         RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-        result = IMX258_IsiRegWriteIss ( pIMX258Ctx, 0x0104, 0x00);
-        osSleep(10);
-       	result = IMX258_IsiRegReadIss ( pIMX258Ctx, IMX258_MODE_SELECT, &RegValue);
-      	RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-      	TRACE( IMX258_ERROR, "%s Set Stream IMX258_MODE_SELECT_OFF,read reg=0x%04x\n", __FUNCTION__);
-        result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
     }
 
     if (result == RET_SUCCESS)
     {
         pIMX258Ctx->Streaming = on;
     }
-	
 
     TRACE( IMX258_INFO, "%s (exit)\n", __FUNCTION__);
 
@@ -2042,38 +2017,25 @@ static RESULT IMX258_IsiSensorSetPowerIss
     pIMX258Ctx->Configured = BOOL_FALSE;
     pIMX258Ctx->Streaming  = BOOL_FALSE;
 
-    TRACE( IMX258_DEBUG, "%s power off \n", __FUNCTION__);
-    result = HalSetPower( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
-    RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-		osSleep( 10 );
-    TRACE( IMX258_DEBUG, "%s reset on\n", __FUNCTION__);
-    result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
+
     RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 
     if (on == BOOL_TRUE)
-    { //power on seq; hkw
+    {
         TRACE( IMX258_DEBUG, "%s power on \n", __FUNCTION__);
         result = HalSetPower( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
         RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
 
-        osSleep( 20 );
-
         TRACE( IMX258_DEBUG, "%s reset off \n", __FUNCTION__);
         result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
         RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-
-        //osSleep( 10 );
-
-        //TRACE( IMX258_DEBUG, "%s reset on \n", __FUNCTION__);
-       // result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
-       // RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
-
-       // osSleep( 10 );
-
-      //  TRACE( IMX258_DEBUG, "%s reset off \n", __FUNCTION__);
-      //  result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
-
-        osSleep( 50 );
+    } else {
+		TRACE( IMX258_DEBUG, "%s power off \n", __FUNCTION__);
+		result = HalSetPower( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, false );
+		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+		
+		TRACE( IMX258_DEBUG, "%s reset on\n", __FUNCTION__);
+		result = HalSetReset( pIMX258Ctx->IsiCtx.HalHandle, pIMX258Ctx->IsiCtx.HalDevID, true );
     }
 
     TRACE( IMX258_INFO, "%s (exit)\n", __FUNCTION__);
@@ -2209,7 +2171,7 @@ static RESULT IMX258_IsiRegReadIss
 {
     RESULT result = RET_SUCCESS;
 
-  //  TRACE( IMX258_INFO, "%s (enter)\n", __FUNCTION__);
+    TRACE( IMX258_INFO, "%s (enter)\n", __FUNCTION__);
 
     if ( handle == NULL )
     {
@@ -2232,13 +2194,10 @@ static RESULT IMX258_IsiRegReadIss
 
         IsiSensorContext_t *pSensorCtx = (IsiSensorContext_t *)handle;        
         result = IsiI2cReadSensorRegister( handle, address, (uint8_t *)p_value, NrOfBytes, BOOL_TRUE );
-        /*
-        TRACE( IMX258_DEBUG, "[SYNNEX DEBUG] IMX258_IsiRegReadIss:I2C_Bus%d SlaveAddress0x%x, addr 0x%x read result:0x%x ,Return:%d\n",SYNNEX_TEST->I2cBusNum,SYNNEX_TEST->SlaveAddress,address,*p_value,result);
-        TRACE( IMX258_DEBUG, "[SYNNEX DEBUG] IMX258_IsiRegReadIss:NrOfAddressBytes:%d NrOfBytes:%d\n",SYNNEX_TEST->NrOfAddressBytes, NrOfBytes);
-        */
+        
     }
 
-  //  TRACE( IMX258_INFO, "%s (exit: 0x%08x 0x%08x)\n", __FUNCTION__, address, *p_value);
+    TRACE( IMX258_INFO, "%s (exit: 0x%08x 0x%08x)\n", __FUNCTION__, address, *p_value);
 
     return ( result );
 }
@@ -2271,7 +2230,7 @@ static RESULT IMX258_IsiRegWriteIss
 
     uint8_t NrOfBytes;
 
-  //  TRACE( IMX258_INFO, "%s (enter)\n", __FUNCTION__);
+    TRACE( IMX258_INFO, "%s (enter)\n", __FUNCTION__);
 
     if ( handle == NULL )
     {
@@ -2286,7 +2245,7 @@ static RESULT IMX258_IsiRegWriteIss
 
     result = IsiI2cWriteSensorRegister( handle, address, (uint8_t *)(&value), NrOfBytes, BOOL_TRUE );
 
-//    TRACE( IMX258_INFO, "%s (exit: 0x%08x 0x%08x)\n", __FUNCTION__, address, value);
+   TRACE( IMX258_INFO, "%s (exit: 0x%08x 0x%08x)\n", __FUNCTION__, address, value);
 
     return ( result );
 }
@@ -2535,7 +2494,6 @@ RESULT IMX258_IsiSetGainIss
 
     uint16_t usGain = 0;
     uint16_t iReg = 0;
-   // uint16_t percentGain = 0;
 
     TRACE( IMX258_INFO, "%s: (enter) pIMX258Ctx->AecMaxGain(%f) \n", __FUNCTION__,pIMX258Ctx->AecMaxGain);
 
@@ -2555,7 +2513,6 @@ RESULT IMX258_IsiSetGainIss
     if( NewGain < pIMX258Ctx->AecMinGain ) NewGain = pIMX258Ctx->AecMinGain;
     if( NewGain > pIMX258Ctx->AecMaxGain ) NewGain = pIMX258Ctx->AecMaxGain;
 
-    //usGain = (uint16_t)(NewGain * IMX258_MAXN_GAIN+0.5); 
     usGain = (uint16_t)(512-(512.0/NewGain)+0.5); 
     iReg = usGain;
     IMX258_IsiRegWriteIss(pIMX258Ctx,0x0204, ((iReg & 0x100) >> 8));  
@@ -2565,7 +2522,7 @@ RESULT IMX258_IsiSetGainIss
     //return current state
     *pSetGain = pIMX258Ctx->AecCurGain;
 
-    TRACE( IMX258_ERROR, "%s: setgain mubiao(%f) shiji(%f)\n", __FUNCTION__, NewGain, *pSetGain);
+    TRACE( IMX258_INFO, "%s: setgain mubiao(%f) shiji(%f)\n", __FUNCTION__, NewGain, *pSetGain);
 	
     return ( result );
 }
@@ -2749,7 +2706,7 @@ RESULT IMX258_IsiSetIntegrationTimeIss
     
 	*pSetIntegrationTime = pIMX258Ctx->AecCurIntegrationTime;
 
-       TRACE( IMX258_ERROR, "%s: vtPixClkFreq:%f, LineLengthPck:%x, SetTi=%f, NewTi=%f, CoarseIntegrationTime=%x\n", __FUNCTION__, 
+       TRACE( IMX258_DEBUG, "%s: vtPixClkFreq:%f, LineLengthPck:%x, SetTi=%f, NewTi=%f, CoarseIntegrationTime=%x\n", __FUNCTION__, 
          pIMX258Ctx->VtPixClkFreq,pIMX258Ctx->LineLengthPck,*pSetIntegrationTime,NewIntegrationTime,CoarseIntegrationTime);
 	   
     TRACE( IMX258_INFO, "%s: (exit)\n", __FUNCTION__);
@@ -2815,10 +2772,10 @@ RESULT IMX258_IsiExposureControlIss
 
     TRACE( IMX258_INFO, "%s: g=%f, Ti=%f\n", __FUNCTION__, NewGain, NewIntegrationTime );
 
-
+    IMX258_IsiRegWriteIss(pIMX258Ctx,0x0104,0x01);
     result = IMX258_IsiSetIntegrationTimeIss( handle, NewIntegrationTime, pSetIntegrationTime, pNumberOfFramesToSkip );
     result = IMX258_IsiSetGainIss( handle, NewGain, pSetGain );
-
+    IMX258_IsiRegWriteIss(pIMX258Ctx,0x0104,0x00);
     TRACE( IMX258_INFO, "%s: set: g=%f, Ti=%f, skip=%d\n", __FUNCTION__, *pSetGain, *pSetIntegrationTime, *pNumberOfFramesToSkip );
     TRACE( IMX258_INFO, "%s: (exit)\n", __FUNCTION__);
 
@@ -3080,33 +3037,36 @@ RESULT IMX258_IsiGetAfpsInfoIss(
                     result = RET_NOTSUPP;
                     break;
                    
-                case ISI_RES_2100_1560P30:
-                case ISI_RES_2100_1560P25:
-                case ISI_RES_2100_1560P20:
-                case ISI_RES_2100_1560P15:
-                case ISI_RES_2100_1560P10:
-                    AFPSCHECKANDADD( ISI_RES_2100_1560P30 );
-                    AFPSCHECKANDADD( ISI_RES_2100_1560P25 );
-                    AFPSCHECKANDADD( ISI_RES_2100_1560P20 );
-                    AFPSCHECKANDADD( ISI_RES_2100_1560P15 );
-                    AFPSCHECKANDADD( ISI_RES_2100_1560P10 );
+                case ISI_RES_2096_1560P30:
+                case ISI_RES_2096_1560P25:
+                case ISI_RES_2096_1560P20:
+                case ISI_RES_2096_1560P15:
+                case ISI_RES_2096_1560P10:
+                    if(ISI_FPS_GET(ISI_RES_2096_1560P30) >= pIMX258Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_2096_1560P30 );
+                    if(ISI_FPS_GET(ISI_RES_2096_1560P25) >= pIMX258Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_2096_1560P25 );
+                    if(ISI_FPS_GET(ISI_RES_2096_1560P20) >= pIMX258Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_2096_1560P20 );
+                    if(ISI_FPS_GET(ISI_RES_2096_1560P15) >= pIMX258Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_2096_1560P15 );
+                    if(ISI_FPS_GET(ISI_RES_2096_1560P10) >= pIMX258Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_2096_1560P10 );
                     break;
-    #if 1               
-               // case ISI_RES_4208_3120P30:
-               // case ISI_RES_4208_3120P25:
-               // case ISI_RES_4208_3120P20:
+                case ISI_RES_4208_3120P25:
+                case ISI_RES_4208_3120P20:
                 case ISI_RES_4208_3120P15:
                 case ISI_RES_4208_3120P10:
-               // case ISI_RES_4208_3120P7:
-                    //AFPSCHECKANDADD( ISI_RES_4208_3120P30 );
-                    //AFPSCHECKANDADD( ISI_RES_4208_3120P25 );
-                   // AFPSCHECKANDADD( ISI_RES_4208_3120P20 );
-                    AFPSCHECKANDADD( ISI_RES_4208_3120P15 );
-                    AFPSCHECKANDADD( ISI_RES_4208_3120P10 );
-                  //  AFPSCHECKANDADD( ISI_RES_4208_3120P7 );
+                //case ISI_RES_4208_3120P7:
+                    if(ISI_FPS_GET(ISI_RES_4208_3120P20) >= pIMX258Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_4208_3120P20 );
+                    if(ISI_FPS_GET(ISI_RES_4208_3120P15) >= pIMX258Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_4208_3120P15 );
+                    if(ISI_FPS_GET(ISI_RES_4208_3120P10) >= pIMX258Ctx->preview_minimum_framerate)
+                        AFPSCHECKANDADD( ISI_RES_4208_3120P10 );
+                    //if(ISI_FPS_GET(ISI_RES_4208_3120P7) >= pIMX258Ctx->preview_minimum_framerate)
+                   //     AFPSCHECKANDADD( ISI_RES_4208_3120P7 );
                     break;
-		#endif
-                // check next series here...
             }
         
 
@@ -3114,7 +3074,7 @@ RESULT IMX258_IsiGetAfpsInfoIss(
         }
 
         default:
-            TRACE( IMX258_ERROR,  "%s: pIMX258Ctx->IsiSensorMipiInfo.ucMipiLanes(0x%x) is invalidate!\n", 
+            TRACE( IMX258_DEBUG,  "%s: pIMX258Ctx->IsiSensorMipiInfo.ucMipiLanes(0x%x) is invalidate!\n", 
                 __FUNCTION__, pIMX258Ctx->IsiSensorMipiInfo.ucMipiLanes );
             result = RET_FAILURE;
             break;
@@ -3717,6 +3677,7 @@ static RESULT IMX258_IsiMdiInitMotoDriveMds
     IMX258_Context_t *pIMX258Ctx = (IMX258_Context_t *)handle;
 
     RESULT result = RET_SUCCESS;
+    
 
     TRACE( IMX258_INFO, "%s: (enter)\n", __FUNCTION__);
 
@@ -3724,6 +3685,7 @@ static RESULT IMX258_IsiMdiInitMotoDriveMds
     {
         return ( RET_WRONG_HANDLE );
     }
+
 
     TRACE( IMX258_INFO, "%s: (exit)\n", __FUNCTION__);
 
@@ -3755,9 +3717,19 @@ static RESULT IMX258_IsiMdiSetupMotoDrive
 )
 {
     IMX258_Context_t *pIMX258Ctx = (IMX258_Context_t *)handle;
-	uint32_t vcm_movefull_t;
+    uint32_t vcm_movefull_t;
     RESULT result = RET_SUCCESS;
-
+#if MODULE_NAME == MODULE_CMK
+    uint8_t puSendCmd2[2] = { 0x02, 0x02 };
+    uint8_t puSendCmd3[2] = { 0x06, 0x61 };
+    uint8_t puSendCmd4[2] = { 0x07, 0x31 };
+    unsigned char vbusy = 0;
+#elif MODULE_NAME == MODULE_GZ
+    uint8_t puSendCmd1[2] = { 0xec, 0xa3 };
+    uint8_t puSendCmd2[2] = { 0xa1, 0x0f };
+    uint8_t puSendCmd3[2] = { 0xf2, 0x00 };
+    uint8_t puSendCmd4[2] = { 0xdc, 0x51 };
+#endif
     TRACE( IMX258_DEBUG, "%s: (enter)\n", __FUNCTION__);
 
     if ( pIMX258Ctx == NULL )
@@ -3769,15 +3741,89 @@ static RESULT IMX258_IsiMdiSetupMotoDrive
     {
         return ( RET_NULL_POINTER );
     }
+    
+#if MODULE_NAME == MODULE_CMK
+
+do{
+   result = HalReadI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                            pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                            pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                            0x05,
+                            pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                            &vbusy,
+                            1U );
+    RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+    osSleep(10);
+}while((vbusy&0x01));
+    result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                             puSendCmd2[0],
+                             pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                             &puSendCmd2[1],
+                             1U );
+  osSleep(5);                     
+  result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                             puSendCmd3[0],
+                             pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                             &puSendCmd3[1],
+                             1U );
+  osSleep(5);
+ result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                             puSendCmd4[0],
+                             pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                             &puSendCmd4[1],
+                             1U );
+#elif MODULE_NAME == MODULE_GZ
+      result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                             puSendCmd1[0],
+                             pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                             &puSendCmd1[1],
+                             1U );
+
+      osSleep(5);
+      result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                             puSendCmd2[0],
+                             pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                             &puSendCmd2[1],
+                             1U );
+
+  osSleep(5);                     
+  result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                             puSendCmd3[0],
+                             pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                             &puSendCmd3[1],
+                             1U );
+
+  osSleep(5);
+ result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                             puSendCmd4[0],
+                             pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                             &puSendCmd4[1],
+                             1U );
+#endif
+
 
  if ((pIMX258Ctx->VcmInfo.StepMode & 0x0c) != 0) {
  	vcm_movefull_t = 64* (1<<(pIMX258Ctx->VcmInfo.StepMode & 0x03)) *1024/((1 << (((pIMX258Ctx->VcmInfo.StepMode & 0x0c)>>2)-1))*1000);
  }else{
  	vcm_movefull_t =64*1023/1000;
-   TRACE( IMX258_ERROR, "%s: (---NO SRC---)\n", __FUNCTION__);
+   TRACE( IMX258_NOTICE0, "%s: (---NO SRC---)\n", __FUNCTION__);
  }
  
-	  *pMaxStep = (MAX_LOG|(vcm_movefull_t<<16));
+    *pMaxStep = (MAX_LOG|(vcm_movefull_t<<16));
    // *pMaxStep = MAX_LOG;
 
     result = IMX258_IsiMdiFocusSet( handle, MAX_LOG );
@@ -3815,8 +3861,11 @@ static RESULT IMX258_IsiMdiFocusSet
     RESULT result = RET_SUCCESS;
 
     uint32_t nPosition;
-    uint8_t  data[2] = { 0, 0 };
+    uint8_t  data[2] = { 0, 0};
 
+#if MODULE_NAME == MODULE_CMK
+    unsigned char vbusy = 0;
+#endif
     TRACE( IMX258_DEBUG, "%s: (enter)\n", __FUNCTION__);
 
     if ( pIMX258Ctx == NULL )
@@ -3840,12 +3889,12 @@ static RESULT IMX258_IsiMdiFocusSet
     if (nPosition > MAX_VCMDRV_REG)  
         nPosition = MAX_VCMDRV_REG;
 
-    TRACE( IMX258_INFO, "%s: focus set position_reg_value(%d) position(%d) \n", __FUNCTION__, nPosition, Position);
+#if MODULE_NAME == MODULE_GZ
     data[0] = (uint8_t)(0x00U | (( nPosition & 0x3F0U ) >> 4U));                 // PD,  1, D9..D4, see AD5820 datasheet
     //data[1] = (uint8_t)( ((nPosition & 0x0FU) << 4U) | MDI_SLEW_RATE_CTRL );    // D3..D0, S3..S0
 	data[1] = (uint8_t)( ((nPosition & 0x0FU) << 4U) | pIMX258Ctx->VcmInfo.StepMode );
 	
-    //TRACE( IMX258_ERROR, "%s: value = %d, 0x%02x 0x%02x\n", __FUNCTION__, nPosition, data[0], data[1] );
+    TRACE( IMX258_DEBUG, "%s: value = %d, 0x%02x 0x%02x\n", __FUNCTION__, nPosition, data[0], data[1] );
 
     result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
                              pIMX258Ctx->IsiCtx.I2cAfBusNum,
@@ -3855,6 +3904,32 @@ static RESULT IMX258_IsiMdiFocusSet
                              data,
                              2U );
     RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+#elif MODULE_NAME == MODULE_CMK
+		
+		data[0] = (uint8_t)(0x00U | (( nPosition & 0x300U ) >> 8U));   
+		data[1] = (uint8_t)(nPosition & 0xFFU); 
+		do{
+			result = HalReadI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                            pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                            pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                            0x05,
+                            pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                            &vbusy,
+                            1U );
+    		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+    		osSleep(10);
+    		TRACE( IMX258_DEBUG, "%s:wait for vbusy %d\n", __FUNCTION__,vbusy);
+		}while((vbusy&0x01));   
+		result = HalWriteI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                             0X03,
+                             pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                             data,
+                             2U );
+    RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+    TRACE( IMX258_DEBUG, "%s: value = %d, 0x%02x 0x%02x\n", __FUNCTION__, nPosition, data[0], data[1] );
+#endif
 
     TRACE( IMX258_DEBUG, "%s: (exit)\n", __FUNCTION__);
     #endif
@@ -3889,7 +3964,9 @@ static RESULT IMX258_IsiMdiFocusGet
 
     RESULT result = RET_SUCCESS;
     uint8_t  data[2] = { 0, 0 };
-
+#if MODULE_NAME == MODULE_CMK
+ 		unsigned char vbusy = 0;
+#endif
     TRACE( IMX258_DEBUG, "%s: (enter)\n", __FUNCTION__);
 
     if ( pIMX258Ctx == NULL )
@@ -3902,7 +3979,8 @@ static RESULT IMX258_IsiMdiFocusGet
         return ( RET_NULL_POINTER );
     }
     /* SYNNEX DEBUG */
-    #if 1
+#if MODULE_NAME == MODULE_GZ
+
     result = HalReadI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
                             pIMX258Ctx->IsiCtx.I2cAfBusNum,
                             pIMX258Ctx->IsiCtx.SlaveAfAddress,
@@ -3917,7 +3995,35 @@ static RESULT IMX258_IsiMdiFocusGet
     /* Data[0] = PD,  1, D9..D4, see VM149C datasheet */
     /* Data[1] = D3..D0, S3..S0 */
     *pAbsStep = ( ((uint32_t)(data[0] & 0x3FU)) << 4U ) | ( ((uint32_t)data[1]) >> 4U );
+#elif MODULE_NAME == MODULE_CMK
+		do{
+				result = HalReadI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                            pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                            pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                            0x05,
+                            pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                            &vbusy,
+                            1U );
+    		RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+    		osSleep(10);
+    		TRACE( IMX258_DEBUG, "%s:czf wait for vbusy %d\n", __FUNCTION__,vbusy);
+		}while((vbusy&0x01)); 
+		
+		result = HalReadI2CMem( pIMX258Ctx->IsiCtx.HalHandle,
+                            pIMX258Ctx->IsiCtx.I2cAfBusNum,
+                            pIMX258Ctx->IsiCtx.SlaveAfAddress,
+                            0x03,
+                            pIMX258Ctx->IsiCtx.NrOfAfAddressBytes,
+                            data,
+                            2U );
+    RETURN_RESULT_IF_DIFFERENT( RET_SUCCESS, result );
+  
+    TRACE( IMX258_DEBUG, "%s:[SYNNEX_VAM_DEBUG] value = 0x%02x 0x%02x\n", __FUNCTION__, data[0], data[1] );
 
+    /* Data[0] = PD,  1, D9..D4, see VM149C datasheet */
+    /* Data[1] = D3..D0, S3..S0 */
+    *pAbsStep = ( ((uint32_t)(data[0] & 0x03U)) << 8U ) | ( (uint32_t)data[1]);
+#endif
     /*  //map 0 to 64 -> infinity 
     if( *pAbsStep == 0 )
     {
@@ -3939,7 +4045,7 @@ static RESULT IMX258_IsiMdiFocusGet
 	{
 		*pAbsStep = 0;
 	}
-    #endif
+
    TRACE( IMX258_DEBUG, "%s: (exit)\n", __FUNCTION__);
 
     return ( result );
@@ -4152,6 +4258,23 @@ static RESULT IMX258_IsiGetSensorTuningXmlVersion
 	return result;
 }
 
+static RESULT IMX258_IsiSetSensorFrameRateLimit(IsiSensorHandle_t handle, uint32_t minimum_framerate)
+{
+    IMX258_Context_t *pIMX258Ctx = (IMX258_Context_t *)handle;
+
+    RESULT result = RET_SUCCESS;
+
+    TRACE( IMX258_INFO, "%s: (enter)\n", __FUNCTION__);
+
+    if ( pIMX258Ctx == NULL )
+    {
+    	TRACE( IMX258_ERROR, "%s: pIMX258Ctx IS NULL\n", __FUNCTION__);
+        return ( RET_WRONG_HANDLE );
+    }
+	
+	pIMX258Ctx->preview_minimum_framerate = minimum_framerate;
+	return RET_SUCCESS;
+}
 
 /*****************************************************************************/
 /**
@@ -4182,7 +4305,11 @@ RESULT IMX258_IsiGetSensorIss
         pIsiSensor->pIsiSensorCaps                      = &IMX258_g_IsiSensorDefaultConfig;
 		pIsiSensor->pIsiGetSensorIsiVer					= IMX258_IsiGetSensorIsiVersion;//oyyf
 		pIsiSensor->pIsiGetSensorTuningXmlVersion		= IMX258_IsiGetSensorTuningXmlVersion;//oyyf
+#if MODULE_NAME == MODULE_CMK
+	pIsiSensor->pIsiCheckOTPInfo                    =  NULL;
+#else
 		pIsiSensor->pIsiCheckOTPInfo                    = check_read_otp;
+#endif
 		pIsiSensor->pIsiSetSensorOTPInfo				= IMX258_IsiSetOTPInfo;
 		pIsiSensor->pIsiEnableSensorOTP					= IMX258_IsiEnableOTP;
         pIsiSensor->pIsiCreateSensorIss                 = IMX258_IsiCreateSensorIss;
@@ -4196,21 +4323,6 @@ RESULT IMX258_IsiGetSensorIss
         pIsiSensor->pIsiGetSensorRevisionIss            = IMX258_IsiGetSensorRevisionIss;
         pIsiSensor->pIsiRegisterReadIss                 = IMX258_IsiRegReadIss;
         pIsiSensor->pIsiRegisterWriteIss                = IMX258_IsiRegWriteIss;
-
-/* SYNNEX DEBUG */
-        /* AEC functions */
-        /*pIsiSensor->pIsiExposureControlIss              = NULL;
-        pIsiSensor->pIsiGetGainLimitsIss                = NULL;
-        pIsiSensor->pIsiGetIntegrationTimeLimitsIss     = NULL;
-        pIsiSensor->pIsiGetCurrentExposureIss           = NULL;
-        pIsiSensor->pIsiGetGainIss                      = NULL;
-        pIsiSensor->pIsiGetGainIncrementIss             = NULL;
-        pIsiSensor->pIsiSetGainIss                      = NULL;
-        pIsiSensor->pIsiGetIntegrationTimeIss           = NULL;
-        pIsiSensor->pIsiGetIntegrationTimeIncrementIss  = NULL;
-        pIsiSensor->pIsiSetIntegrationTimeIss           = NULL;
-        pIsiSensor->pIsiGetResolutionIss                = NULL;
-        pIsiSensor->pIsiGetAfpsInfoIss                  = NULL;*/
         
         pIsiSensor->pIsiExposureControlIss              = IMX258_IsiExposureControlIss;
         pIsiSensor->pIsiGetGainLimitsIss                = IMX258_IsiGetGainLimitsIss;
@@ -4238,17 +4350,18 @@ RESULT IMX258_IsiGetSensorIss
         pIsiSensor->pIsiGetLscMatrixTable               = IMX258_IsiGetLscMatrixTable;
 /*SYNNEX DEBUG */
         /* AF functions */
-        pIsiSensor->pIsiMdiInitMotoDriveMds             = NULL;
-        pIsiSensor->pIsiMdiSetupMotoDrive               = NULL;
-        pIsiSensor->pIsiMdiFocusSet                     = NULL;
-        pIsiSensor->pIsiMdiFocusGet                     = NULL;
-        pIsiSensor->pIsiMdiFocusCalibrate               = NULL;
+        pIsiSensor->pIsiMdiInitMotoDriveMds             = IMX258_IsiMdiInitMotoDriveMds;
+        pIsiSensor->pIsiMdiSetupMotoDrive               = IMX258_IsiMdiSetupMotoDrive;
+        pIsiSensor->pIsiMdiFocusSet                     = IMX258_IsiMdiFocusSet;
+        pIsiSensor->pIsiMdiFocusGet                     = IMX258_IsiMdiFocusGet;
+        pIsiSensor->pIsiMdiFocusCalibrate               = IMX258_IsiMdiFocusCalibrate;
 /* END of SYNNEX DEBUG */
         /* MIPI */
         pIsiSensor->pIsiGetSensorMipiInfoIss            = IMX258_IsiGetSensorMipiInfoIss;
 
         /* Testpattern */
         pIsiSensor->pIsiActivateTestPattern             = IMX258_IsiActivateTestPattern;
+        pIsiSensor->pIsiSetSensorFrameRateLimit			= IMX258_IsiSetSensorFrameRateLimit;
     }
     else
     {
@@ -4282,7 +4395,7 @@ static RESULT IMX258_IsiGetSensorI2cInfo(sensor_i2c_info_t** pdata)
     pSensorI2cInfo->reg_size = 2;
     pSensorI2cInfo->value_size = 1;
 
-    TRACE( IMX258_ERROR,  "csq %s: i2c_addr: 0x%x----0x%x\n", __FUNCTION__,  pSensorI2cInfo->i2c_addr,pSensorI2cInfo->i2c_addr2);
+    TRACE( IMX258_DEBUG,  "%s: i2c_addr: 0x%x\n", __FUNCTION__,  pSensorI2cInfo->i2c_addr);
 
     {
         IsiSensorCaps_t Caps;
@@ -4369,10 +4482,10 @@ IsiCamDrvConfig_t IsiCamDrvConfig =
         0,                      /**< IsiSensor_t.pRegisterTable */
         0,                      /**< IsiSensor_t.pIsiSensorCaps */
         0,						/**< IsiSensor_t.pIsiGetSensorIsiVer_t>*/   //oyyf add
-        0,                      /**< IsiSensor_t.pIsiGetSensorTuningXmlVersion_t>*/   //oyyf add
+        0,                      /**< IsiSensor_t.pIsiGetSensorTuningXmlVersion_t>*/   //oyyf add 
         0,                      /**< IsiSensor_t.pIsiWhiteBalanceIlluminationChk>*/   //ddl@rock-chips.com 
         0,                      /**< IsiSensor_t.pIsiWhiteBalanceIlluminationSet>*/   //ddl@rock-chips.com
-        0,                      /**< IsiSensor_t.pIsiCheckOTPInfo>*/  //zyc 
+        0,                      /**< IsiSensor_t.pIsiCheckOTPInfo>*/  //zyc
         0,						/**< IsiSensor_t.pIsiSetSensorOTPInfo>*/  //zyl
         0,						/**< IsiSensor_t.pIsiEnableSensorOTP>*/  //zyl
         0,                      /**< IsiSensor_t.pIsiCreateSensorIss */
@@ -4386,6 +4499,7 @@ IsiCamDrvConfig_t IsiCamDrvConfig =
         0,                      /**< IsiSensor_t.pIsiGetSensorRevisionIss */
         0,                      /**< IsiSensor_t.pIsiRegisterReadIss */
         0,                      /**< IsiSensor_t.pIsiRegisterWriteIss */
+        0,                      /**< IsiSensor_t.pIsiIsEvenFieldIss */
 
         0,                      /**< IsiSensor_t.pIsiExposureControlIss */
         0,                      /**< IsiSensor_t.pIsiGetGainLimitsIss */
@@ -4419,6 +4533,8 @@ IsiCamDrvConfig_t IsiCamDrvConfig =
         0,                      /**< IsiSensor_t.pIsiGetSensorMipiInfoIss */
 
         0,                      /**< IsiSensor_t.pIsiActivateTestPattern */
+        0,
+        0,						/**< IsiSensor_t.pIsiGetColorIss */
     },
     IMX258_IsiGetSensorI2cInfo,
 };
