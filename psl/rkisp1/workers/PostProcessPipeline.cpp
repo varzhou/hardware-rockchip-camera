@@ -287,6 +287,11 @@ PostProcessUnit::prepareProcess() {
                 mCurPostProcBufOut.reset();
                 return;
             }
+            if(mCurPostProcBufOut->cambuf->waitOnAcquireFence() != NO_ERROR) {
+                // if wait on fence failed, just relay the buffer to xxframework
+                LOGW("Wait on fence for buffer %p timed out", mCurPostProcBufOut->cambuf.get());
+                relayToNextProcUnit(NO_ERROR);
+            }
         }
         break;
     case kPostProcBufTypePre :

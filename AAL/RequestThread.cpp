@@ -264,6 +264,7 @@ RequestThread::handleProcessCaptureRequest(Message & msg)
     // Request counter
     mRequestsInHAL++;
     PERFORMANCE_HAL_ATRACE_PARAM1("mRequestsInHAL", mRequestsInHAL);
+    LOGD("@%s : mRequestsInHAL :%d", __FUNCTION__, mRequestsInHAL);
 
     /**
      * Settings may be nullptr in repeating requests but not in the first one

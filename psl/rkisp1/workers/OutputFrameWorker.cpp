@@ -505,10 +505,11 @@ OutputFrameWorker::prepareBuffer(std::shared_ptr<CameraBuffer>& buffer)
             return UNKNOWN_ERROR;
         }
     }
-    status = buffer->waitOnAcquireFence();
-    if (CC_UNLIKELY(status != NO_ERROR)) {
-        LOGW("Wait on fence for buffer %p timed out", buffer.get());
-    }
+    // do waitOnAcquireFence in postpipeline last process unit
+    /* status = buffer->waitOnAcquireFence(); */
+    /* if (CC_UNLIKELY(status != NO_ERROR)) { */
+    /*     LOGW("Wait on fence for buffer %p timed out", buffer.get()); */
+    /* } */
     return status;
 }
 
