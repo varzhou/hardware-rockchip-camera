@@ -5,16 +5,16 @@
 		<CamDevie>
 			<HardWareInfo>
 				<Sensor>
-					<SensorName name="OV9750_A" ></SensorName>
+					<SensorName name="IMX258_A" ></SensorName>
 					<SensorDevID IDname="CAMSYS_DEVID_SENSOR_1A"></SensorDevID>
 					<SensorHostDevID busnum="CAMSYS_DEVID_MARVIN" ></SensorHostDevID>
 					<SensorI2cBusNum busnum="1"></SensorI2cBusNum>
 					<SensorI2cAddrByte byte="2"></SensorI2cAddrByte>
 					<SensorI2cRate rate="100000"></SensorI2cRate>
-					<SensorAvdd name="NC" min="0" max="0" delay="5000"></SensorAvdd>
-					<SensorDvdd name="NC" min="18000000" max="18000000" delay="5000"></SensorDvdd>
+					<SensorAvdd name="NC" min="28000000" max="28000000" delay="0"></SensorAvdd>
+					<SensorDvdd name="NC" min="12000000" max="12000000" delay="0"></SensorDvdd>
 					<SensorDovdd name="NC" min="18000000" max="18000000" delay="5000"></SensorDovdd>
-					<SensorMclk mclk="24000000" delay="1000"></SensorMclk>
+					<SensorMclk mclk="24000000" delay="1000"></SensorMclk>	
 					<SensorGpioPwen ioname="NC" active="1" delay="1000"></SensorGpioPwen>					
 					<SensorGpioRst ioname="RK30_PIN4_PD2" active="0" delay="0"></SensorGpioRst>
 					<SensorGpioPwdn ioname="RK30_PIN4_PD1" active="0" delay="0"></SensorGpioPwdn>
@@ -23,9 +23,9 @@
 					<SensorMirrorFlip mirror="0"></SensorMirrorFlip>
 					<SensorOrientation orientation="180"></SensorOrientation>
 					<SensorPowerupSequence seq="1234"></SensorPowerupSequence>					
-					<SensorFovParemeter h="80.0" v="65.0"></SensorFovParemeter>
+					<SensorFovParemeter h="60.0" v="60.0"></SensorFovParemeter>
 					<SensorAWB_Frame_Skip fps="15"></SensorAWB_Frame_Skip>					
-					<SensorPhy phyMode="CamSys_Phy_Mipi" lane="2"  phyIndex="0" sensorFmt="CamSys_Fmt_Raw_10b"></SensorPhy>
+					<SensorPhy phyMode="CamSys_Phy_Mipi" lane="4"  phyIndex="0" sensorFmt="CamSys_Fmt_Raw_10b"></SensorPhy>
 				</Sensor>
 				<VCM>
 					<VCMDrvName name="NC"></VCMDrvName>
@@ -101,11 +101,11 @@
 					<Focus_Mode_Continuous_Picture support="0"></Focus_Mode_Continuous_Picture>
 				</FocusMode>
 				<FlashMode>
-					<Flash_Mode_Off support="1"></Flash_Mode_Off>
-					<Flash_Mode_On support="1"></Flash_Mode_On>
-					<Flash_Mode_Torch support="1"></Flash_Mode_Torch>
-					<Flash_Mode_Auto support="1"></Flash_Mode_Auto>
-					<Flash_Mode_Red_Eye support="1"></Flash_Mode_Red_Eye>
+					<Flash_Mode_Off support="0"></Flash_Mode_Off>
+					<Flash_Mode_On support="0"></Flash_Mode_On>
+					<Flash_Mode_Torch support="0"></Flash_Mode_Torch>
+					<Flash_Mode_Auto support="0"></Flash_Mode_Auto>
+					<Flash_Mode_Red_Eye support="0"></Flash_Mode_Red_Eye>
 				</FlashMode>
 				<AntiBanding>
 					<Anti_Banding_Auto support="1"></Anti_Banding_Auto>
@@ -113,12 +113,12 @@
 					<Anti_Banding_60HZ support="1"></Anti_Banding_60HZ>
 					<Anti_Banding_Off support="1"></Anti_Banding_Off>
 				</AntiBanding>
-				<HDR support="1"></HDR>
-				<ZSL support="1"></ZSL>
-				<DigitalZoom support="1"></DigitalZoom>
+				<HDR support="0"></HDR>
+				<ZSL support="0"></ZSL>
+				<DigitalZoom support="0"></DigitalZoom>
 				<Continue_SnapShot support="1"></Continue_SnapShot>
 				<InterpolationRes resolution="0"></InterpolationRes>
-				<PreviewSize width="0" height="0"></PreviewSize>
+				<PreviewSize width="2096" height="1560"></PreviewSize>
 				<FaceDetect support="0" MaxNum="1"></FaceDetect>
 				<Cproc support="1" contrast="1.1" saturation="1.0" hue="0" brightness="0"></Cproc>
 				<Gammaout support = "0" gamma = "1.0" offset = "0"></Gammaout>
@@ -129,23 +129,23 @@
 					<DV_VGA name="480p" width="640" height="480" fps="10" support="0"></DV_VGA>
 					<DV_480P name="480p" width="720" height="480" fps="10" support="0"></DV_480P>
 					<DV_720P name="720p" width="1280" height="720" fps="10" support="1"></DV_720P>
-					<DV_1080P name="1080p" width="1920" height="1080" fps="10" support="1"></DV_1080P>
+					<DV_1080P name="1080p" width="1600" height="1200" fps="10" support="1"></DV_1080P>
 				</DV>
 			</SoftWareInfo>
 		</CamDevie>
 		<CamDevie>
 			<HardWareInfo>
 				<Sensor>
-					<SensorName name="OV9750_B" ></SensorName>
-					<SensorDevID IDname="CAMSYS_DEVID_SENSOR_1B"></SensorDevID>
+					<SensorName name="IMX258_B" ></SensorName>
+					<SensorDevID IDname="CAMSYS_DEVID_SENSOR_1A"></SensorDevID>
 					<SensorHostDevID busnum="CAMSYS_DEVID_MARVIN" ></SensorHostDevID>
 					<SensorI2cBusNum busnum="2"></SensorI2cBusNum>
 					<SensorI2cAddrByte byte="2"></SensorI2cAddrByte>
 					<SensorI2cRate rate="100000"></SensorI2cRate>
-					<SensorAvdd name="NC" min="0" max="0" delay="5000"></SensorAvdd>
-					<SensorDvdd name="NC" min="18000000" max="18000000" delay="5000"></SensorDvdd>
+					<SensorAvdd name="NC" min="28000000" max="28000000" delay="0"></SensorAvdd>
+					<SensorDvdd name="NC" min="12000000" max="12000000" delay="0"></SensorDvdd>
 					<SensorDovdd name="NC" min="18000000" max="18000000" delay="5000"></SensorDovdd>
-					<SensorMclk mclk="24000000" delay="1000"></SensorMclk>
+					<SensorMclk mclk="24000000" delay="1000"></SensorMclk>	
 					<SensorGpioPwen ioname="NC" active="1" delay="1000"></SensorGpioPwen>					
 					<SensorGpioRst ioname="RK30_PIN3_PD7" active="0" delay="0"></SensorGpioRst>
 					<SensorGpioPwdn ioname="RK30_PIN3_PD2" active="0" delay="0"></SensorGpioPwdn>
@@ -154,9 +154,9 @@
 					<SensorMirrorFlip mirror="0"></SensorMirrorFlip>
 					<SensorOrientation orientation="180"></SensorOrientation>
 					<SensorPowerupSequence seq="1234"></SensorPowerupSequence>					
-					<SensorFovParemeter h="80.0" v="65.0"></SensorFovParemeter>
+					<SensorFovParemeter h="60.0" v="60.0"></SensorFovParemeter>
 					<SensorAWB_Frame_Skip fps="15"></SensorAWB_Frame_Skip>					
-					<SensorPhy phyMode="CamSys_Phy_Mipi" lane="2"  phyIndex="1" sensorFmt="CamSys_Fmt_Raw_10b"></SensorPhy>
+					<SensorPhy phyMode="CamSys_Phy_Mipi" lane="4"  phyIndex="1" sensorFmt="CamSys_Fmt_Raw_10b"></SensorPhy>
 				</Sensor>
 				<VCM>
 					<VCMDrvName name="NC"></VCMDrvName>
@@ -232,11 +232,11 @@
 					<Focus_Mode_Continuous_Picture support="0"></Focus_Mode_Continuous_Picture>
 				</FocusMode>
 				<FlashMode>
-					<Flash_Mode_Off support="1"></Flash_Mode_Off>
-					<Flash_Mode_On support="1"></Flash_Mode_On>
-					<Flash_Mode_Torch support="1"></Flash_Mode_Torch>
-					<Flash_Mode_Auto support="1"></Flash_Mode_Auto>
-					<Flash_Mode_Red_Eye support="1"></Flash_Mode_Red_Eye>
+					<Flash_Mode_Off support="0"></Flash_Mode_Off>
+					<Flash_Mode_On support="0"></Flash_Mode_On>
+					<Flash_Mode_Torch support="0"></Flash_Mode_Torch>
+					<Flash_Mode_Auto support="0"></Flash_Mode_Auto>
+					<Flash_Mode_Red_Eye support="0"></Flash_Mode_Red_Eye>
 				</FlashMode>
 				<AntiBanding>
 					<Anti_Banding_Auto support="1"></Anti_Banding_Auto>
@@ -244,12 +244,12 @@
 					<Anti_Banding_60HZ support="1"></Anti_Banding_60HZ>
 					<Anti_Banding_Off support="1"></Anti_Banding_Off>
 				</AntiBanding>
-				<HDR support="1"></HDR>
-				<ZSL support="1"></ZSL>
-				<DigitalZoom support="1"></DigitalZoom>
+				<HDR support="0"></HDR>
+				<ZSL support="0"></ZSL>
+				<DigitalZoom support="0"></DigitalZoom>
 				<Continue_SnapShot support="1"></Continue_SnapShot>
 				<InterpolationRes resolution="0"></InterpolationRes>
-				<PreviewSize width="0" height="0"></PreviewSize>
+				<PreviewSize width="2096" height="1560"></PreviewSize>
 				<FaceDetect support="0" MaxNum="1"></FaceDetect>
 				<Cproc support="1" contrast="1.1" saturation="1.0" hue="0" brightness="0"></Cproc>
 				<Gammaout support = "0" gamma = "1.0" offset = "0"></Gammaout>
@@ -260,7 +260,7 @@
 					<DV_VGA name="480p" width="640" height="480" fps="10" support="0"></DV_VGA>
 					<DV_480P name="480p" width="720" height="480" fps="10" support="0"></DV_480P>
 					<DV_720P name="720p" width="1280" height="720" fps="10" support="1"></DV_720P>
-					<DV_1080P name="1080p" width="1920" height="1080" fps="10" support="1"></DV_1080P>
+					<DV_1080P name="1080p" width="1600" height="1200" fps="10" support="1"></DV_1080P>
 				</DV>
 			</SoftWareInfo>
 		</CamDevie>
