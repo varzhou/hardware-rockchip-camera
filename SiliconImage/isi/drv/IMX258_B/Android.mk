@@ -18,8 +18,7 @@ LOCAL_C_INCLUDES += \
 	
 	
 
-LOCAL_CFLAGS := -Wall -Wextra -std=c99   -Wformat-nonliteral -g -O0 -DDEBUG -pedantic -Wno-zero-length-array -Wno-unused-parameter -Wno-unused-variable -Wno-c11-extensions -Wno-unused-function \
--Wno-missing-field-initializers -Wno-sometimes-uninitialized -Wno-parentheses-equality -Wno-pointer-sign -Wno-unused-label
+LOCAL_CFLAGS := -Wall -Wextra -std=c99   -Wformat-nonliteral -g -O0 -DDEBUG -pedantic -Wno-zero-length-array -Wno-unused-parameter -Wno-unused-variable -Wno-c11-extensions -Wno-unused-function -Wno-missing-field-initializers -Wno-sometimes-uninitialized -Wno-parentheses-equality
 
 LOCAL_CFLAGS += -DLINUX  -DMIPI_USE_CAMERIC -DHAL_MOCKUP -DCAM_ENGINE_DRAW_DOM_ONLY -D_FILE_OFFSET_BITS=64 -DHAS_STDINT_H
 #LOCAL_STATIC_LIBRARIES := libisp_ebase libisp_oslayer libisp_common libisp_hal libisp_cameric_reg_drv libisp_cameric_drv libisp_isi

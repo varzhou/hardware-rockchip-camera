@@ -1,19 +1,12 @@
 /******************************************************************************
  *
- * The copyright in this software is owned by Rockchip and/or its licensors.
- * This software is made available subject to the conditions of the license 
- * terms to be determined and negotiated by Rockchip and you.
- * THIS SOFTWARE IS PROVIDED TO YOU ON AN "AS IS" BASIS and ROCKCHP AND/OR 
- * ITS LICENSORS DISCLAIMS ANY AND ALL WARRANTIES AND REPRESENTATIONS WITH 
- * RESPECT TO SUCH SOFTWARE, WHETHER EXPRESS,IMPLIED, STATUTORY OR OTHERWISE, 
- * INCLUDING WITHOUT LIMITATION, ANY IMPLIED WARRANTIES OF TITLE, NON-INFRINGEMENT, 
- * MERCHANTABILITY, SATISFACTROY QUALITY, ACCURACY OR FITNESS FOR A PARTICULAR PURPOSE. 
- * Except as expressively authorized by Rockchip and/or its licensors, you may not 
- * (a) disclose, distribute, sell, sub-license, or transfer this software to any third party, 
- * in whole or part; (b) modify this software, in whole or part; (c) decompile, reverse-engineer, 
- * dissemble, or attempt to derive any source code from the software.
+ * Copyright 2010, Dream Chip Technologies GmbH. All rights reserved.
+ * No part of this work may be reproduced, modified, distributed, transmitted,
+ * transcribed, or translated into any language or computer format, in any form
+ * or by any means without written permission of:
+ * Dream Chip Technologies GmbH, Steinriede 10, 30827 Garbsen / Berenbostel,
+ * Germany
  *
-
  *****************************************************************************/
 /**
  * @file isi_common.h
@@ -221,10 +214,10 @@ extern "C"
 #define ISI_RES_SVGAP120                       0xf0320258        /**< 16 800x600@120   */
 
 #define ISI_RES_1920_540P60                    0x7878021c        /**< 16 1920x540@60  */
-#define ISI_RES_720_480P60                     0x782d01e0        /**< 16 720x480@60  */
-#define ISI_RES_720_576P50                     0x642d0240        /**< 16 720x576@50  */
-#define ISI_RES_720_240P60                     0x782d00f0        /**< 16 720x240@60  */
-#define ISI_RES_720_288P50                     0x642d0120        /**< 16 720x288@50  */
+#define ISI_RES_720_480P60		               0x782d01e0        /**< 16 720x480@60  */
+#define ISI_RES_720_576P50		               0x642d0240        /**< 16 720x576@50  */
+#define ISI_RES_720_240P60		               0x782d00f0        /**< 16 720x240@60  */
+#define ISI_RES_720_288P50		               0x642d0120        /**< 16 720x288@50  */
 
 #define ISI_RES_1280_960P10                    0x145003c0        /**< 16 1280x960@10   */
 #define ISI_RES_1280_960P15                    0x1e5003c0        /**< 16 1280x960@15   */
@@ -315,6 +308,16 @@ extern "C"
 #define ISI_RES_4208_3120P20                   0x29070c30
 #define ISI_RES_4208_3120P25                   0x33070c30
 #define ISI_RES_4208_3120P30                   0x3d070c30
+
+#define ISI_RES_2096_1560P7                    0x0e830618 
+#define ISI_RES_2096_1560P10                   0x14830618
+#define ISI_RES_2096_1560P15                   0x1e830618
+#define ISI_RES_2096_1560P20                   0x28830618
+#define ISI_RES_2096_1560P25                   0x32830618
+#define ISI_RES_2096_1560P30                   0x3c830618
+#define ISI_RES_2096_1560P40                   0x50830618
+#define ISI_RES_2096_1560P50                   0x64830618
+#define ISI_RES_2096_1560P60                   0x78830618
 
 #define ISI_RES_2104_1560P7                    0x0e838618 
 #define ISI_RES_2104_1560P10                   0x14838618
@@ -924,16 +927,7 @@ typedef struct
     uint32_t   ulMipiFreq;
     uint32_t    sensorHalDevID;
 } IsiSensorMipiInfo;
-//for toybrick
-#define ISI_RES_2100_1560P7                    0x0e834618 
-#define ISI_RES_2100_1560P10                   0x14834618
-#define ISI_RES_2100_1560P15                   0x1e834618
-#define ISI_RES_2100_1560P20                   0x28834618
-#define ISI_RES_2100_1560P25                   0x32834618
-#define ISI_RES_2100_1560P30                   0x3c834618
-#define ISI_RES_2100_1560P40                   0x50834618
-#define ISI_RES_2100_1560P50                   0x64834618
-#define ISI_RES_2100_1560P60                   0x78834618
+
 /*****************************************************************************/
 /**
  *          IsiIlluProfile_t
@@ -941,7 +935,7 @@ typedef struct
  * @brief   Illumination specific structure.
  *
  */
-
+/*****************************************************************************/
 typedef struct IsiIlluProfile_s
 {
     void                            *p_next;                /*!< void pointer for setting up a illumination list */
