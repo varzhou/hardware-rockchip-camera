@@ -909,7 +909,7 @@ int camera_get_number_of_cameras(void)
 					unsigned int mCamDriverSupportFmt[CAMERA_DRIVER_SUPPORT_FORMAT_MAX]={0};
 					unsigned int mCamDriverPreviewFmt=0;
 					unsigned int maxfps;
-
+					camInfoTmp[cam_cnt&0x01].facing_info.orientation = 0; // 90 180 270
 					//add usb camera to board_profiles 
 					rk_DV_info *pDVResolution = new rk_DV_info();
 					memset(pNewCamInfo->mHardInfo.mSensorInfo.mSensorName, 0x00, sizeof(pNewCamInfo->mHardInfo.mSensorInfo.mSensorName));
