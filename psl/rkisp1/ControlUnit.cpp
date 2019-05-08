@@ -141,6 +141,19 @@ ControlUnit::getDevicesPath()
         }
     }
 
+    // get flashlight device path
+    if (camHwInfo->mSensorInfo[mCameraId].mModuleFlashDevName == "") {
+        LOGW("%s: No flashlight found", __FUNCTION__);
+    } else {
+        struct stat sb;
+        int PathExists = stat(camHwInfo->mSensorInfo[mCameraId].mModuleFlashDevName.c_str(), &sb);
+        if (PathExists != 0) {
+            LOGE("Error, could not find flashlight subdev %s !", entityName.c_str());
+        } else {
+            mDevPathsMap[KDevPathTypeFlNode] = camHwInfo->mSensorInfo[mCameraId].mModuleFlashDevName;
+        }
+    }
+
     return OK;
 }
 
@@ -405,6 +418,9 @@ ControlUnit::configStreams(bool configChanged)
                 break;
             case KDevPathTypeLensNode:
                 prepareParams.lens_sd_node_path = it.second.c_str();
+                break;
+            case KDevPathTypeFlNode:
+                prepareParams.flashlight_sd_node_path = it.second.c_str();
                 break;
             default:
                 continue;
