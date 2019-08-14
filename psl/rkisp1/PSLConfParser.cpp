@@ -564,9 +564,10 @@ camera_metadata_t* PSLConfParser::constructDefaultMetadata(int cameraId, int req
     return meta;
 }
 
-status_t PSLConfParser::addCamera(int cameraId, const std::string &sensorName)
+status_t PSLConfParser::addCamera(int cameraId, const std::string &sensorName, const char* moduleIdStr)
 {
-    LOGI("%s: for camera %d, name: %s", __FUNCTION__, cameraId, sensorName.c_str());
+    LOGI("%s: for camera %d, name: %s, moduleIdStr %s",
+         __FUNCTION__, cameraId, sensorName.c_str(), moduleIdStr);
     camera_metadata_t * emptyReq = nullptr;
     CLEAR(emptyReq);
 
@@ -575,6 +576,7 @@ status_t PSLConfParser::addCamera(int cameraId, const std::string &sensorName)
     RKISP1CameraCapInfo * info = new RKISP1CameraCapInfo(type);
 
     info->mSensorName = sensorName;
+    info->mModuleIndexStr = moduleIdStr;
     mCaps.push_back(info);
 
     for (int i = 0; i < CAMERA_TEMPLATE_COUNT; i++)
@@ -834,7 +836,7 @@ void PSLConfParser::checkField(const char *name, const char **atts)
                 LOGE("ERROR: bad camera id %d!", mSensorIndex);
                 return;
             }
-            addCamera(mSensorIndex, sensorName);
+            addCamera(mSensorIndex, sensorName, atts[5]);
         }
 
     } else if (!strcmp(name, "Hal_tuning_RKISP1")) {
@@ -1178,10 +1180,12 @@ std::string PSLConfParser::getSensorMediaDevice(int cameraId)
     const RKISP1CameraCapInfo *cap = getRKISP1CameraCapInfo(cameraId);
     CheckError(!cap, "none", "@%s, failed to get RKISP1CameraCapInfo", __FUNCTION__);
     string sensorName = cap->getSensorName();
+    string moduleIdStr = cap->mModuleIndexStr;
 
     const std::vector<struct SensorDriverDescriptor>& sensorInfo = PlatformData::getCameraHWInfo()->mSensorInfo;
     for (auto it = sensorInfo.begin(); it != sensorInfo.end(); ++it) {
-        if((*it).mSensorName == sensorName)
+        if((*it).mSensorName == sensorName &&
+           (*it).mModuleIndexStr == moduleIdStr)
             return (*it).mParentMediaDev;
     }
     LOGE("@%s : Can't get SensorMediaDevice, cameraId: %d, sensorName:%s", __FUNCTION__,
