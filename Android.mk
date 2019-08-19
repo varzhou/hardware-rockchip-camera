@@ -102,7 +102,7 @@ LOCAL_SRC_FILES := \
     $(GCSSSRC) \
     Camera3HALModule.cpp
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_HEADER_LIBRARIES += \
        libhardware_headers \
        libbinder_headers \
@@ -117,11 +117,16 @@ LOCAL_C_INCLUDES += \
     frameworks/av/include \
     hardware/libhardware/include
 endif
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 29)))
+LOCAL_C_INCLUDES += \
+    system/core/liblog/include
+endif
 LOCAL_C_INCLUDES += \
     hardware/rockchip/libgralloc \
     hardware/libhardware/include \
     system/media/camera/include \
     system/core/libsync \
+    system/core/liblog/include \
     kernel/include/uapi \
     hardware/rockchip/librkvpu \
     hardware/rockchip/jpeghw \
@@ -162,7 +167,7 @@ LOCAL_CPPFLAGS += -DNAMESPACE_DECLARATION=namespace\ android\ {\namespace\ camer
 LOCAL_CPPFLAGS += -DNAMESPACE_DECLARATION_END=}
 LOCAL_CPPFLAGS += -DUSING_DECLARED_NAMESPACE=using\ namespace\ android::camera2
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_CPPFLAGS += \
     -DUSING_METADATA_NAMESPACE=using\ ::android::hardware::camera::common::V1_0::helper::CameraMetadata
 else
@@ -189,7 +194,7 @@ LOCAL_CPPFLAGS += $(ALLINCLUDES)
 
 LOCAL_STATIC_LIBRARIES := \
     libyuv_static
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_STATIC_LIBRARIES += android.hardware.camera.common@1.0-helper
 endif
 LOCAL_SHARED_LIBRARIES:= \
@@ -207,7 +212,7 @@ LOCAL_SHARED_LIBRARIES:= \
     libvpu \
     libcamera_metadata \
     librga
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
 LOCAL_SHARED_LIBRARIES += \
     libnativewindow \
     liblog
@@ -216,19 +221,24 @@ LOCAL_SHARED_LIBRARIES += \
     libcamera_client
 endif
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 9)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 28)))
 LOCAL_SHARED_LIBRARIES += \
     libsync_vendor
 endif
 
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
     LOCAL_CFLAGS += -DANDROID_VERSION_ABOVE_8_X
 endif
 
 LOCAL_LDFLAGS := -Wl,-z,defs
-ifeq (1,$(strip $(shell expr $(PLATFORM_VERSION) \>= 8.0)))
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 26)))
     LOCAL_PROPRIETARY_MODULE := true
 endif
+ifeq (1,$(strip $(shell expr $(PLATFORM_SDK_VERSION) \>= 29)))
+    LOCAL_CFLAGS += -DANDROID_VERSION_ABOVE_10_X
+    LOCAL_CPPFLAGS += -std=c++1y
+endif
+
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_MODULE:= camera.$(TARGET_BOARD_HARDWARE)
 LOCAL_MODULE_TAGS:= optional
