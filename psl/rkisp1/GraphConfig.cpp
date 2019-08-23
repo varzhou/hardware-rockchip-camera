@@ -2238,6 +2238,16 @@ status_t GraphConfig::getNodeInfo(const ia_uid uid, const Node &parent, int* wid
     return status;
 }
 
+void GraphConfig::limitPathOutputSize(uint32_t& path_out_w, uint32_t& path_out_h) {
+    uint32_t limit_w;
+
+    limit_w = path_out_w > PP_MAX_WIDTH ? PP_MAX_WIDTH : path_out_w;
+    if (limit_w < path_out_w) {
+        path_out_h = limit_w * path_out_h / path_out_w;
+        path_out_w = limit_w;
+    }
+}
+
 void GraphConfig::isNeedPathCrop(uint32_t path_input_w,
                              uint32_t path_input_h,
                              bool sp_enabled,
@@ -2614,7 +2624,8 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
 
         if (mp_need_crop)
             cal_crop(mpInWidth, mpInHeight, mpStream->width, mpStream->height);
-
+        else
+            limitPathOutputSize(mpInWidth, mpInHeight);
         select.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         select.target = V4L2_SEL_TGT_CROP;
         select.flags = 0;
@@ -2660,6 +2671,8 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
         } else {
             if (sp_need_crop)
                 cal_crop(spInWidth, spInHeight, spStream->width, spStream->height);
+            else
+                limitPathOutputSize(spInWidth, spInHeight);
 
             select.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             select.target = V4L2_SEL_TGT_CROP;
