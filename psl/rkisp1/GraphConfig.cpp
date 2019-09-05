@@ -2585,8 +2585,8 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
         videoOutFormat = gcu::getV4L2Format(gcu::pixelCode2fourcc(mCurSensorFormat.formatCode));
     }
     // isp output pad format and selection config
-    addFormatParams(IspName, ispOutWidth, ispOutHeight, ispSrcPad, ispOutFormat, 0, 0, mediaCtlConfig);
     addSelectionParams(IspName, ispOutWidth, ispOutHeight, 0, 0, V4L2_SEL_TGT_CROP, ispSrcPad, mediaCtlConfig);
+    addFormatParams(IspName, ispOutWidth, ispOutHeight, ispSrcPad, ispOutFormat, 0, 0, mediaCtlConfig);
 
     // isp stats and param link enable
     addLinkParams(IspName, ispStatsPad, statsName,  statsSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
@@ -2632,15 +2632,15 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
                 videoWidth = mpStream->width > mpInWidth ? mpInWidth : mpStream->width ;
                 videoHeight = mpStream->height > mpInHeight ? mpInHeight : mpStream->height ;
             }
-            addFormatParams(mpName, videoWidth, videoHeight, mpSinkPad, videoOutFormat, 0, 0, mediaCtlConfig);
             addSelectionVideoParams(mpName, select, mediaCtlConfig);
+            addFormatParams(mpName, videoWidth, videoHeight, mpSinkPad, videoOutFormat, 0, 0, mediaCtlConfig);
         } else {
             select.r.left = 0;
             select.r.top = 0;
             select.r.width = ispOutWidth;
             select.r.height = ispOutHeight;
-            addFormatParams(mpName, ispOutWidth, ispOutHeight, mpSinkPad, videoOutFormat, 0, 0, mediaCtlConfig);
             addSelectionVideoParams(mpName, select, mediaCtlConfig);
+            addFormatParams(mpName, ispOutWidth, ispOutHeight, mpSinkPad, videoOutFormat, 0, 0, mediaCtlConfig);
         }
         addImguVideoNode(IMGU_NODE_VIDEO, mpName, mediaCtlConfig);
         addLinkParams(IspName, ispSrcPad, mpName,  mpSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
@@ -2677,8 +2677,8 @@ status_t GraphConfig::getImguMediaCtlConfig(int32_t cameraId,
                 videoWidth = spStream->width > spInWidth ? spInWidth : spStream->width ;
                 videoHeight = spStream->height > spInHeight ? spInHeight : spStream->height ;
             }
-            addFormatParams(spName, videoWidth, videoHeight, spSinkPad, videoOutFormat, 0, 0, mediaCtlConfig);
             addSelectionVideoParams(spName, select, mediaCtlConfig);
+            addFormatParams(spName, videoWidth, videoHeight, spSinkPad, videoOutFormat, 0, 0, mediaCtlConfig);
             addImguVideoNode(IMGU_NODE_VF_PREVIEW, spName, mediaCtlConfig);
             addLinkParams(IspName, ispSrcPad, spName,  spSinkPad,  1, MEDIA_LNK_FL_ENABLED, mediaCtlConfig);
         }
@@ -3225,6 +3225,10 @@ void GraphConfig::addFormatParams(const string &entityName,
         mediaCtlFormatParams.field = field;
         mediaCtlFormatParams.quantization= quantization;
         config->mFormatParams.push_back(mediaCtlFormatParams);
+        MediaCtlParamsOrder order;
+        order.index = config->mFormatParams.size() - 1;
+        order.type = MEDIACTL_PARAMS_TYPE_FMT;
+        config->mParamsOrder.push_back(order);
         LOGI("@%s, entityName:%s, width:%d, height:%d, pad:%d, format:0x%x:%s, field:%d",
             __FUNCTION__, entityName.c_str(), width, height, pad, format, gcu::pixelCode2String(format).c_str(), field);
     }
@@ -3254,6 +3258,10 @@ void GraphConfig::addCtlParams(const string &entityName,
         mediaCtlControlParams.controlId = controlId;
         mediaCtlControlParams.value = value;
         config->mControlParams.push_back(mediaCtlControlParams);
+        MediaCtlParamsOrder order;
+        order.index = config->mControlParams.size() - 1;
+        order.type = MEDIACTL_PARAMS_TYPE_CTL;
+        config->mParamsOrder.push_back(order);
         LOGI("@%s, entityName:%s, controlNameStr:%s, controlId:%d, value:%d",
             __FUNCTION__, entityName.c_str(), controlNameStr.c_str(), controlId, value);
     }
@@ -3290,6 +3298,10 @@ void GraphConfig::addSelectionParams(const string &entityName,
         mediaCtlSelectionParams.pad = pad;
         mediaCtlSelectionParams.entityName = entityName;
         config->mSelectionParams.push_back(mediaCtlSelectionParams);
+        MediaCtlParamsOrder order;
+        order.index = config->mSelectionParams.size() - 1;
+        order.type = MEDIACTL_PARAMS_TYPE_CTLSEL;
+        config->mParamsOrder.push_back(order);
         LOGI("@%s, width:%d, height:%d, left:%d, top:%d, target:%d, pad:%d, entityName:%s",
             __FUNCTION__, width, height, left, top, target, pad, entityName.c_str());
     }
@@ -3308,6 +3320,10 @@ void GraphConfig::addSelectionVideoParams(const string &entityName,
     mediaCtlSelectionVideoParams.entityName = entityName;
     mediaCtlSelectionVideoParams.select = select;
     config->mSelectionVideoParams.push_back(mediaCtlSelectionVideoParams);
+    MediaCtlParamsOrder order;
+    order.index = config->mSelectionVideoParams.size() - 1;
+    order.type = MEDIACTL_PARAMS_TYPE_VIDSEL;
+    config->mParamsOrder.push_back(order);
     LOGI("@%s, width:%d, height:%d, left:%d, top:%d, target:%d, type:%d, flags:%d entityName:%s",
         __FUNCTION__, select.r.width, select.r.height, select.r.left, select.r.top,
         select.target, select.type, select.flags, entityName.c_str());

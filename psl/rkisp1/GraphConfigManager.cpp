@@ -248,6 +248,7 @@ status_t GraphConfigManager::configStreams(const vector<camera3_stream_t*> &stre
         mMediaCtlConfigs[i].mSelectionVideoParams.clear();
         mMediaCtlConfigs[i].mControlParams.clear();
         mMediaCtlConfigs[i].mVideoNodes.clear();
+        mMediaCtlConfigs[i].mParamsOrder.clear();
     }
 
     ret = gc->getSensorMediaCtlConfig(mCameraId, testPatternMode,

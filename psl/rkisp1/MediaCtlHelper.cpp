@@ -119,6 +119,7 @@ status_t MediaCtlHelper::configure(IStreamConfigProvider &graphConfigMgr, IStrea
         return status;
     }
 
+#if 0 // none-orderd
     // HFLIP must be set before setting formats. Other controls need to be set after formats.
     for (unsigned int i = 0; i < mMediaCtlConfig->mControlParams.size(); i++) {
         MediaCtlControlParams pipeControl = mMediaCtlConfig->mControlParams[i];
@@ -212,7 +213,97 @@ status_t MediaCtlHelper::configure(IStreamConfigProvider &graphConfigMgr, IStrea
             }
         }
     }
+#else // ordered
+    for (auto& it :mMediaCtlConfig->mParamsOrder) {
+        switch (it.type) {
+            case MEDIACTL_PARAMS_TYPE_CTLSEL:
+                {
+                    MediaCtlSelectionParams ctrSel = mMediaCtlConfig->mSelectionParams[it.index];
 
+                    if (ctrSel.entityName.find("isp-subdev") == string::npos)
+                        continue;
+                    status = mMediaCtl->setSelection(ctrSel.entityName.c_str(), ctrSel.pad,
+                                                     ctrSel.target, ctrSel.top, ctrSel.left,
+                                                     ctrSel.width, ctrSel.height);
+                    if (status != NO_ERROR) {
+                        LOGE("Cannot set subdev MediaCtl format selection (ret = %d)", status);
+                        return status;
+                    }
+                }
+                break;
+            case MEDIACTL_PARAMS_TYPE_VIDSEL:
+                {
+                    std::shared_ptr<MediaEntity> entity;
+                    std::shared_ptr<V4L2VideoNode> vNode;
+                    MediaCtlSelectionVideoParams vidSel = mMediaCtlConfig->mSelectionVideoParams[it.index];
+
+                    status = mMediaCtl->getMediaEntity(entity, vidSel.entityName.c_str());
+                    if (status != NO_ERROR) {
+                        LOGE("Cannot get media entity (ret = %d)", status);
+                        return status;
+                    }
+                    status = entity->getDevice((std::shared_ptr<V4L2DeviceBase>&)vNode);
+                    if (status != NO_ERROR) {
+                        LOGE("Cannot get media entity device (ret = %d)", status);
+                        return status;
+                    }
+
+                    status = vNode->setSelection(vidSel.select);
+                    if (status != NO_ERROR) {
+                        LOGE("Cannot set vnode MediaCtl format selection (ret = %d)", status);
+                        return status;
+                    }
+                }
+                break;
+            case MEDIACTL_PARAMS_TYPE_FMT:
+                {
+                    MediaCtlFormatParams pipeFormat = mMediaCtlConfig->mFormatParams[it.index];
+                    std::shared_ptr<MediaEntity> entity = nullptr;
+
+                    status = mMediaCtl->getMediaEntity(entity, pipeFormat.entityName.c_str());
+                    if (status != NO_ERROR) {
+                        LOGE("Getting MediaEntity \"%s\" failed", pipeFormat.entityName.c_str());
+                        return status;
+                    }
+                    pipeFormat.field = 0;
+                    //TODO: need align, zyc ?
+                    //if (entity->getType() == DEVICE_VIDEO)
+                    //    pipeFormat.stride = widthToStride(pipeFormat.formatCode, pipeFormat.width);
+                    //else
+                        pipeFormat.stride = pipeFormat.width;
+
+                    status = mMediaCtl->setFormat(pipeFormat);
+                    if (status != NO_ERROR) {
+                        LOGE("Cannot set MediaCtl format (ret = %d)", status);
+                        return status;
+                    }
+
+                    // get the capture pipe output format
+                    if (entity->getType() == DEVICE_VIDEO) {
+                        mConfigResults.pixelFormat = pipeFormat.formatCode;
+                        LOGI("Capture pipe output format: %s",
+                                v4l2Fmt2Str(mConfigResults.pixelFormat));
+                    }
+                }
+                break;
+            case MEDIACTL_PARAMS_TYPE_CTL :
+                {
+                    MediaCtlControlParams pipeControl = mMediaCtlConfig->mControlParams[it.index];
+
+                    status = mMediaCtl->setControl(pipeControl.entityName.c_str(),
+                            pipeControl.controlId, pipeControl.value,
+                            pipeControl.controlName.c_str());
+                    if (status != NO_ERROR) {
+                        LOGE("Cannot set control (ret = %d)", status);
+                        return status;
+                    }
+                }
+                break;
+            default:
+                LOGW("wrong mediactl params type %d", it.type);
+        }
+    }
+#endif
     return status;
 }
 

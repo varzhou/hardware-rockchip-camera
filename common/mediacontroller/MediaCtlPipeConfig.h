@@ -94,6 +94,22 @@ typedef struct {
     string controlName;
 } MediaCtlControlParams;
 
+typedef enum {
+    MEDIACTL_PARAMS_TYPE_CTLSEL,
+    MEDIACTL_PARAMS_TYPE_VIDSEL,
+    MEDIACTL_PARAMS_TYPE_FMT,
+    MEDIACTL_PARAMS_TYPE_CTL
+} MediaCtlParamsType;
+
+// media pipelines settings require specific order, this
+// is used to record all the settings order of
+// MediaCtlControlParams, MediaCtlSelectionVideoParams,
+// MediaCtlFormatParams
+typedef struct {
+  MediaCtlParamsType type;
+  size_t index;
+} MediaCtlParamsOrder;
+
 /**
  * \struct MediaCtlSingleConfig
  *
@@ -113,6 +129,7 @@ typedef struct {
     std::vector<MediaCtlSelectionVideoParams> mSelectionVideoParams;
     std::vector<MediaCtlControlParams> mControlParams;
     std::vector<MediaCtlElement> mVideoNodes;
+    std::vector<MediaCtlParamsOrder> mParamsOrder;
 } MediaCtlConfig;
 
 } NAMESPACE_DECLARATION_END
