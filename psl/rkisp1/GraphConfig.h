@@ -42,6 +42,12 @@ class GraphConfigNode;
 // selfPath output capacity
 #define SP_MAX_WIDTH        1920
 #define SP_MAX_HEIGHT       1920
+// postpipeline limitation, limited by RGA now
+#if defined(TARGET_RK312X)
+#define PP_MAX_WIDTH        2048
+#else
+#define PP_MAX_WIDTH        4096
+#endif
 
 #define NODE_NAME(x) (getNodeName(x).c_str())
 
@@ -460,6 +466,7 @@ private:
                         std::vector<camera3_stream_t*>& outputStream,
                         bool& mp_need_crop,
                         bool& sp_need_crop);
+    void limitPathOutputSize(uint32_t& path_out_w, uint32_t& path_out_h);
 
 private:
     GraphConfigManager *mManager; /* GraphConfig doesn't own mManager */
